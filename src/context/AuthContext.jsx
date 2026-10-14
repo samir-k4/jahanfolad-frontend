@@ -57,10 +57,28 @@ export function AuthProvider({ children }) {
   useEffect(() => onUnauthorized(() => clearSession()), [clearSession]);
 
   const login = useCallback(async (email, password) => {
+    // 1. Perform the mandatory CSRF handshake
+    // We strip '/api' from the VITE_API_URL because the sanctum route sits at the root domain
+    const baseUrl = (import.meta.env.VITE_API_URL || "").replace(
+      /\/api\/?$/,
+      "",
+    );
+
+    await fetch(`${baseUrl}/sanctum/csrf-cookie`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        Accept: "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+    });
+
+    // 2. Send the login credentials
     const result = await apiFetch("/login", {
       method: "POST",
       body: { email, password, device_name: "web" },
     });
+
     markActivity();
     setUser(result.user);
     setSession(result.session ?? null);
