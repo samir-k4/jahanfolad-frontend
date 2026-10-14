@@ -1,0 +1,155 @@
+{
+  "actions": {
+    "save": "ثبت و ذخیره",
+    "saving": "در حال ذخیره...",
+    "saveChanges": "ذخیره تغییرات",
+    "cancel": "انصراف",
+    "close": "بستن",
+    "closeWindow": "بستن پنجره",
+    "delete": "حذف",
+    "edit": "ویرایش",
+    "print": "چاپ",
+    "downloadPdf": "دانلود PDF",
+    "submit": "ثبت اطلاعات",
+    "search": "جستجو...",
+    "deleting": "در حال حذف...",
+    "update": "به‌روزرسانی",
+    "confirm": "تایید",
+    "backToList": "بازگشت به لیست",
+    "addExpense": "ثبت مصرف جدید"
+  },
+  "table": {
+    "rowIndex": "#",
+    "actions": "عملیات",
+    "date": "تاریخ",
+    "status": "وضعیت",
+    "description": "توضیحات",
+    "notes": "ملاحظات",
+    "amount": "مبلغ",
+    "fullName": "نام و تخلص",
+    "fatherName": "ولد",
+    "employeeCode": "کد پرسونل",
+    "emptyValue": "—"
+  },
+  "status": {
+    "active": "فعال",
+    "inactive": "غیرفعال"
+  },
+  "toast": {
+    "serverError": "خطا در برقراری ارتباط با سرور.",
+    "unexpectedError": "خطای غیرمنتظره در ارتباط با سرور.",
+    "successGeneric": "عملیات با موفقیت انجام شد."
+  },
+  "filters": {
+    "allBranches": "تمام نمایندگی‌ها",
+    "selectBranch": "انتخاب نمایندگی..."
+  },
+  "company": {
+    "name": "شرکت تولیدی جهان فولاد",
+    "headOffice": "دفتر مرکزی",
+    "currency": "AFN",
+    "defaultLocation": "کابل"
+  },
+  "departments": {
+    "hangar": "کارمند زیر هنگر",
+    "general": "کارمند عمومی",
+    "office": "کارمند دفتر",
+    "kitchen": "آشپزخانه",
+    "security": "گارد امنیتی",
+    "representation": "کارمند نمایندگی"
+  },
+  "pdf": {
+    "zoomIn": "بزرگ‌نمایی",
+    "zoomOut": "کوچک‌نمایی",
+    "zoomReset": "تنظیم ۱۰۰٪",
+    "reload": "بارگذاری مجدد پیش‌نمایش",
+    "generating": "در حال تولید PDF...",
+    "loading": "در حال دریافت پیش‌نمایش از سرور..."
+  },
+  "pagination": {
+    "perPage": "رکورد در صفحه",
+    "noResults": "موردی یافت نشد"
+  },
+  "voucher": {
+    "transactionTitle": "سند گردش خزانه",
+    "transactionMeta": "شماره سند: {{doc}} • {{vault}}",
+    "iframeTitle": "پیش‌نمایش سند",
+    "loading": "در حال دریافت پیش‌نمایش از سرور...",
+    "loadError": "خطا در دریافت پیش‌نمایش سند.",
+    "print": "چاپ سند",
+    "downloadPdf": "دانلود PDF",
+    "downloading": "در حال تولید PDF...",
+    "fallbackFile": "voucher.pdf",
+    "advanceTitle": "سند امانت مدیریتی",
+    "advanceMeta": "شماره سند: {{doc}} • گیرنده: {{receiver}}",
+    "receiptTitle": "قبض رسید دریافت وجه",
+    "receiptMeta": "شماره سند: {{doc}} • {{payer}}"
+  },
+  "datePreset": {
+    "today": "امروز",
+    "this_week": "این هفته",
+    "last_7_days": "۷ روز اخیر",
+    "last_7_days_long": "این هفته (۷ روز اخیر)",
+    "this_month": "این ماه",
+    "current_month": "ماه جاری",
+    "current_year": "سال جاری",
+    "last_30_days": "۳۰ روز اخیر",
+    "all_time": "کل دوره",
+    "all": "همه",
+    "custom": "دلخواه",
+    "custom_range": "تاریخ دلخواه"
+  },
+  "branch": {
+    "all": "همه شعبات",
+    "gateTitle": "انتخاب نمایندگی",
+    "gateSubtitle": "لطفاً نمایندگی‌ای که با آن کار می‌کنید را انتخاب نمایید.",
+    "gateLocationPrefix": "موقعیت:",
+    "gateLogout": "خروج از حساب"
+  },
+  "deleteConfirm": {
+    "title": "تایید حذف",
+    "question": "آیا از حذف این مورد مطمئن هستید؟",
+    "warning": " این عملیات قابل بازگشت نیست. لطفاً مطمئن باشید.",
+    "itemPrefix": "مورد",
+    "itemSuffix": "به‌طور دائمی از سیستم حذف خواهد شد.",
+    "confirmButton": "تایید و حذف"
+  },
+  "session": {
+    "warnTitle": "نشست شما به‌زودی بسته می‌شود",
+    "warnBody": "به دلیل نبود فعالیت، {{seconds}} ثانیه دیگر از سیستم خارج می‌شوید.",
+    "stay": "ادامه کار",
+    "logout": "خروج",
+    "endedIdle": "به دلیل نبود فعالیت از سیستم خارج شدید. لطفاً دوباره وارد شوید.",
+    "endedExpired": "نشست شما به پایان رسید. لطفاً دوباره وارد شوید."
+  },
+  "password": {
+    "title": "تغییر رمز عبور",
+    "forcedTitle": "تعیین رمز عبور جدید",
+    "forcedNote": "رمز عبور فعلی شما توسط مدیر سیستم ساخته شده است. برای ورود به سیستم باید یک رمز عبور شخصی تعیین کنید.",
+    "current": "رمز عبور فعلی",
+    "new": "رمز عبور جدید",
+    "confirm": "تکرار رمز عبور جدید",
+    "rule": "حداقل ۸ حرف",
+    "show": "نمایش",
+    "hide": "پنهان کردن",
+    "submit": "ذخیره رمز عبور",
+    "mismatch": "رمز عبور جدید و تکرار آن یکسان نیستند.",
+    "failed": "تغییر رمز عبور انجام نشد. لطفاً دوباره تلاش کنید.",
+    "changed": "رمز عبور با موفقیت تغییر کرد.",
+    "changeButton": "تغییر رمز عبور"
+  },
+  "sessions": {
+    "title": "دستگاه‌های فعال",
+    "limit": "(حداکثر {{count}} دستگاه)",
+    "current": "این دستگاه",
+    "lastUsed": "آخرین استفاده",
+    "signedIn": "زمان ورود",
+    "unknownDevice": "دستگاه نامشخص",
+    "closeOthers": "خروج از سایر دستگاه‌ها",
+    "closed": "سایر دستگاه‌ها از سیستم خارج شدند.",
+    "closeFailed": "خروج از سایر دستگاه‌ها انجام نشد.",
+    "loading": "در حال دریافت دستگاه‌ها...",
+    "loadFailed": "دریافت فهرست دستگاه‌ها انجام نشد.",
+    "empty": "دستگاه فعالی ثبت نشده است."
+  }
+}

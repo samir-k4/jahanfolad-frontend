@@ -1,0 +1,1348 @@
+import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { showToast as appToast } from "../utils/toast";
+import {
+  Users,
+  Tag,
+  Building,
+  Sliders,
+  Wallet,
+  Shield,
+  Database,
+  Plus,
+  Search,
+  AlertTriangle,
+  Edit2,
+  Trash2,
+  ToggleLeft,
+  ToggleRight,
+  Download,
+  Save,
+  RefreshCw,
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  CalendarClock,
+  DollarSign,
+  Printer,
+  ChevronLeft,
+  Upload,
+  Image as ImageIcon,
+  Eye,
+  KeyRound,
+  Lock,
+  LockOpen,
+} from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import UserFormModal from "../components/settings/UserFormModal";
+import PasswordResetResultModal from "../components/settings/PasswordResetResultModal";
+import CategoryFormModal from "../components/settings/CategoryFormModal";
+import PayRulesTable from "../components/settings/PayRulesTable";
+import SalaryPaymentTypesTable from "../components/settings/SalaryPaymentTypesTable";
+import { useCompany } from "../context/CompanyContext";
+import { useBranch } from "../context/BranchContext";
+import CompanyLogoPlate from "../components/common/CompanyLogoPlate";
+import useDebounce from "../hooks/useDebounce";
+import persian_af from "../utils/persian_af";
+import { apiFetch, apiList } from "../api";
+import { TooltipButton, CustomDropdown, usePagePerms } from "../components/common";
+const TAB_IDS = ["users", "categories", "company", "policies", "branches", "backup"];
+const TAB_ICONS = {
+  users: Users,
+  categories: Tag,
+  company: Building,
+  policies: Sliders,
+  branches: MapPin,
+  backup: Database,
+};
+const CATEGORY_DOMAIN_IDS = [
+  "all",
+  "product_category",
+  "expense_type",
+  "expense_category",
+  "job_category",
+  "job_position",
+  "warehouse_category",
+  "vault_type",
+];
+const LOGO_PRESETS = [
+  { key: "small", size: 60 },
+  { key: "standard", size: 80 },
+  { key: "large", size: 120 },
+  { key: "xlarge", size: 180 },
+  { key: "max", size: 250 },
+];
+const ACCOUNT_START_MONTHS = persian_af.months.map(([name], index) => ({
+  value: String(index + 1).padStart(2, "0"),
+  label: name,
+}));
+const ACCOUNT_START_MIN_YEAR = 1390;
+const ACCOUNT_START_MAX_YEAR = 1500;
+const parseAccountStart = (value) => {
+  const match = /^(\d{4})\/(\d{2})$/.exec(String(value || "").trim());
+  return match ? { year: match[1], month: match[2] } : { year: "", month: "" };
+};
+const composeAccountStart = (year, month) =>
+  year && month ? `${String(year).padStart(4, "0")}/${month}` : "";
+const LOGO_SIZE_DEFAULT = 80;
+const LOGO_MAX_BYTES = 5 * 1024 * 1024;
+const ROLE_BADGE_CLASS = {
+  super_admin: "bg-slate-900 text-white border-slate-900",
+  finance_manager: "bg-emerald-50 text-emerald-800 border-emerald-200",
+  production_manager: "bg-slate-100 text-slate-800 border-slate-200",
+  warehouse_manager: "bg-amber-50 text-amber-900 border-amber-300",
+  hr_manager: "bg-gray-100 text-gray-700 border-gray-200",
+  auditor_viewer: "bg-gray-100 text-gray-700 border-gray-200",
+};
+const ROLE_BADGE_FALLBACK = "bg-gray-100 text-gray-700 border-gray-200";
+const PANEL_CLASS = "bg-white rounded-card border border-gray-200 shadow-2xs overflow-hidden";
+const TOOLBAR_CLASS = "px-4 py-3 bg-gray-50/70 border-b border-gray-200";
+const INPUT_CLASS =
+  "w-full px-3 py-2 bg-white border border-gray-300 rounded-input text-body-text text-gray-900 outline-none focus:border-slate-800 transition-colors";
+const NUMERIC_INPUT_CLASS =
+  "w-full px-3 py-2 bg-white border border-gray-300 rounded-input text-body-text font-mono font-bold text-center text-gray-900 outline-none focus:border-slate-800 transition-colors";
+const PRIMARY_BTN_CLASS =
+  "px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-btn-text font-bold rounded-btn flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50";
+const SECONDARY_BTN_CLASS =
+  "px-3.5 py-2 bg-white hover:bg-gray-50 text-gray-700 text-btn-text font-bold rounded-btn border border-gray-300 flex items-center justify-center gap-1.5 transition-colors cursor-pointer";
+const CARD_FIELD_CLASS = "p-3.5 bg-gray-50/70 rounded-card border border-gray-200";
+const HINT_CLASS = "text-caption-text text-gray-500 block mt-1.5 whitespace-normal break-words";
+const TH_CLASS = "py-2.5 px-4 text-table-header-text font-bold text-gray-700";
+const TD_CLASS = "py-3 px-4 text-table-cell-text text-gray-800";
+const PanelHeader = ({ icon: Icon, title, subtitle, children }) => (
+  <div className="px-4 py-3 border-b border-gray-200 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="min-w-0">
+      <h2 className="text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
+        <Icon size={17} className="text-gray-400 shrink-0" />
+        <span className="whitespace-normal break-words">{title}</span>
+      </h2>
+      <p className="text-caption-text text-gray-500 mt-0.5 whitespace-normal break-words">{subtitle}</p>
+    </div>
+    {children ? <div className="shrink-0">{children}</div> : null}
+  </div>
+);
+const StatusToggle = ({ isActive, onClick, activeLabel, inactiveLabel, size = 20 }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="flex items-center gap-1.5 cursor-pointer font-bold"
+  >
+    {isActive ? (
+      <>
+        <ToggleRight size={size} className="text-emerald-600" />
+        <span className="text-caption-text font-bold text-emerald-700">{activeLabel}</span>
+      </>
+    ) : (
+      <>
+        <ToggleLeft size={size} className="text-gray-400" />
+        <span className="text-caption-text text-gray-400">{inactiveLabel}</span>
+      </>
+    )}
+  </button>
+);
+export default function SettingsPage() {
+  const { t } = useTranslation("settings");
+  const navigate = useNavigate();
+  const { canEdit: canEditUsers, canDelete: canDeleteUsers, canCreate: canCreateUsers } =
+    usePagePerms("users");
+  const { canEdit: canEditSettings } = usePagePerms("settings");
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(
+    () => searchParams.get("tab") || "users",
+  );
+  const notify = (type, message) => {
+    (appToast[type] || appToast.info)(message);
+  };
+  const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const { branches } = useBranch();
+  const [userSearch, setUserSearch] = useState("");
+  const debouncedUserSearch = useDebounce(userSearch, 1000);
+  const [userRoleFilter, setUserRoleFilter] = useState("all");
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [userModalOpen, setUserModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [resetResult, setResetResult] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [catDomainFilter, setCatDomainFilter] = useState(
+    () => searchParams.get("domain") || "all",
+  );
+  const [catSearch, setCatSearch] = useState("");
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [modalDefaultDomain, setModalDefaultDomain] = useState("expense");
+  const { updateLogo, removeLogo, syncSettingsToStateAndCache, saveLogoSize } = useCompany();
+  const [settings, setSettings] = useState({
+    company_name: "شرکت تولیدی جهان فولاد",
+    company_tagline:
+      "تولیدکننده انواع میخ‌های صنعتی و سیم‌های ساختمانی با کیفیت برتر",
+    company_about:
+      "تولید و عرضه مستقیم انواع میخ‌های صنعتی، نجاری و سیم‌های ساختمانی و صنعتی با استانداردهای بین‌المللی",
+    company_phone: "+93 799 000 111 / +93 700 222 333",
+    company_email: "info@jahanfolad.af",
+    company_address: "افغانستان، هرات، شهرک صنعتی فاز ۲، خیابان صنعت ۵",
+    company_logo: null,
+    company_logo_size: LOGO_SIZE_DEFAULT,
+    default_currency: "AFN",
+    usd_rate: "70",
+    standard_daily_hours: "8",
+    low_balance_alert_afn: "10000",
+    print_voucher_footer:
+      "سند فوق صرفاً با مهر و امضای مدیریت مالی و گیرنده وجه دارای اعتبار رسمی می‌باشد.",
+    employee_account_start: "",
+  });
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoSize = Number(settings.company_logo_size) || LOGO_SIZE_DEFAULT;
+  const accountStart = parseAccountStart(settings.employee_account_start);
+  const fetchSettings = useCallback(async () => {
+    try {
+      const data = await apiFetch("/settings/general");
+      if (data.settings) {
+        setSettings((prev) => ({ ...prev, ...data.settings }));
+      }
+    } catch (e) {
+      notify("error", e.message);
+    }
+  }, []);
+  const fetchUsers = useCallback(async () => {
+    setLoadingUsers(true);
+    try {
+      const params = new URLSearchParams();
+      if (userRoleFilter !== "all") params.append("role", userRoleFilter);
+      if (debouncedUserSearch.trim()) params.append("search", debouncedUserSearch.trim());
+      const data = await apiFetch(`/users?${params.toString()}`);
+      setUsers(data.data || []);
+      setRoles(data.roles || []);
+    } catch (e) {
+      notify("error", t("message.usersError"));
+    } finally {
+      setLoadingUsers(false);
+    }
+  }, [userRoleFilter, debouncedUserSearch, t]);
+  const [jobCategories, setJobCategories] = useState([]);
+  const [expenseTypes, setExpenseTypes] = useState([]);
+  const fetchCategories = useCallback(async () => {
+    setLoadingCategories(true);
+    try {
+      if (catDomainFilter === "all") {
+        const data = await apiFetch("/categories/all-grouped");
+        const jCats = data.job_categories || [];
+        setJobCategories(jCats);
+        const eTypes = data.expense_types || [];
+        setExpenseTypes(eTypes);
+        const withDomain = (list, domain) =>
+          (list || []).map((c) => ({ ...c, _domain: domain }));
+        setCategories([
+          ...withDomain(data.product_categories, "product_category"),
+          ...withDomain(eTypes, "expense_type"),
+          ...withDomain(data.expense_categories, "expense_category"),
+          ...withDomain(jCats, "job_category"),
+          ...withDomain(data.job_positions, "job_position"),
+          ...withDomain(data.warehouse_categories, "warehouse_category"),
+          ...withDomain(data.vault_types, "vault_type"),
+        ]);
+      } else {
+        const [domainData, jcData, etData] = await Promise.all([
+          apiList(`/categories/${encodeURIComponent(catDomainFilter)}`),
+          apiList("/categories/job_category"),
+          apiList("/categories/expense_type"),
+        ]);
+        setJobCategories(jcData);
+        setExpenseTypes(etData);
+        setCategories(
+          (Array.isArray(domainData) ? domainData : []).map((c) => ({
+            ...c,
+            _domain: catDomainFilter,
+          })),
+        );
+      }
+    } catch (e) {
+      notify("error", t("message.categoriesError"));
+    } finally {
+      setLoadingCategories(false);
+    }
+  }, [catDomainFilter, t]);
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+  useEffect(() => {
+    if (activeTab === "users") fetchUsers();
+    if (activeTab === "categories") fetchCategories();
+  }, [activeTab, fetchUsers, fetchCategories]);
+  const domainLabel = (domain) => t(`domain.${domain}`, { defaultValue: domain });
+  const roleLabel = (roleKey) => t(`role.${roleKey}`, { defaultValue: roleKey });
+  const handleToggleUserStatus = async (user) => {
+    try {
+      const data = await apiFetch(`/users/${user.id}/toggle-status`, {
+        method: "POST",
+      });
+      notify("success", data.message || t("message.userStatusChanged"));
+      fetchUsers();
+    } catch (e) {
+      notify("error", e.message);
+    }
+  };
+  const isLocked = (user) =>
+    Boolean(user?.locked_until) && new Date(user.locked_until).getTime() > Date.now();
+  const handleUnlockUser = async (user) => {
+    try {
+      const data = await apiFetch(`/users/${user.id}/unlock`, { method: "POST" });
+      notify("success", data?.message || t("users.lock.unlocked"));
+      fetchUsers();
+    } catch (e) {
+      notify("error", e.message || t("users.lock.failed"));
+    }
+  };
+  const handleResetPassword = async (user) => {
+    if (!window.confirm(t("users.reset.confirm", { name: user.name }))) return;
+    try {
+      const data = await apiFetch(`/users/${user.id}/reset-password`, { method: "POST" });
+      setResetResult({ name: user.name, password: data?.temporary_password });
+      fetchUsers();
+    } catch (e) {
+      notify("error", e.message || t("users.reset.failed"));
+    }
+  };
+  const handleDeleteUser = async (user) => {
+    if (!window.confirm(t("users.confirmDelete", { name: user.name }))) return;
+    try {
+      const data = await apiFetch(`/users/${user.id}`, { method: "DELETE" });
+      notify("success", data?.message || t("message.userDeleted"));
+      fetchUsers();
+    } catch (e) {
+      notify("error", e.message);
+    }
+  };
+  const handleToggleCategoryStatus = async (cat) => {
+    try {
+      const targetDomain = cat._domain || catDomainFilter;
+      const data = await apiFetch(
+        `/categories/${encodeURIComponent(targetDomain)}/${cat.id}/toggle`,
+        { method: "POST" },
+      );
+      notify("success", data?.message || t("message.categoryStatusChanged"));
+      fetchCategories();
+    } catch (e) {
+      notify("error", e.message);
+    }
+  };
+  const handleDeleteCategory = async (cat) => {
+    if (!window.confirm(t("categories.confirmDelete", { name: cat.name }))) return;
+    try {
+      const targetDomain = cat._domain || catDomainFilter;
+      const data = await apiFetch(
+        `/categories/${encodeURIComponent(targetDomain)}/${cat.id}`,
+        { method: "DELETE" },
+      );
+      notify("success", data?.message || t("message.categoryDeleted"));
+      fetchCategories();
+    } catch (e) {
+      notify("error", e.message);
+    }
+  };
+  const handleSaveSettings = async (e) => {
+    if (e) e.preventDefault();
+    setSavingSettings(true);
+    try {
+      await apiFetch("/settings/general", {
+        method: "POST",
+        body: { settings },
+      });
+      syncSettingsToStateAndCache(settings);
+      notify("success", t("message.settingsSaved"));
+    } catch (err) {
+      notify("error", err.message);
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+  const handleLogoFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      notify("error", t("company.logoInvalidType"));
+      return;
+    }
+    if (file.size > LOGO_MAX_BYTES) {
+      notify("error", t("company.logoTooLarge"));
+      return;
+    }
+    setUploadingLogo(true);
+    try {
+      const res = await updateLogo(file);
+      setSettings((prev) => ({ ...prev, company_logo: res.logo_url }));
+      notify("success", t("company.logoUploaded"));
+    } catch (err) {
+      notify("error", err.message || t("company.logoUploadError"));
+    } finally {
+      setUploadingLogo(false);
+      e.target.value = "";
+    }
+  };
+  const handleRemoveLogo = async () => {
+    if (!window.confirm(t("company.logoRemoveConfirm"))) return;
+    setUploadingLogo(true);
+    try {
+      await removeLogo();
+      setSettings((prev) => ({ ...prev, company_logo: null }));
+      notify("success", t("company.logoRemoved"));
+    } catch (err) {
+      notify("error", err.message || t("company.logoRemoveError"));
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+  const handleDownloadBackup = async () => {
+    try {
+      const data = await apiFetch("/settings/backup");
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `jahan_folad_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      notify("success", t("message.backupDownloaded"));
+    } catch (err) {
+      notify("error", t("message.backupError"));
+    }
+  };
+  const handleLogoSizeChange = (size) => {
+    setSettings((prev) => ({ ...prev, company_logo_size: size }));
+    if (saveLogoSize) saveLogoSize(size);
+  };
+  const filteredCategories = categories.filter((c) => {
+    if (!catSearch.trim()) return true;
+    const s = catSearch.toLowerCase();
+    return (
+      c.name?.toLowerCase().includes(s) ||
+      c.description?.toLowerCase().includes(s) ||
+      domainLabel(c._domain)?.toLowerCase().includes(s) ||
+      c.job_category?.name?.toLowerCase().includes(s)
+    );
+  });
+  const userActions = (u) => (
+    <div className="flex items-center justify-center gap-1.5">
+      <TooltipButton
+        icon={Eye}
+        tooltip={t("users.tooltip.view")}
+        onClick={() => navigate(`/settings/users/${u.id}`)}
+        className="bg-white text-gray-500 border border-gray-300 hover:text-blue-600 hover:border-blue-300"
+      />
+      {canEditUsers && (
+        <TooltipButton
+          icon={Edit2}
+          tooltip={t("users.tooltip.edit")}
+          onClick={() => {
+            setSelectedUser(u);
+            setUserModalOpen(true);
+          }}
+          className="bg-white text-gray-500 border border-gray-300 hover:text-amber-700 hover:border-amber-300"
+        />
+      )}
+      {canEditUsers && isLocked(u) && (
+        <TooltipButton
+          icon={LockOpen}
+          tooltip={t("users.lock.tooltip")}
+          onClick={() => handleUnlockUser(u)}
+          className="bg-white text-amber-700 border border-amber-300 hover:bg-amber-50"
+        />
+      )}
+      {canEditUsers && (
+        <TooltipButton
+          icon={KeyRound}
+          tooltip={t("users.reset.tooltip")}
+          onClick={() => handleResetPassword(u)}
+          className="bg-white text-gray-500 border border-gray-300 hover:text-slate-800 hover:border-slate-400"
+        />
+      )}
+      {canDeleteUsers && (
+        <TooltipButton
+          icon={Trash2}
+          tooltip={t("users.tooltip.delete")}
+          onClick={() => handleDeleteUser(u)}
+          className="bg-white text-gray-500 border border-gray-300 hover:text-rose-600 hover:border-rose-300"
+        />
+      )}
+    </div>
+  );
+  return (
+    <div className="w-full space-y-3.5 font-sans" dir="rtl">
+      <div className={`${PANEL_CLASS} px-4 py-3`}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <Link
+              to="/"
+              className="text-caption-text text-gray-400 hover:text-gray-600 font-medium inline-flex items-center gap-1 transition-colors"
+            >
+              <ChevronLeft size={12} />
+              <span>{t("page.back")}</span>
+            </Link>
+            <h1 className="text-xl font-bold text-gray-800 tracking-tight mt-1">
+              {t("page.title")}
+            </h1>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" onClick={handleDownloadBackup} className={SECONDARY_BTN_CLASS}>
+              <Download size={15} className="text-gray-500" />
+              <span>{t("action.backup")}</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveSettings}
+              disabled={savingSettings}
+              className={PRIMARY_BTN_CLASS}
+            >
+              <Save size={15} />
+              <span>{savingSettings ? t("action.saving") : t("action.save")}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
+        <div className="lg:col-span-3 xl:col-span-2 lg:sticky lg:top-24">
+          <nav
+            className={`${PANEL_CLASS} p-1.5 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible`}
+          >
+            {TAB_IDS.map((tabId) => {
+              const Icon = TAB_ICONS[tabId];
+              const isActive = activeTab === tabId;
+              return (
+                <button
+                  key={tabId}
+                  type="button"
+                  onClick={() => setActiveTab(tabId)}
+                  className={`shrink-0 lg:w-full text-right px-3 py-2 rounded-btn flex items-center gap-2 transition-colors cursor-pointer text-btn-text ${
+                    isActive
+                      ? "bg-slate-800 text-white font-bold"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-medium"
+                  }`}
+                >
+                  <Icon size={16} className={isActive ? "text-white" : "text-gray-400"} />
+                  <span className="whitespace-nowrap">{t(`tab.${tabId}.label`)}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+        <div className="lg:col-span-9 xl:col-span-10 min-w-0">
+          {activeTab === "users" && (
+            <div className={PANEL_CLASS}>
+              <PanelHeader icon={Shield} title={t("users.title")} subtitle={t("users.subtitle")}>
+                {canCreateUsers && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedUser(null);
+                      setUserModalOpen(true);
+                    }}
+                    className={`${PRIMARY_BTN_CLASS} w-full sm:w-auto`}
+                  >
+                    <Plus size={16} />
+                    <span>{t("users.add")}</span>
+                  </button>
+                )}
+              </PanelHeader>
+              <div className={`${TOOLBAR_CLASS} flex flex-col sm:flex-row items-stretch sm:items-center gap-2`}>
+                <div className="relative flex-1">
+                  <Search size={15} className="absolute right-3 top-2.5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder={t("users.searchPlaceholder")}
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    className={`${INPUT_CLASS} pr-9`}
+                  />
+                </div>
+                <div className="w-full sm:w-56 shrink-0">
+                  <CustomDropdown
+                    value={userRoleFilter}
+                    onChange={(val) => setUserRoleFilter(val)}
+                    options={[
+                      { value: "all", label: t("users.allRoles") },
+                      ...roles.map((r) => ({ value: String(r.id), label: r.title })),
+                    ]}
+                    buttonClassName="w-full px-3 py-2 bg-white border border-gray-300 rounded-input text-label-text font-bold text-gray-700"
+                  />
+                </div>
+              </div>
+              {loadingUsers ? (
+                <div className="py-16 text-center text-gray-400">
+                  <RefreshCw size={26} className="mx-auto animate-spin mb-2" />
+                  <p className="text-caption-text">{t("users.loading")}</p>
+                </div>
+              ) : users.length === 0 ? (
+                <div className="py-16 px-4 text-center text-gray-400">
+                  <Users size={30} className="mx-auto mb-2 opacity-40" />
+                  <p className="text-body-text font-bold text-gray-600">{t("users.emptyTitle")}</p>
+                  <p className="text-caption-text mt-1">{t("users.emptyHint")}</p>
+                </div>
+              ) : (
+                <>
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-right">
+                      <thead className="bg-gray-50/70 border-b border-gray-200">
+                        <tr>
+                          <th className={TH_CLASS}>{t("users.col.user")}</th>
+                          <th className={TH_CLASS}>{t("users.col.username")}</th>
+                          <th className={TH_CLASS}>{t("users.col.role")}</th>
+                          <th className={TH_CLASS}>{t("users.col.branch")}</th>
+                          <th className={TH_CLASS}>{t("users.col.status")}</th>
+                          <th className={`${TH_CLASS} w-36 text-center`}>{t("users.col.actions")}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {users.map((u) => (
+                          <tr key={u.id} className="hover:bg-gray-50/70 transition-colors">
+                            <td className={TD_CLASS}>
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-9 h-9 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-caption-text shrink-0">
+                                  {u.name ? u.name.charAt(0) : "U"}
+                                </div>
+                                <div className="min-w-0">
+                                  <span className="font-bold text-gray-900 block whitespace-normal break-words">
+                                    {u.name}
+                                  </span>
+                                  <span className="text-caption-text text-gray-400 block font-mono" dir="ltr">
+                                    {u.email}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className={TD_CLASS}>
+                              <span
+                                className="font-mono font-bold text-gray-700 bg-gray-100/80 px-2 py-0.5 rounded-badge"
+                                dir="ltr"
+                              >
+                                {u.username || t("placeholder.dash")}
+                              </span>
+                            </td>
+                            <td className={TD_CLASS}>
+                              <span
+                                className={`inline-block px-2.5 py-0.5 rounded-badge border text-caption-text font-bold ${
+                                  ROLE_BADGE_CLASS[u.role] || ROLE_BADGE_FALLBACK
+                                }`}
+                              >
+                                {roleLabel(u.role)}
+                              </span>
+                            </td>
+                            <td className={`${TD_CLASS} text-gray-600`}>
+                              {u.branch ? u.branch.name : t("users.centralOffice")}
+                            </td>
+                            <td className={TD_CLASS}>
+                              <div className="flex items-center gap-2">
+                                <StatusToggle
+                                  isActive={u.status === "active"}
+                                  onClick={() => handleToggleUserStatus(u)}
+                                  activeLabel={t("status.active")}
+                                  inactiveLabel={t("status.inactive")}
+                                  size={22}
+                                />
+                                {isLocked(u) && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-badge bg-amber-50 border border-amber-200 text-caption-text font-bold text-amber-800">
+                                    <Lock size={12} />
+                                    {t("users.lock.badge")}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className={`${TD_CLASS} text-center`}>{userActions(u)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="md:hidden divide-y divide-gray-100">
+                    {users.map((u) => (
+                      <div key={u.id} className="p-4 space-y-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-caption-text shrink-0">
+                            {u.name ? u.name.charAt(0) : "U"}
+                          </div>
+                          <div className="min-w-0">
+                            <span className="font-bold text-gray-900 block whitespace-normal break-words">
+                              {u.name}
+                            </span>
+                            <span className="text-caption-text text-gray-400 block font-mono" dir="ltr">
+                              {u.email}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <span className="text-caption-text text-gray-500 block">
+                              {t("users.col.username")}
+                            </span>
+                            <span className="font-mono font-bold text-gray-800 text-table-cell-text" dir="ltr">
+                              {u.username || t("placeholder.dash")}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-caption-text text-gray-500 block">
+                              {t("users.col.branch")}
+                            </span>
+                            <span className="text-table-cell-text text-gray-800">
+                              {u.branch ? u.branch.name : t("users.centralOffice")}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-caption-text text-gray-500 block mb-0.5">
+                              {t("users.col.role")}
+                            </span>
+                            <span
+                              className={`inline-block px-2.5 py-0.5 rounded-badge border text-caption-text font-bold ${
+                                ROLE_BADGE_CLASS[u.role] || ROLE_BADGE_FALLBACK
+                              }`}
+                            >
+                              {roleLabel(u.role)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-caption-text text-gray-500 block mb-0.5">
+                              {t("users.col.status")}
+                            </span>
+                            <StatusToggle
+                              isActive={u.status === "active"}
+                              onClick={() => handleToggleUserStatus(u)}
+                              activeLabel={t("status.active")}
+                              inactiveLabel={t("status.inactive")}
+                            />
+                          </div>
+                        </div>
+                        <div className="pt-2 border-t border-gray-100 flex justify-end">
+                          {userActions(u)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          {activeTab === "categories" && (
+            <div className={PANEL_CLASS}>
+              <PanelHeader icon={Tag} title={t("categories.title")} subtitle={t("categories.subtitle")}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(null);
+                    setModalDefaultDomain(
+                      catDomainFilter === "all" ? "expense_category" : catDomainFilter,
+                    );
+                    setCategoryModalOpen(true);
+                  }}
+                  className={`${PRIMARY_BTN_CLASS} w-full sm:w-auto`}
+                >
+                  <Plus size={16} />
+                  <span>{t("categories.add")}</span>
+                </button>
+              </PanelHeader>
+              <div className={`${TOOLBAR_CLASS} space-y-2.5`}>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {CATEGORY_DOMAIN_IDS.map((domain) => (
+                    <button
+                      key={domain}
+                      type="button"
+                      onClick={() => setCatDomainFilter(domain)}
+                      className={`px-3 py-1.5 rounded-btn border text-caption-text font-bold transition-colors cursor-pointer ${
+                        catDomainFilter === domain
+                          ? "bg-slate-800 text-white border-slate-800"
+                          : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      {domainLabel(domain)}
+                    </button>
+                  ))}
+                </div>
+                <div className="relative">
+                  <Search size={15} className="absolute right-3 top-2.5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder={t("categories.searchPlaceholder")}
+                    value={catSearch}
+                    onChange={(e) => setCatSearch(e.target.value)}
+                    className={`${INPUT_CLASS} pr-9`}
+                  />
+                </div>
+              </div>
+              <div className="p-4">
+                {loadingCategories ? (
+                  <div className="py-16 text-center text-gray-400">
+                    <RefreshCw size={26} className="mx-auto animate-spin mb-2" />
+                    <p className="text-caption-text">{t("categories.loading")}</p>
+                  </div>
+                ) : filteredCategories.length === 0 ? (
+                  <div className="py-16 text-center text-gray-400">
+                    <Tag size={30} className="mx-auto mb-2 opacity-40" />
+                    <p className="text-body-text font-bold text-gray-600">
+                      {t("categories.emptyTitle")}
+                    </p>
+                    <p className="text-caption-text mt-1">{t("categories.emptyHint")}</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+                    {filteredCategories.map((cat) => (
+                      <div
+                        key={`${cat._domain || "cat"}-${cat.id}`}
+                        className={`p-3.5 rounded-card border flex flex-col justify-between transition-colors ${
+                          cat.is_active
+                            ? "bg-white border-gray-200 shadow-2xs hover:border-gray-300"
+                            : "bg-gray-50/70 border-gray-200 opacity-60"
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                            <span className="px-2 py-0.5 rounded-badge border border-gray-200 bg-gray-100/80 text-caption-text font-bold text-gray-700">
+                              {domainLabel(cat._domain)}
+                            </span>
+                            {cat.job_category && (
+                              <span className="px-2 py-0.5 rounded-badge border border-gray-200 bg-white text-caption-text font-bold text-gray-600">
+                                {t("categories.jobCategory", { name: cat.job_category.name })}
+                              </span>
+                            )}
+                            {cat.expense_type && (
+                              <span className="px-2 py-0.5 rounded-badge border border-amber-300 bg-amber-50 text-caption-text font-bold text-amber-900">
+                                {t("categories.expenseType", { name: cat.expense_type.name })}
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="font-bold text-gray-900 text-body-text mb-1 whitespace-normal break-words">
+                            {cat.name}
+                          </h3>
+                          {cat.description && (
+                            <p className="text-caption-text text-gray-500 leading-relaxed mb-3 whitespace-normal break-words">
+                              {cat.description}
+                            </p>
+                          )}
+                        </div>
+                        <div className="pt-3 mt-2 border-t border-gray-100 flex items-center justify-between gap-2">
+                          <StatusToggle
+                            isActive={cat.is_active}
+                            onClick={() => handleToggleCategoryStatus(cat)}
+                            activeLabel={t("status.active")}
+                            inactiveLabel={t("status.inactive")}
+                          />
+                          <div className="flex items-center gap-1.5">
+                            <TooltipButton
+                              icon={Edit2}
+                              tooltip={t("categories.tooltip.edit")}
+                              onClick={() => {
+                                setSelectedCategory(cat);
+                                setModalDefaultDomain(cat._domain || catDomainFilter);
+                                setCategoryModalOpen(true);
+                              }}
+                              className="bg-white text-gray-500 border border-gray-300 hover:text-amber-700 hover:border-amber-300"
+                            />
+                            <TooltipButton
+                              icon={Trash2}
+                              tooltip={t("categories.tooltip.delete")}
+                              onClick={() => handleDeleteCategory(cat)}
+                              className="bg-white text-gray-500 border border-gray-300 hover:text-rose-600 hover:border-rose-300"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          {activeTab === "company" && (
+            <form onSubmit={handleSaveSettings} className={PANEL_CLASS}>
+              <PanelHeader icon={Building} title={t("company.title")} subtitle={t("company.subtitle")} />
+              <div className="p-4 space-y-4">
+                <div className={`${CARD_FIELD_CLASS} space-y-3.5`}>
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3.5">
+                    <div className="space-y-1.5 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <ImageIcon size={16} className="text-gray-400 shrink-0" />
+                        <h3 className="text-label-text font-bold text-gray-800 whitespace-normal break-words">
+                          {t("company.logoTitle")}
+                        </h3>
+                      </div>
+                      <p className="text-caption-text text-gray-500 leading-relaxed whitespace-normal break-words">
+                        {t("company.logoHint")}
+                      </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 lg:shrink-0">
+                      <div className="bg-white p-3 border border-gray-300 rounded-card shadow-2xs flex items-center justify-center w-full sm:w-auto sm:min-w-[160px] sm:max-w-[260px] min-h-[100px] overflow-hidden">
+                        <CompanyLogoPlate
+                          logo={settings.company_logo}
+                          companyName={settings.company_name}
+                          height={logoSize}
+                          width={logoSize}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5 shrink-0">
+                        <label
+                          className={`flex items-center justify-center gap-1.5 px-3.5 py-2 text-btn-text font-bold rounded-btn cursor-pointer transition-colors ${
+                            uploadingLogo
+                              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                              : "bg-slate-800 hover:bg-slate-900 text-white"
+                          }`}
+                        >
+                          {uploadingLogo ? (
+                            <RefreshCw size={14} className="animate-spin" />
+                          ) : (
+                            <Upload size={14} />
+                          )}
+                          <span>
+                            {settings.company_logo
+                              ? t("company.logoChange")
+                              : t("company.logoUpload")}
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            disabled={uploadingLogo}
+                            onChange={handleLogoFileChange}
+                            className="hidden"
+                          />
+                        </label>
+                        {settings.company_logo && (
+                          <button
+                            type="button"
+                            disabled={uploadingLogo}
+                            onClick={handleRemoveLogo}
+                            className="text-caption-text font-bold text-rose-600 hover:text-rose-700 text-center cursor-pointer transition-colors"
+                          >
+                            {t("company.logoRemove")}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="pt-3 border-t border-gray-200">
+                    <div className="flex items-center justify-between gap-3 mb-2">
+                      <span className="text-label-text font-bold text-gray-700">
+                        {t("company.logoSize")}
+                      </span>
+                      <span
+                        className="px-2 py-0.5 text-caption-text font-mono font-bold bg-gray-100/80 text-gray-800 border border-gray-200 rounded-badge"
+                        dir="ltr"
+                      >
+                        {logoSize} px
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="40"
+                      max="250"
+                      step="5"
+                      value={logoSize}
+                      onChange={(e) => handleLogoSizeChange(Number(e.target.value))}
+                      className="w-full accent-slate-800 cursor-pointer"
+                    />
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+                      {LOGO_PRESETS.map((preset) => (
+                        <button
+                          key={preset.size}
+                          type="button"
+                          onClick={() => handleLogoSizeChange(preset.size)}
+                          className={`px-2.5 py-1 text-caption-text rounded-badge border transition-colors cursor-pointer ${
+                            logoSize === preset.size
+                              ? "bg-slate-800 text-white border-slate-800 font-bold"
+                              : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+                          }`}
+                        >
+                          {t(`company.preset.${preset.key}`)}
+                          <span className="font-mono opacity-60 mr-1" dir="ltr">
+                            {preset.size}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-label-text text-gray-700 mb-1">
+                      {t("company.field.name")} <span className="text-rose-600">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={settings.company_name}
+                      onChange={(e) => setSettings({ ...settings, company_name: e.target.value })}
+                      className={`${INPUT_CLASS} font-bold`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-label-text text-gray-700 mb-1">
+                      {t("company.field.tagline")}
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.company_tagline}
+                      onChange={(e) => setSettings({ ...settings, company_tagline: e.target.value })}
+                      className={INPUT_CLASS}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-label-text text-gray-700 mb-1">
+                      {t("company.field.about")}
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.company_about || ""}
+                      onChange={(e) => setSettings({ ...settings, company_about: e.target.value })}
+                      className={INPUT_CLASS}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-label-text text-gray-700 mb-1">
+                      {t("company.field.phone")}
+                    </label>
+                    <div className="relative">
+                      <Phone size={15} className="absolute right-3 top-2.5 text-gray-400" />
+                      <input
+                        type="text"
+                        dir="ltr"
+                        value={settings.company_phone}
+                        onChange={(e) => setSettings({ ...settings, company_phone: e.target.value })}
+                        className={`${INPUT_CLASS} pr-9 font-mono text-left`}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-label-text text-gray-700 mb-1">
+                      {t("company.field.email")}
+                    </label>
+                    <div className="relative">
+                      <Mail size={15} className="absolute right-3 top-2.5 text-gray-400" />
+                      <input
+                        type="email"
+                        dir="ltr"
+                        value={settings.company_email}
+                        onChange={(e) => setSettings({ ...settings, company_email: e.target.value })}
+                        className={`${INPUT_CLASS} pr-9 font-mono text-left`}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-label-text text-gray-700 mb-1">
+                      {t("company.field.address")}
+                    </label>
+                    <div className="relative">
+                      <MapPin size={15} className="absolute right-3 top-2.5 text-gray-400" />
+                      <input
+                        type="text"
+                        value={settings.company_address}
+                        onChange={(e) => setSettings({ ...settings, company_address: e.target.value })}
+                        className={`${INPUT_CLASS} pr-9`}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className={`${CARD_FIELD_CLASS} space-y-2.5`}>
+                  <h3 className="text-label-text font-bold text-gray-800 flex items-center gap-2">
+                    <Printer size={15} className="text-gray-400 shrink-0" />
+                    <span className="whitespace-normal break-words">{t("company.footerTitle")}</span>
+                  </h3>
+                  <textarea
+                    rows={3}
+                    value={settings.print_voucher_footer}
+                    onChange={(e) =>
+                      setSettings({ ...settings, print_voucher_footer: e.target.value })
+                    }
+                    className={`${INPUT_CLASS} resize-none`}
+                  />
+                  <span className={HINT_CLASS}>{t("company.footerHint")}</span>
+                </div>
+                <div className="pt-1 flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={savingSettings}
+                    className={`${PRIMARY_BTN_CLASS} w-full sm:w-auto`}
+                  >
+                    <Save size={16} />
+                    <span>{savingSettings ? t("action.saving") : t("action.saveCompany")}</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
+          {activeTab === "policies" && (
+            <form onSubmit={handleSaveSettings} className={PANEL_CLASS}>
+              <PanelHeader icon={Sliders} title={t("policies.title")} subtitle={t("policies.subtitle")} />
+              <div className="p-4 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                  <div className={CARD_FIELD_CLASS}>
+                    <label className="text-label-text font-bold text-gray-800 mb-1 flex items-center gap-1.5">
+                      <Clock size={15} className="text-gray-400 shrink-0" />
+                      <span className="whitespace-normal break-words">{t("policies.dailyHours")}</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="24"
+                      dir="ltr"
+                      onFocus={(e) => e.target.select()}
+                      onWheel={(e) => e.target.blur()}
+                      value={settings.standard_daily_hours}
+                      onChange={(e) =>
+                        setSettings({ ...settings, standard_daily_hours: e.target.value })
+                      }
+                      className={NUMERIC_INPUT_CLASS}
+                    />
+                    <span className={HINT_CLASS}>{t("policies.dailyHoursHint")}</span>
+                  </div>
+                  <div className={CARD_FIELD_CLASS}>
+                    <label className="text-label-text font-bold text-gray-800 mb-1 flex items-center gap-1.5">
+                      <DollarSign size={15} className="text-gray-400 shrink-0" />
+                      <span className="whitespace-normal break-words">{t("policies.currency")}</span>
+                    </label>
+                    <CustomDropdown
+                      value={settings.default_currency}
+                      onChange={(val) => setSettings({ ...settings, default_currency: val })}
+                      options={[
+                        { value: "AFN", label: t("policies.currencyOption.AFN") },
+                        { value: "USD", label: t("policies.currencyOption.USD") },
+                      ]}
+                      buttonClassName="w-full px-3 py-2 bg-white border border-gray-300 rounded-input text-label-text font-bold text-gray-800"
+                    />
+                    <span className={HINT_CLASS}>{t("policies.currencyHint")}</span>
+                  </div>
+                  <div className={CARD_FIELD_CLASS}>
+                    <label className="text-label-text font-bold text-gray-800 mb-1 flex items-center gap-1.5">
+                      <DollarSign size={15} className="text-gray-400 shrink-0" />
+                      <span className="whitespace-normal break-words">{t("policies.usdRate")}</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0.01"
+                      step="any"
+                      dir="ltr"
+                      onFocus={(e) => e.target.select()}
+                      onWheel={(e) => e.target.blur()}
+                      value={settings.usd_rate}
+                      onChange={(e) => setSettings({ ...settings, usd_rate: e.target.value })}
+                      className={NUMERIC_INPUT_CLASS}
+                    />
+                    <span className={HINT_CLASS}>{t("policies.usdRateHint")}</span>
+                  </div>
+                  <div className={CARD_FIELD_CLASS}>
+                    <label className="text-label-text font-bold text-gray-800 mb-1 flex items-center gap-1.5">
+                      <AlertTriangle size={15} className="text-amber-600 shrink-0" />
+                      <span className="whitespace-normal break-words">{t("policies.lowBalance")}</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      dir="ltr"
+                      onFocus={(e) => e.target.select()}
+                      onWheel={(e) => e.target.blur()}
+                      value={settings.low_balance_alert_afn}
+                      onChange={(e) =>
+                        setSettings({ ...settings, low_balance_alert_afn: e.target.value })
+                      }
+                      className={NUMERIC_INPUT_CLASS}
+                    />
+                    <span className={HINT_CLASS}>{t("policies.lowBalanceHint")}</span>
+                  </div>
+                  <div className={CARD_FIELD_CLASS}>
+                    <label className="text-label-text font-bold text-gray-800 mb-1 flex items-center gap-1.5">
+                      <CalendarClock size={15} className="text-gray-400 shrink-0" />
+                      <span className="whitespace-normal break-words">{t("policies.accountStart")}</span>
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={ACCOUNT_START_MIN_YEAR}
+                        max={ACCOUNT_START_MAX_YEAR}
+                        step="1"
+                        dir="ltr"
+                        placeholder={t("policies.accountStartYear")}
+                        onFocus={(e) => e.target.select()}
+                        onWheel={(e) => e.target.blur()}
+                        value={accountStart.year}
+                        onChange={(e) =>
+                          setSettings({
+                            ...settings,
+                            employee_account_start: composeAccountStart(
+                              e.target.value,
+                              accountStart.month,
+                            ),
+                          })
+                        }
+                        className={`${NUMERIC_INPUT_CLASS} w-28 shrink-0`}
+                      />
+                      <CustomDropdown
+                        value={accountStart.month}
+                        onChange={(val) =>
+                          setSettings({
+                            ...settings,
+                            employee_account_start: composeAccountStart(accountStart.year, val),
+                          })
+                        }
+                        options={ACCOUNT_START_MONTHS}
+                        placeholder={t("policies.accountStartMonth")}
+                        buttonClassName="w-full px-3 py-2 bg-white border border-gray-300 rounded-input text-label-text font-bold text-gray-800"
+                      />
+                    </div>
+                    <span className={HINT_CLASS}>{t("policies.accountStartHint")}</span>
+                  </div>
+                </div>
+                <div className="pt-1 flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={savingSettings}
+                    className={`${PRIMARY_BTN_CLASS} w-full sm:w-auto`}
+                  >
+                    <Save size={16} />
+                    <span>{savingSettings ? t("action.saving") : t("action.savePolicies")}</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
+          {activeTab === "policies" && (
+            <div className={`${PANEL_CLASS} mt-3.5`}>
+              <PanelHeader
+                icon={Sliders}
+                title={t("payRules.title")}
+                subtitle={t("payRules.subtitle")}
+              />
+              <PayRulesTable canEdit={canEditSettings} />
+            </div>
+          )}
+          {activeTab === "policies" && (
+            <div className={`${PANEL_CLASS} mt-3.5`}>
+              <PanelHeader
+                icon={Wallet}
+                title={t("paymentTypes.title")}
+                subtitle={t("paymentTypes.subtitle")}
+              />
+              <SalaryPaymentTypesTable canEdit={canEditSettings} />
+            </div>
+          )}
+          {activeTab === "branches" && (
+            <div className={PANEL_CLASS}>
+              <PanelHeader icon={MapPin} title={t("branches.title")} subtitle={t("branches.subtitle")} />
+              <div className="p-4">
+                {branches.length === 0 ? (
+                  <div className="py-12 text-center text-gray-400">
+                    <Building size={30} className="mx-auto mb-2 opacity-40" />
+                    <p className="text-caption-text">{t("branches.empty")}</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                    {branches.map((b) => (
+                      <div
+                        key={b.id}
+                        className="p-3.5 rounded-card border border-gray-200 bg-gray-50/70 flex items-start gap-3"
+                      >
+                        <div className="w-10 h-10 rounded-btn bg-white border border-gray-200 text-gray-500 flex items-center justify-center shrink-0">
+                          <Building size={18} />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-bold text-gray-900 text-body-text whitespace-normal break-words">
+                            {b.name}
+                          </h3>
+                          <p className="text-caption-text text-gray-500 mt-1 whitespace-normal break-words">
+                            {b.location || t("branches.defaultLocation")}
+                          </p>
+                          {b.phone && (
+                            <p className="text-caption-text font-mono text-gray-400 mt-0.5" dir="ltr">
+                              {b.phone}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          {activeTab === "backup" && (
+            <div className={PANEL_CLASS}>
+              <PanelHeader icon={Database} title={t("backup.title")} subtitle={t("backup.subtitle")} />
+              <div className="p-4 space-y-4">
+                <div className="p-4 rounded-card bg-slate-800 text-white flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-base sm:text-lg whitespace-normal break-words">
+                      {t("backup.downloadTitle")}
+                    </h3>
+                    <p className="text-caption-text text-gray-300 mt-1 leading-relaxed whitespace-normal break-words">
+                      {t("backup.downloadHint")}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDownloadBackup}
+                    className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-800 text-btn-text font-bold rounded-btn flex items-center justify-center gap-2 transition-colors cursor-pointer shrink-0"
+                  >
+                    <Download size={16} />
+                    <span>{t("backup.download")}</span>
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className={`${CARD_FIELD_CLASS} text-center`}>
+                    <span className="text-caption-text font-bold text-gray-500 block">
+                      {t("backup.version")}
+                    </span>
+                    <span className="text-base font-bold text-gray-900 font-mono mt-1 block" dir="ltr">
+                      v2.0 PRO
+                    </span>
+                  </div>
+                  <div className={`${CARD_FIELD_CLASS} text-center`}>
+                    <span className="text-caption-text font-bold text-gray-500 block">
+                      {t("backup.engine")}
+                    </span>
+                    <span className="text-base font-bold text-gray-900 font-mono mt-1 block" dir="ltr">
+                      MySQL 8.x
+                    </span>
+                  </div>
+                  <div className={`${CARD_FIELD_CLASS} text-center`}>
+                    <span className="text-caption-text font-bold text-gray-500 block">
+                      {t("backup.security")}
+                    </span>
+                    <span className="text-base font-bold text-emerald-700 mt-1 block">
+                      {t("backup.securityValue")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      <UserFormModal
+        isOpen={userModalOpen}
+        onClose={() => setUserModalOpen(false)}
+        user={selectedUser}
+        roles={roles}
+        branches={branches}
+        onSaved={(msg) => {
+          notify("success", msg);
+          fetchUsers();
+        }}
+      />
+      <PasswordResetResultModal
+        isOpen={Boolean(resetResult)}
+        onClose={() => setResetResult(null)}
+        userName={resetResult?.name}
+        password={resetResult?.password}
+      />
+      <CategoryFormModal
+        isOpen={categoryModalOpen}
+        onClose={() => setCategoryModalOpen(false)}
+        category={selectedCategory}
+        defaultDomain={modalDefaultDomain}
+        jobCategories={jobCategories}
+        expenseTypes={expenseTypes}
+        onSaved={(msg) => {
+          notify("success", msg);
+          fetchCategories();
+        }}
+      />
+    </div>
+  );
+}

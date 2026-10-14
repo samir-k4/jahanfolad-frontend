@@ -1,0 +1,259 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========================================================================= */
+/* Typography: Roshan AL Global @font-face Declarations                      */
+/* ========================================================================= */
+
+@font-face {
+  font-family: 'Roshan AL';
+  src: url('/Fonts/RoshanAL-Extralight.ttf') format('truetype'),
+       url('/fonts/RoshanAL-Extralight.ttf') format('truetype');
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roshan AL';
+  src: url('/Fonts/RoshanAL-Light.ttf') format('truetype'),
+       url('/fonts/RoshanAL-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roshan AL';
+  src: url('/Fonts/RoshanAL-Regular.ttf') format('truetype'),
+       url('/fonts/RoshanAL-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roshan AL';
+  src: url('/Fonts/RoshanAL-Medium.ttf') format('truetype'),
+       url('/fonts/RoshanAL-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roshan AL';
+  src: url('/Fonts/RoshanAL-Semibold.ttf') format('truetype'),
+       url('/fonts/RoshanAL-Semibold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roshan AL';
+  src: url('/Fonts/RoshanAL-Bold.ttf') format('truetype'),
+       url('/fonts/RoshanAL-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ========================================================================= */
+/* Universal Font Enforcement & Industrial Reset                             */
+/* ========================================================================= */
+
+*, *::before, *::after {
+  font-family: 'Roshan AL', sans-serif !important;
+}
+
+@layer base {
+  html, body, #root {
+    font-family: 'Roshan AL', sans-serif !important;
+    background-color: #f9fafb; /* bg-gray-50 */
+    color: #4b5563; /* text-gray-600 */
+    direction: rtl;
+  }
+
+  /* Dropdown styling */
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22%234B5563%22%3E%3Cpath%20d%3D%22M7%2010l5%205%205-5z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-size: 1.25rem;
+    cursor: pointer;
+  }
+
+  [dir="rtl"] select,
+  html[dir="rtl"] select,
+  body[dir="rtl"] select,
+  select:dir(rtl) {
+    background-position: left 0.75rem center;
+    padding-left: 2rem !important;
+  }
+
+  [dir="ltr"] select,
+  html[dir="ltr"] select,
+  body[dir="ltr"] select,
+  select:dir(ltr) {
+    background-position: right 0.75rem center;
+    padding-right: 2rem !important;
+  }
+
+  /* Default strict rounded-sm for inputs and buttons */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select,
+  button {
+    border-radius: 0.125rem; /* rounded-sm */
+  }
+
+  textarea:not([dir]) {
+    direction: rtl;
+    text-align: right;
+  }
+
+  /* Disable mouse wheel scrolling number increments & remove spinner arrows */
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: #f9fafb;
+  color: #4b5563;
+  direction: rtl;
+}
+
+body.modal-open {
+  overflow: hidden !important;
+  touch-action: none;
+}
+
+body.modal-open main {
+  overflow: hidden !important;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+.rmdp-steel.rmdp-wrapper,
+.rmdp-steel .rmdp-wrapper {
+  border: 1px solid theme('colors.line.DEFAULT');
+  border-radius: theme('borderRadius.card');
+  box-shadow: 0 12px 28px rgb(15 23 42 / 0.14);
+}
+
+.rmdp-steel .rmdp-header-values {
+  color: theme('colors.content.strong');
+  font-weight: 700;
+}
+
+.rmdp-steel .rmdp-week-day {
+  color: theme('colors.content.subtle');
+  font-weight: 600;
+}
+
+.rmdp-steel .rmdp-day.rmdp-deactive {
+  color: theme('colors.line.strong');
+}
+
+.rmdp-steel .rmdp-day span {
+  border-radius: theme('borderRadius.btn');
+}
+
+.rmdp-steel .rmdp-day.rmdp-today span {
+  background-color: transparent;
+  color: theme('colors.accent.DEFAULT');
+  border: 1.5px solid theme('colors.line.strong');
+  font-weight: 700;
+}
+
+.rmdp-steel .rmdp-day.rmdp-selected span:not(.highlight) {
+  background-color: theme('colors.accent.DEFAULT');
+  color: theme('colors.content.inverse');
+  box-shadow: none;
+}
+
+.rmdp-steel .rmdp-day:not(.rmdp-day-hidden) span:hover {
+  background-color: theme('colors.accent.subtle') !important;
+  color: theme('colors.accent.hover');
+}
+
+.rmdp-steel .rmdp-day.rmdp-selected span:not(.highlight):hover {
+  background-color: theme('colors.accent.hover') !important;
+  color: theme('colors.content.inverse');
+}
+
+.rmdp-steel .rmdp-range {
+  background-color: theme('colors.accent.DEFAULT');
+  color: theme('colors.content.inverse');
+  box-shadow: none;
+}
+
+.rmdp-steel .rmdp-arrow {
+  border: solid theme('colors.accent.strong');
+  border-width: 0 2px 2px 0;
+}
+
+.rmdp-steel .rmdp-arrow-container:hover {
+  background-color: theme('colors.accent.DEFAULT');
+  box-shadow: none;
+}
+
+.rmdp-steel .rmdp-arrow-container:hover .rmdp-arrow {
+  border-color: theme('colors.content.inverse');
+}
+
+.rmdp-steel .rmdp-panel-body li {
+  background-color: theme('colors.accent.DEFAULT');
+  box-shadow: none;
+}
+
+.rmdp-steel .rmdp-panel-body::-webkit-scrollbar-thumb {
+  background: theme('colors.line.strong');
+}
+
+.rmdp-steel .rmdp-rtl .rmdp-panel {
+  border-left: unset;
+  border-right: 1px solid theme('colors.line.DEFAULT');
+}
+
+.rmdp-steel .b-deselect {
+  color: theme('colors.danger.text');
+  background-color: theme('colors.surface.DEFAULT');
+}
+
+.rmdp-steel .rmdp-action-button {
+  color: theme('colors.accent.DEFAULT');
+}
+
+.rmdp-steel .rmdp-button:not(.rmdp-action-button) {
+  background-color: theme('colors.accent.DEFAULT');
+}
+
+.rmdp-steel .rmdp-button:not(.rmdp-action-button):hover {
+  background-color: theme('colors.accent.hover');
+}

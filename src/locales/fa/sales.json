@@ -1,0 +1,37 @@
+{
+  "invoicePreviewModal": {
+    "title": "پیش‌نمایش فاکتور فروش",
+    "zoomOutTooltip": "کوچک‌نمایی",
+    "zoomDefaultTooltip": "اندازه پیش‌فرض (۱۰۰٪)",
+    "zoomInTooltip": "بزرگ‌نمایی",
+    "reloadTooltip": "بارگذاری مجدد پیش‌نمایش",
+    "downloadTooltip": "دانلود فایل PDF",
+    "downloadButton": "ذخیره سند (PDF)",
+    "downloadingText": "در حال تولید PDF...",
+    "printTooltip": "چاپ مستقیم بر روی برگه A5",
+    "printButton": "چاپ فاکتور",
+    "closeTooltip": "بستن پنجره",
+    "closeAriaLabel": "بستن",
+    "loadingPreview": "در حال دریافت پیش‌نمایش فاکتور از سرور...",
+    "iframeTitle": "پیش‌نمایش فاکتور فروش {{invoiceNumber}}",
+    "filenamePrefix": "فاکتور_فروش",
+    "defaultCustomer": "مشتری",
+    "errorFetchPreview": "خطا در دریافت پیش‌نمایش فاکتور از سرور",
+    "warehouseExitTitle": "خروجی گدام",
+    "warehouseExitTooltip": "خروجی گدام (برای راننده)",
+    "warehouseExitFilenamePrefix": "خروجی_گدام",
+    "warehouseExitPrintButton": "چاپ خروجی گدام",
+    "warehouseExitPrintTooltip": "چاپ خروجی گدام بر روی برگه A5",
+    "warehouseExitIframeTitle": "پیش‌نمایش خروجی گدام {{invoiceNumber}}",
+    "warehouseExitErrorFetchPreview": "خطا در دریافت پیش‌نمایش خروجی گدام از سرور",
+    "dispatchExitTitle": "حواله خروجی گدام",
+    "dispatchExitFilenamePrefix": "حواله_خروجی_گدام",
+    "dispatchExitPrintButton": "چاپ حواله خروجی",
+    "dispatchExitPrintTooltip": "چاپ حواله خروجی بر روی برگه A5",
+    "dispatchExitIframeTitle": "پیش‌نمایش حواله خروجی گدام {{invoiceNumber}}",
+    "dispatchExitErrorFetchPreview": "خطا در دریافت پیش‌نمایش حواله خروجی گدام از سرور"
+  },
+  "preview": {
+    "iframeTitle": "پیش‌نمایش فاکتور فروش {{number}}"
+  }
+}

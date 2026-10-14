@@ -1,0 +1,75 @@
+{
+  "page": {
+    "title": "لیست محصولات و اقلام تولیدی",
+    "subtitle": "مدیریت مشخصات، کدهای فنی، اوزان و متراژ محصولات"
+  },
+  "list": {
+    "addProductButton": "ثبت محصول جدید",
+    "searchPlaceholder": "جستجو در نام محصولات یا دسته‌بندی...",
+    "weightLabel": "وزن:",
+    "tooltipEdit": "ویرایش محصول",
+    "productsCount": "{{count}} محصول",
+    "emptyTitle": "موردی یافت نشد",
+    "emptyDescription": "با جستجوی شما هیچ محصول یا دسته‌بندی‌ای مطابقت ندارد.",
+    "loading": "در حال بارگذاری لیست محصولات...",
+    "fetchErrorPrefix": "خطا در دریافت اطلاعات:"
+  },
+  "insertModal": {
+    "title": "افزودن محصول جدید",
+    "categoryLabel": "دسته‌بندی محصول",
+    "categoryPlaceholder": "انتخاب دسته‌بندی...",
+    "categorySearchPlaceholder": "جستجو در دسته‌بندی‌ها...",
+    "categoryNoResults": "دسته‌بندی یافت نشد",
+    "addNewCategory": "← افزودن دسته‌بندی جدید",
+    "newCategoryPlaceholder": "نام دسته‌بندی جدید",
+    "backToExistingCategory": "← بازگشت به انتخاب دسته‌بندی موجود",
+    "productNameLabel": "نام محصول",
+    "productNamePlaceholder": "میخ ۲ اینچ",
+    "weightFieldLabel": "وزن",
+    "weightPlaceholder": "مثلاً 25kg",
+    "lowStockLabel": "حد هشدار موجودی",
+    "lowStockPlaceholder": "10",
+    "cancelButton": "انصراف",
+    "submitButton": "ثبت محصول",
+    "submittingButton": "در حال ثبت..."
+  },
+  "editModal": {
+    "title": "ویرایش محصول",
+    "productNamePlaceholder": "10 x 4",
+    "weightPlaceholder": "12.5KG",
+    "categoryLabel": "دسته‌بندی",
+    "lowStockLabel": "حد هشدار موجودی (کمترین مقدار قبل از اخطار)",
+    "closeButton": "بستن",
+    "deleteButton": "حذف",
+    "deletingButton": "در حال حذف...",
+    "updateButton": "به‌روزرسانی",
+    "savingButton": "در حال ذخیره..."
+  },
+  "deleteConfirm": {
+    "title": "تایید حذف",
+    "question": "آیا از حذف این مورد مطمئن هستید؟",
+    "description": "مورد {{name}} به‌طور دائمی از سیستم حذف خواهد شد.",
+    "itemPrefix": "مورد",
+    "itemSuffix": "به‌طور دائمی از سیستم حذف خواهد شد.",
+    "warning": "این عملیات قابل بازگشت نیست. لطفاً مطمئن باشید.",
+    "confirmButton": "تایید و حذف"
+  },
+  "messages": {
+    "fetchProductsError": "خطا در دریافت لیست محصولات",
+    "enterProductName": "نام محصول را وارد کنید.",
+    "enterCategoryName": "نام دسته‌بندی جدید را وارد کنید.",
+    "selectCategory": "دسته‌بندی را انتخاب کنید.",
+    "createCategoryError": "ایجاد دسته‌بندی با مشکل روبرو شد.",
+    "insertSuccess": "محصول با موفقیت اضافه شد.",
+    "insertError": "ثبت محصول انجام نشد.",
+    "updateSuccess": "محصول با موفقیت به‌روزرسانی شد.",
+    "updateToast": "محصول با موفقیت ویرایش شد.",
+    "updateError": "به‌روزرسانی با مشکل مواجه شد.",
+    "deleteSuccess": "محصول با موفقیت حذف شد.",
+    "deleteError": "حذف محصول انجام نشد.",
+    "deleteUndo": "محصول «{{name}}» حذف گردید.",
+    "deleteCancelled": "عملیات حذف محصول «{{name}}» لغو شد.",
+    "genericError": "خطایی رخ داد.",
+    "invalidThreshold": "حد هشدار باید یک عدد صحیح و مثبت باشد."
+  }
+}

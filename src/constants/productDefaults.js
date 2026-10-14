@@ -1,0 +1,3 @@
+export const PRODUCT_DEFAULTS = {
+  LOW_STOCK_THRESHOLD: 10,
+};
