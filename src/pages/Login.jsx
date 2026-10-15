@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Loader2, LogIn } from "lucide-react";
+import { AlertTriangle, Building2, Loader2, LogIn, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { takeSessionEndReason } from "../api";
 
 export default function Login() {
   const { t } = useTranslation("common");
   const { login } = useAuth();
-  // read once per mount, so it disappears after the user has seen it
   const [endedReason] = useState(() => takeSessionEndReason());
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showRecoveryNotice, setShowRecoveryNotice] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,9 +20,8 @@ export default function Login() {
     setIsSubmitting(true);
     try {
       await login(email.trim(), password);
-      // success unmounts this screen — no navigation needed
     } catch (err) {
-      setError(err.message || "ورود ناموفق بود. لطفاً دوباره تلاش کنید.");
+      setError(err.message || "ورود انجام نشد. لطفاً دوباره تلاش کنید.");
       setPassword("");
     } finally {
       setIsSubmitting(false);
@@ -30,88 +29,172 @@ export default function Login() {
   };
 
   return (
-    <div
+    <main
       dir="rtl"
-      className="min-h-screen bg-gray-200 flex items-center justify-center p-4 font-sans"
+      className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-100 px-4 py-10 font-sans"
     >
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[#8c2e25]">جهان فولاد</h1>
-          <p className="text-gray-500 mt-2">سیستم مدیریت تولید</p>
-        </div>
+      <div className="pointer-events-none absolute -right-28 -top-32 h-96 w-96 rounded-full bg-slate-300/50 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 -left-28 h-96 w-96 rounded-full bg-blue-200/50 blur-3xl" />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="login-email" className="block text-gray-700 mb-1">
-              ایمیل
-            </label>
-            <input
-              id="login-email"
-              name="email"
-              type="text"
-              autoComplete="username"
-              required
-              autoFocus
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isSubmitting}
-              className="w-full border border-gray-300 text-black rounded-lg p-2 text-right bg-gray-100 outline-none focus:border-[#8c2e25] transition-colors disabled:opacity-60"
-              dir="ltr"
-              placeholder="admin@jahanfolad.af"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="login-password" className="block text-gray-700 mb-1">
-              رمز عبور
-            </label>
-            <input
-              id="login-password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isSubmitting}
-              className="w-full border border-gray-300 text-black rounded-lg p-2 text-right bg-gray-100 outline-none focus:border-[#8c2e25] transition-colors disabled:opacity-60"
-              dir="ltr"
-              placeholder="••••••••"
-            />
-          </div>
-
-          {!error && endedReason && (
+      <section className="relative w-full max-w-md overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 text-white shadow-2xl shadow-slate-900/25">
+        <div className="h-1.5 bg-gradient-to-l from-amber-400 via-amber-300 to-slate-700" />
+        <div className="p-7 sm:p-9">
+          <header className="mb-8 text-center">
             <div
-              role="status"
-              className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900"
+              aria-label="جایگاه نشان سیستم"
+              className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-600 bg-slate-800 text-amber-300 shadow-inner"
             >
-              {endedReason === "idle" ? t("session.endedIdle") : t("session.endedExpired")}
+              <Building2 size={30} strokeWidth={1.7} />
             </div>
-          )}
+            <p className="mb-1 text-xs font-semibold tracking-[0.18em] text-slate-400">
+              سیستم مدیریت مالی
+            </p>
+            <h1 className="text-2xl font-bold text-white sm:text-3xl">
+              سیستم حسابدار نور
+            </h1>
+            <p className="mt-2 text-sm text-slate-400">
+              برای ادامه، به حساب کاربری خود وارد شوید
+            </p>
+          </header>
 
-          {error && (
-            <div
-              role="alert"
-              className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-800"
-            >
-              {error}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label
+                htmlFor="login-email"
+                className="mb-2 block text-sm font-semibold text-slate-200"
+              >
+                ایمیل یا نام کاربری
+              </label>
+              <input
+                id="login-email"
+                name="email"
+                type="text"
+                autoComplete="username"
+                required
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isSubmitting}
+                className="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-3 text-left text-white outline-none transition placeholder:text-slate-500 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 disabled:opacity-60"
+                dir="ltr"
+                placeholder="Email or username"
+              />
             </div>
-          )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-[#8c2e25] text-white p-2 rounded-lg hover:bg-[#6a221c] transition duration-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
-          >
-            {isSubmitting ? (
-              <Loader2 size={17} className="animate-spin" />
-            ) : (
-              <LogIn size={17} />
+            <div>
+              <label
+                htmlFor="login-password"
+                className="mb-2 block text-sm font-semibold text-slate-200"
+              >
+                رمز عبور
+              </label>
+              <input
+                id="login-password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isSubmitting}
+                className="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-3 text-left text-white outline-none transition placeholder:text-slate-500 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 disabled:opacity-60"
+                dir="ltr"
+                placeholder="Enter your password"
+              />
+            </div>
+
+            <div className="flex justify-start">
+              <button
+                type="button"
+                onClick={() => setShowRecoveryNotice(true)}
+                className="text-sm font-semibold text-amber-300 transition hover:text-amber-200 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-300"
+              >
+                رمز عبور خود را فراموش کرده‌اید؟
+              </button>
+            </div>
+
+            {!error && endedReason && (
+              <div
+                role="status"
+                className="rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-sm font-medium text-amber-100"
+              >
+                {endedReason === "idle"
+                  ? t("session.endedIdle")
+                  : t("session.endedExpired")}
+              </div>
             )}
-            <span>{isSubmitting ? "در حال ورود..." : "ورود به سیستم"}</span>
-          </button>
-        </form>
-      </div>
-    </div>
+
+            {error && (
+              <div
+                role="alert"
+                className="rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm font-medium text-rose-200"
+              >
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-amber-400 px-4 py-3 font-bold text-slate-950 transition hover:bg-amber-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {isSubmitting ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <LogIn size={18} />
+              )}
+              <span>{isSubmitting ? "در حال ورود..." : "ورود به سیستم"}</span>
+            </button>
+          </form>
+        </div>
+        <footer className="border-t border-slate-800 px-7 py-4 text-center text-xs text-slate-500 sm:px-9">
+          دسترسی مجاز برای کاربران ثبت‌شده
+        </footer>
+      </section>
+
+      {showRecoveryNotice && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setShowRecoveryNotice(false);
+          }}
+        >
+          <section
+            aria-labelledby="recovery-notice-title"
+            aria-modal="true"
+            className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-6 text-right text-slate-800 shadow-2xl"
+            dir="rtl"
+            role="dialog"
+          >
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                <AlertTriangle size={22} />
+              </div>
+              <button
+                type="button"
+                aria-label="بستن"
+                onClick={() => setShowRecoveryNotice(false)}
+                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              >
+                <X size={19} />
+              </button>
+            </div>
+            <h2 id="recovery-notice-title" className="text-lg font-bold">
+              بازیابی رمز عبور
+            </h2>
+            <p className="mt-2 text-sm leading-7 text-slate-600">
+              برای بازیابی یا تغییر رمز عبور، لطفاً با مدیر سیستم تماس بگیرید.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowRecoveryNotice(false)}
+              className="mt-5 w-full rounded-lg bg-slate-900 px-4 py-2.5 font-bold text-white transition hover:bg-slate-800"
+            >
+              فهمیدم
+            </button>
+          </section>
+        </div>
+      )}
+    </main>
   );
 }

@@ -55,7 +55,12 @@ export default function InvoiceCreatePage() {
   const [initialLoading, setInitialLoading] = useState(isEditMode);
   const [productsList, setProductsList] = useState([]);
   const [categoriesList, setCategoriesList] = useState([]);
-  const { branches: branchesList, isMultiBranch } = useBranch();
+  const {
+    branches: branchesList,
+    isMultiBranch,
+    isLoadingBranches,
+    singleBranchId,
+  } = useBranch();
   const [customers, setCustomers] = useState([]);
   const [vaults, setVaults] = useState([]);
   const [branchInventories, setBranchInventories] = useState({});
@@ -189,6 +194,31 @@ export default function InvoiceCreatePage() {
   useEffect(() => {
     if (branchesList.length > 0) fetchBranchStock(branchesList[0].id);
   }, [branchesList, fetchBranchStock]);
+  useEffect(() => {
+    if (isLoadingBranches || isMultiBranch || !singleBranchId) return;
+
+    const branch = branchesList[0];
+    setItems((prev) => {
+      let changed = false;
+      const next = prev.map((item) => {
+        if (item.branch_id) return item;
+        changed = true;
+        return {
+          ...item,
+          branch_id: singleBranchId,
+          branch_name: branch?.name || "",
+          stock: branchInventories[singleBranchId]?.[item.product_id] ?? item.stock,
+        };
+      });
+      return changed ? next : prev;
+    });
+  }, [
+    branchInventories,
+    branchesList,
+    isLoadingBranches,
+    isMultiBranch,
+    singleBranchId,
+  ]);
   useEffect(() => {
     setItems((prev) => prev.map((it) => {
       if (it.branch_id && it.product_id && branchInventories[it.branch_id]) {
@@ -409,7 +439,7 @@ export default function InvoiceCreatePage() {
       showToast.error("لطفاً مشخصات تمام ردیف‌های کالا (محصول، تعداد، قیمت) را تکمیل کنید.");
       return;
     }
-    const missingBranch = items.find((it) => it.product_id && !it.branch_id);
+    const missingBranch = isMultiBranch && items.find((it) => it.product_id && !it.branch_id);
     if (missingBranch) {
       showToast.error("لطفاً برای تمام ردیف‌های کالا، گدام مربوطه را انتخاب کنید.");
       return;
