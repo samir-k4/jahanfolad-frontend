@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, Building2, Loader2, LogIn, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { takeSessionEndReason } from "../api";
 
@@ -31,28 +30,19 @@ export default function Login() {
   return (
     <main
       dir="rtl"
-      className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-100 px-4 py-10 font-sans"
+      className="flex min-h-screen items-center justify-center bg-slate-900 px-4 py-10 font-sans"
     >
-      <div className="pointer-events-none absolute -right-28 -top-32 h-96 w-96 rounded-full bg-slate-300/50 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 -left-28 h-96 w-96 rounded-full bg-blue-200/50 blur-3xl" />
-
-      <section className="relative w-full max-w-md overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 text-white shadow-2xl shadow-slate-900/25">
-        <div className="h-1.5 bg-gradient-to-l from-amber-400 via-amber-300 to-slate-700" />
+      <section className="w-full max-w-md overflow-hidden rounded-xl border border-slate-200 bg-slate-100 text-slate-900 shadow-2xl shadow-black/20">
+        <div className="h-1 bg-amber-400" />
         <div className="p-7 sm:p-9">
           <header className="mb-8 text-center">
-            <div
-              aria-label="جایگاه نشان سیستم"
-              className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-slate-600 bg-slate-800 text-amber-300 shadow-inner"
-            >
-              <Building2 size={30} strokeWidth={1.7} />
-            </div>
-            <p className="mb-1 text-xs font-semibold tracking-[0.18em] text-slate-400">
+            <p className="mb-1 text-xs font-semibold tracking-[0.18em] text-slate-500">
               سیستم مدیریت مالی
             </p>
-            <h1 className="text-2xl font-bold text-white sm:text-3xl">
+            <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
               سیستم حسابدار نور
             </h1>
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-2 text-sm text-slate-600">
               برای ادامه، به حساب کاربری خود وارد شوید
             </p>
           </header>
@@ -61,7 +51,7 @@ export default function Login() {
             <div>
               <label
                 htmlFor="login-email"
-                className="mb-2 block text-sm font-semibold text-slate-200"
+                className="mb-2 block text-sm font-semibold text-slate-700"
               >
                 ایمیل یا نام کاربری
               </label>
@@ -75,7 +65,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isSubmitting}
-                className="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-3 text-left text-white outline-none transition placeholder:text-slate-500 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 disabled:opacity-60"
+                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-left text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 disabled:opacity-60"
                 dir="ltr"
                 placeholder="Email or username"
               />
@@ -84,7 +74,7 @@ export default function Login() {
             <div>
               <label
                 htmlFor="login-password"
-                className="mb-2 block text-sm font-semibold text-slate-200"
+                className="mb-2 block text-sm font-semibold text-slate-700"
               >
                 رمز عبور
               </label>
@@ -97,7 +87,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isSubmitting}
-                className="w-full rounded-lg border border-slate-600 bg-slate-800 px-4 py-3 text-left text-white outline-none transition placeholder:text-slate-500 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 disabled:opacity-60"
+                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-left text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 disabled:opacity-60"
                 dir="ltr"
                 placeholder="Enter your password"
               />
@@ -107,7 +97,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setShowRecoveryNotice(true)}
-                className="text-sm font-semibold text-amber-300 transition hover:text-amber-200 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-300"
+                className="text-sm font-semibold text-slate-700 transition hover:text-slate-950 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-500"
               >
                 رمز عبور خود را فراموش کرده‌اید؟
               </button>
@@ -116,7 +106,7 @@ export default function Login() {
             {!error && endedReason && (
               <div
                 role="status"
-                className="rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-sm font-medium text-amber-100"
+                className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900"
               >
                 {endedReason === "idle"
                   ? t("session.endedIdle")
@@ -127,7 +117,7 @@ export default function Login() {
             {error && (
               <div
                 role="alert"
-                className="rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm font-medium text-rose-200"
+                className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-800"
               >
                 {error}
               </div>
@@ -136,18 +126,13 @@ export default function Login() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-amber-400 px-4 py-3 font-bold text-slate-950 transition hover:bg-amber-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300 disabled:cursor-not-allowed disabled:opacity-70"
+              className="flex w-full cursor-pointer items-center justify-center rounded-lg bg-slate-900 px-4 py-3 font-bold text-white transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {isSubmitting ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : (
-                <LogIn size={18} />
-              )}
-              <span>{isSubmitting ? "در حال ورود..." : "ورود به سیستم"}</span>
+              {isSubmitting ? "در حال ورود..." : "ورود به سیستم"}
             </button>
           </form>
         </div>
-        <footer className="border-t border-slate-800 px-7 py-4 text-center text-xs text-slate-500 sm:px-9">
+        <footer className="border-t border-slate-200 px-7 py-4 text-center text-xs text-slate-500 sm:px-9">
           دسترسی مجاز برای کاربران ثبت‌شده
         </footer>
       </section>
@@ -166,17 +151,13 @@ export default function Login() {
             dir="rtl"
             role="dialog"
           >
-            <div className="mb-4 flex items-start justify-between gap-4">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
-                <AlertTriangle size={22} />
-              </div>
+            <div className="mb-4 flex justify-end">
               <button
                 type="button"
-                aria-label="بستن"
                 onClick={() => setShowRecoveryNotice(false)}
-                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                className="rounded-lg px-2 py-1 text-sm font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
               >
-                <X size={19} />
+                بستن
               </button>
             </div>
             <h2 id="recovery-notice-title" className="text-lg font-bold">
