@@ -53,6 +53,15 @@ export function BranchProvider({ children }) {
       console.error(e);
     }
   }, []);
+  useEffect(() => {
+    if (
+      pickedBranch &&
+      branches.length > 0 &&
+      !branches.some((branch) => String(branch.id) === pickedBranch)
+    ) {
+      setPickedBranch("");
+    }
+  }, [branches, pickedBranch, setPickedBranch]);
   const selectedBranch = isMultiBranch ? pickedBranch : singleBranchId;
   const setSelectedBranch = useCallback(
     (branchId) => {

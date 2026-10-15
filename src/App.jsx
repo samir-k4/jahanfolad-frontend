@@ -6,7 +6,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { ChevronDown, Settings, LogOut, Bell, User } from "lucide-react";
+import { ChevronDown, LogOut, Bell, User } from "lucide-react";
 import Dashboard from "./pages/Dashboard";
 import ProductionPage from "./pages/ProductionPage";
 import ProductsList from "./pages/ProductsList";
@@ -369,24 +369,6 @@ export default function App() {
             >
             </div>
           </div>
-          <div className="relative group/tip inline-flex">
-            <PageLink
-              page="settings"
-              to="/settings"
-              className={`p-2 rounded-full transition-colors cursor-pointer ${
-                activeTab === "/settings"
-                  ? "bg-emerald-600 text-white shadow-xs"
-                  : "text-slate-300 hover:text-white hover:bg-slate-800"
-              }`}
-            >
-              <Settings size={19} />
-            </PageLink>
-            <div
-              className="absolute top-full left-0 mt-1.5 hidden group-hover/tip:flex flex-col items-start pointer-events-none z-50 whitespace-nowrap animate-in fade-in zoom-in-95 duration-150"
-              dir="rtl"
-            >
-            </div>
-          </div>
           <div className="h-5 w-px bg-slate-700 mx-1 hidden sm:block" />
           <PageLink
             page="settings"
@@ -403,23 +385,15 @@ export default function App() {
               </span>
             </div>
           </PageLink>
-          <div className="relative group/tip inline-flex">
-            <button
-              onClick={logout}
-              className="hidden md:flex items-center space-x-1 space-x-reverse text-slate-300 hover:text-rose-400 p-1.5 rounded-btn transition-colors cursor-pointer"
-            >
-              <LogOut size={17} />
-            </button>
-            <div
-              className="absolute top-full left-0 mt-1.5 hidden group-hover/tip:flex flex-col items-start pointer-events-none z-50 whitespace-nowrap animate-in fade-in zoom-in-95 duration-150"
-              dir="rtl"
-            >
-              <div className="bg-slate-900 text-white text-xs font-bold py-1 px-2.5 rounded-tooltip shadow-xl border border-slate-700">
-                خروج از سیستم
-              </div>
-              <div className="w-1.5 h-1.5 bg-slate-900 rotate-45 -mt-0.5 mr-auto ml-2.5 border-r border-b border-slate-700" />
-            </div>
-          </div>
+          <button
+            type="button"
+            onClick={logout}
+            title="خروج از سیستم"
+            aria-label="خروج از سیستم"
+            className="hidden md:flex items-center space-x-1 space-x-reverse text-slate-300 hover:text-rose-400 p-1.5 rounded-btn transition-colors cursor-pointer"
+          >
+            <LogOut size={17} />
+          </button>
         </div>
       </nav>
       <div className="md:hidden bg-white p-2 border-b border-gray-200 fixed top-12 w-full z-40 shadow-xs mt-1">

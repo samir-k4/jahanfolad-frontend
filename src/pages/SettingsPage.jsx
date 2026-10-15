@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { showToast as appToast } from "../utils/toast";
 import {
@@ -8,7 +8,6 @@ import {
   Sliders,
   Wallet,
   Shield,
-  Database,
   Plus,
   Search,
   AlertTriangle,
@@ -22,8 +21,6 @@ import {
   Phone,
   Mail,
   MapPin,
-  Clock,
-  CalendarClock,
   DollarSign,
   Printer,
   ChevronLeft,
@@ -44,7 +41,6 @@ import { useCompany } from "../context/CompanyContext";
 import { useBranch } from "../context/BranchContext";
 import CompanyLogoPlate from "../components/common/CompanyLogoPlate";
 import useDebounce from "../hooks/useDebounce";
-import persian_af from "../utils/persian_af";
 import { apiFetch, apiList } from "../api";
 import { TooltipButton, CustomDropdown, usePagePerms } from "../components/common";
 const TAB_IDS = ["users", "categories", "company", "policies", "branches", "backup"];
@@ -54,7 +50,7 @@ const TAB_ICONS = {
   company: Building,
   policies: Sliders,
   branches: MapPin,
-  backup: Database,
+  backup: Download,
 };
 const CATEGORY_DOMAIN_IDS = [
   "all",
@@ -73,18 +69,6 @@ const LOGO_PRESETS = [
   { key: "xlarge", size: 180 },
   { key: "max", size: 250 },
 ];
-const ACCOUNT_START_MONTHS = persian_af.months.map(([name], index) => ({
-  value: String(index + 1).padStart(2, "0"),
-  label: name,
-}));
-const ACCOUNT_START_MIN_YEAR = 1390;
-const ACCOUNT_START_MAX_YEAR = 1500;
-const parseAccountStart = (value) => {
-  const match = /^(\d{4})\/(\d{2})$/.exec(String(value || "").trim());
-  return match ? { year: match[1], month: match[2] } : { year: "", month: "" };
-};
-const composeAccountStart = (year, month) =>
-  year && month ? `${String(year).padStart(4, "0")}/${month}` : "";
 const LOGO_SIZE_DEFAULT = 80;
 const LOGO_MAX_BYTES = 5 * 1024 * 1024;
 const ROLE_BADGE_CLASS = {
@@ -147,6 +131,7 @@ export default function SettingsPage() {
   const { canEdit: canEditUsers, canDelete: canDeleteUsers, canCreate: canCreateUsers } =
     usePagePerms("users");
   const { canEdit: canEditSettings } = usePagePerms("settings");
+  const { canView: canViewTreasury } = usePagePerms("treasury");
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(
     () => searchParams.get("tab") || "users",
@@ -156,7 +141,11 @@ export default function SettingsPage() {
   };
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
-  const { branches } = useBranch();
+  const { branches, refreshBranches } = useBranch();
+  const [branchFormOpen, setBranchFormOpen] = useState(false);
+  const [editingBranch, setEditingBranch] = useState(null);
+  const [branchForm, setBranchForm] = useState({ name: "", location: "" });
+  const [savingBranch, setSavingBranch] = useState(false);
   const [userSearch, setUserSearch] = useState("");
   const debouncedUserSearch = useDebounce(userSearch, 1000);
   const [userRoleFilter, setUserRoleFilter] = useState("all");
@@ -165,6 +154,7 @@ export default function SettingsPage() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [resetResult, setResetResult] = useState(null);
   const [categories, setCategories] = useState([]);
+  const categoriesRequestId = useRef(0);
   const [catDomainFilter, setCatDomainFilter] = useState(
     () => searchParams.get("domain") || "all",
   );
@@ -196,7 +186,50 @@ export default function SettingsPage() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const logoSize = Number(settings.company_logo_size) || LOGO_SIZE_DEFAULT;
-  const accountStart = parseAccountStart(settings.employee_account_start);
+  const openNewBranchForm = () => {
+    setEditingBranch(null);
+    setBranchForm({ name: "", location: "" });
+    setBranchFormOpen(true);
+  };
+  const openEditBranchForm = (branch) => {
+    setEditingBranch(branch);
+    setBranchForm({ name: branch.name || "", location: branch.location || "" });
+    setBranchFormOpen(true);
+  };
+  const saveBranch = async (event) => {
+    event.preventDefault();
+    setSavingBranch(true);
+    try {
+      await apiFetch(
+        editingBranch ? `/branches/${editingBranch.id}` : "/branches",
+        {
+          method: editingBranch ? "PUT" : "POST",
+          body: {
+            name: branchForm.name.trim(),
+            location: branchForm.location.trim() || null,
+          },
+        },
+      );
+      await refreshBranches();
+      setBranchFormOpen(false);
+      setEditingBranch(null);
+      notify("success", t(editingBranch ? "branches.updated" : "branches.created"));
+    } catch (error) {
+      notify("error", error.message || t("branches.saveError"));
+    } finally {
+      setSavingBranch(false);
+    }
+  };
+  const deleteBranch = async (branch) => {
+    if (!window.confirm(t("branches.confirmDelete", { name: branch.name }))) return;
+    try {
+      await apiFetch(`/branches/${branch.id}`, { method: "DELETE" });
+      await refreshBranches();
+      notify("success", t("branches.deleted"));
+    } catch (error) {
+      notify("error", error.message || t("branches.deleteError"));
+    }
+  };
   const fetchSettings = useCallback(async () => {
     try {
       const data = await apiFetch("/settings/general");
@@ -225,10 +258,16 @@ export default function SettingsPage() {
   const [jobCategories, setJobCategories] = useState([]);
   const [expenseTypes, setExpenseTypes] = useState([]);
   const fetchCategories = useCallback(async () => {
+    const requestId = ++categoriesRequestId.current;
     setLoadingCategories(true);
     try {
       if (catDomainFilter === "all") {
-        const data = await apiFetch("/categories/all-grouped");
+        const [data, branches, vaults] = await Promise.all([
+          apiFetch("/categories/all-grouped"),
+          apiList("/branches"),
+          canViewTreasury ? apiList("/vaults") : Promise.resolve([]),
+        ]);
+        if (requestId !== categoriesRequestId.current) return;
         const jCats = data.job_categories || [];
         setJobCategories(jCats);
         const eTypes = data.expense_types || [];
@@ -241,30 +280,46 @@ export default function SettingsPage() {
           ...withDomain(data.expense_categories, "expense_category"),
           ...withDomain(jCats, "job_category"),
           ...withDomain(data.job_positions, "job_position"),
-          ...withDomain(data.warehouse_categories, "warehouse_category"),
-          ...withDomain(data.vault_types, "vault_type"),
+          ...withDomain(branches, "warehouse_category"),
+          ...withDomain(vaults, "vault_type"),
         ]);
       } else {
-        const [domainData, jcData, etData] = await Promise.all([
-          apiList(`/categories/${encodeURIComponent(catDomainFilter)}`),
-          apiList("/categories/job_category"),
-          apiList("/categories/expense_type"),
-        ]);
-        setJobCategories(jcData);
-        setExpenseTypes(etData);
+        const domainData =
+          catDomainFilter === "warehouse_category"
+            ? await apiList("/branches")
+            : catDomainFilter === "vault_type"
+              ? canViewTreasury
+                ? await apiList("/vaults")
+                : []
+              : await apiList(`/categories/${encodeURIComponent(catDomainFilter)}`);
+        if (requestId !== categoriesRequestId.current) return;
         setCategories(
           (Array.isArray(domainData) ? domainData : []).map((c) => ({
             ...c,
             _domain: catDomainFilter,
           })),
         );
+
+        if (catDomainFilter === "job_position") {
+          const jcData = await apiList("/categories/job_category");
+          if (requestId !== categoriesRequestId.current) return;
+          setJobCategories(jcData);
+        } else if (catDomainFilter === "expense_category") {
+          const etData = await apiList("/categories/expense_type");
+          if (requestId !== categoriesRequestId.current) return;
+          setExpenseTypes(etData);
+        }
       }
     } catch (e) {
-      notify("error", t("message.categoriesError"));
+      if (requestId === categoriesRequestId.current) {
+        notify("error", t("message.categoriesError"));
+      }
     } finally {
-      setLoadingCategories(false);
+      if (requestId === categoriesRequestId.current) {
+        setLoadingCategories(false);
+      }
     }
-  }, [catDomainFilter, t]);
+  }, [catDomainFilter, canViewTreasury, t]);
   useEffect(() => {
     fetchSettings();
   }, [fetchSettings]);
@@ -422,6 +477,11 @@ export default function SettingsPage() {
     return (
       c.name?.toLowerCase().includes(s) ||
       c.description?.toLowerCase().includes(s) ||
+      c.location?.toLowerCase().includes(s) ||
+      c.type?.toLowerCase().includes(s) ||
+      c.account_number?.toLowerCase().includes(s) ||
+      c.holder_name?.toLowerCase().includes(s) ||
+      c.notes?.toLowerCase().includes(s) ||
       domainLabel(c._domain)?.toLowerCase().includes(s) ||
       c.job_category?.name?.toLowerCase().includes(s)
     );
@@ -727,20 +787,22 @@ export default function SettingsPage() {
           {activeTab === "categories" && (
             <div className={PANEL_CLASS}>
               <PanelHeader icon={Tag} title={t("categories.title")} subtitle={t("categories.subtitle")}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedCategory(null);
-                    setModalDefaultDomain(
-                      catDomainFilter === "all" ? "expense_category" : catDomainFilter,
-                    );
-                    setCategoryModalOpen(true);
-                  }}
-                  className={`${PRIMARY_BTN_CLASS} w-full sm:w-auto`}
-                >
-                  <Plus size={16} />
-                  <span>{t("categories.add")}</span>
-                </button>
+                {!["warehouse_category", "vault_type"].includes(catDomainFilter) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory(null);
+                      setModalDefaultDomain(
+                        catDomainFilter === "all" ? "expense_category" : catDomainFilter,
+                      );
+                      setCategoryModalOpen(true);
+                    }}
+                    className={`${PRIMARY_BTN_CLASS} w-full sm:w-auto`}
+                  >
+                    <Plus size={16} />
+                    <span>{t("categories.add")}</span>
+                  </button>
+                )}
               </PanelHeader>
               <div className={`${TOOLBAR_CLASS} space-y-2.5`}>
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -780,74 +842,128 @@ export default function SettingsPage() {
                   <div className="py-16 text-center text-gray-400">
                     <Tag size={30} className="mx-auto mb-2 opacity-40" />
                     <p className="text-body-text font-bold text-gray-600">
-                      {t("categories.emptyTitle")}
+                      {catDomainFilter === "vault_type" && !canViewTreasury
+                        ? t("categories.permissionRequired")
+                        : t("categories.emptyTitle")}
                     </p>
-                    <p className="text-caption-text mt-1">{t("categories.emptyHint")}</p>
+                    <p className="text-caption-text mt-1">
+                      {catDomainFilter === "vault_type" && !canViewTreasury
+                        ? t("categories.vaultPermissionHint")
+                        : t("categories.emptyHint")}
+                    </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
-                    {filteredCategories.map((cat) => (
-                      <div
-                        key={`${cat._domain || "cat"}-${cat.id}`}
-                        className={`p-3.5 rounded-card border flex flex-col justify-between transition-colors ${
-                          cat.is_active
-                            ? "bg-white border-gray-200 shadow-2xs hover:border-gray-300"
-                            : "bg-gray-50/70 border-gray-200 opacity-60"
-                        }`}
-                      >
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-1.5 mb-2">
-                            <span className="px-2 py-0.5 rounded-badge border border-gray-200 bg-gray-100/80 text-caption-text font-bold text-gray-700">
+                  <div className="overflow-x-auto rounded-lg border border-gray-200">
+                    <table className="w-full min-w-[760px] border-collapse text-right">
+                      <thead className="bg-gray-50 text-xs font-bold text-gray-600">
+                        <tr>
+                          <th className="whitespace-nowrap px-4 py-3">{t("categories.col.name")}</th>
+                          <th className="whitespace-nowrap px-4 py-3">{t("categories.col.domain")}</th>
+                          <th className="whitespace-nowrap px-4 py-3">{t("categories.col.related")}</th>
+                          <th className="px-4 py-3">{t("categories.col.description")}</th>
+                          <th className="whitespace-nowrap px-4 py-3">{t("categories.col.status")}</th>
+                          <th className="whitespace-nowrap px-4 py-3 text-center">{t("categories.col.actions")}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 bg-white text-sm">
+                        {filteredCategories.map((cat) => (
+                          <tr
+                            key={`${cat._domain || "cat"}-${cat.id}`}
+                            className={cat.is_active ? "hover:bg-gray-50/70" : "bg-gray-50/50 text-gray-400"}
+                          >
+                            <td className="max-w-56 px-4 py-3 font-semibold text-gray-900">
+                              <span className="block whitespace-normal break-words">{cat.name}</span>
+                            </td>
+                            <td className="whitespace-nowrap px-4 py-3 text-gray-600">
                               {domainLabel(cat._domain)}
-                            </span>
-                            {cat.job_category && (
-                              <span className="px-2 py-0.5 rounded-badge border border-gray-200 bg-white text-caption-text font-bold text-gray-600">
-                                {t("categories.jobCategory", { name: cat.job_category.name })}
+                            </td>
+                            <td className="max-w-56 px-4 py-3 text-gray-600">
+                              {cat.job_category?.name ||
+                                cat.expense_type?.name ||
+                                cat.location ||
+                                (cat.type
+                                ? t(`categories.vaultKind.${cat.type}`, {
+                                    defaultValue: cat.type,
+                                  })
+                                : null) ||
+                              t("placeholder.dash")}
+                            </td>
+                            <td className="max-w-sm px-4 py-3 text-gray-500">
+                              <span className="block whitespace-normal break-words">
+                              {cat._domain === "vault_type" && (
+                                <span className="mb-1 block text-xs text-gray-600" dir="ltr">
+                                  {[
+                                    cat.account_number,
+                                    cat.currency,
+                                    cat.current_balance != null
+                                      ? Number(cat.current_balance).toLocaleString("en-US")
+                                      : null,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" · ")}
+                                </span>
+                              )}
+                              {cat.description || cat.notes || t("placeholder.dash")}
                               </span>
-                            )}
-                            {cat.expense_type && (
-                              <span className="px-2 py-0.5 rounded-badge border border-amber-300 bg-amber-50 text-caption-text font-bold text-amber-900">
-                                {t("categories.expenseType", { name: cat.expense_type.name })}
-                              </span>
-                            )}
-                          </div>
-                          <h3 className="font-bold text-gray-900 text-body-text mb-1 whitespace-normal break-words">
-                            {cat.name}
-                          </h3>
-                          {cat.description && (
-                            <p className="text-caption-text text-gray-500 leading-relaxed mb-3 whitespace-normal break-words">
-                              {cat.description}
-                            </p>
-                          )}
-                        </div>
-                        <div className="pt-3 mt-2 border-t border-gray-100 flex items-center justify-between gap-2">
-                          <StatusToggle
-                            isActive={cat.is_active}
-                            onClick={() => handleToggleCategoryStatus(cat)}
-                            activeLabel={t("status.active")}
-                            inactiveLabel={t("status.inactive")}
-                          />
-                          <div className="flex items-center gap-1.5">
-                            <TooltipButton
-                              icon={Edit2}
-                              tooltip={t("categories.tooltip.edit")}
-                              onClick={() => {
-                                setSelectedCategory(cat);
-                                setModalDefaultDomain(cat._domain || catDomainFilter);
-                                setCategoryModalOpen(true);
-                              }}
-                              className="bg-white text-gray-500 border border-gray-300 hover:text-amber-700 hover:border-amber-300"
-                            />
-                            <TooltipButton
-                              icon={Trash2}
-                              tooltip={t("categories.tooltip.delete")}
-                              onClick={() => handleDeleteCategory(cat)}
-                              className="bg-white text-gray-500 border border-gray-300 hover:text-rose-600 hover:border-rose-300"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                            </td>
+                            <td className="whitespace-nowrap px-4 py-3">
+                              {["warehouse_category", "vault_type"].includes(cat._domain) ? (
+                                <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                                  {t("status.active")}
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleCategoryStatus(cat)}
+                                  className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
+                                    cat.is_active
+                                      ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                                  }`}
+                                >
+                                  {cat.is_active ? t("status.active") : t("status.inactive")}
+                                </button>
+                              )}
+                            </td>
+                            <td className="whitespace-nowrap px-4 py-3">
+                              <div className="flex items-center justify-center gap-1.5">
+                                {["warehouse_category", "vault_type"].includes(cat._domain) ? (
+                                  <TooltipButton
+                                    icon={Eye}
+                                    tooltip={t("categories.tooltip.viewSource")}
+                                    onClick={() =>
+                                      navigate(
+                                        cat._domain === "warehouse_category" ? "/godam" : "/vaults",
+                                      )
+                                    }
+                                    className="bg-white text-gray-500 border border-gray-300 hover:text-blue-600 hover:border-blue-300"
+                                  />
+                                ) : (
+                                  <>
+                                    <TooltipButton
+                                      icon={Edit2}
+                                      tooltip={t("categories.tooltip.edit")}
+                                      onClick={() => {
+                                        setSelectedCategory(cat);
+                                        setModalDefaultDomain(cat._domain || catDomainFilter);
+                                        setCategoryModalOpen(true);
+                                      }}
+                                      className="bg-white text-gray-500 border border-gray-300 hover:text-amber-700 hover:border-amber-300"
+                                    />
+                                    <TooltipButton
+                                      icon={Trash2}
+                                      tooltip={t("categories.tooltip.delete")}
+                                      onClick={() => handleDeleteCategory(cat)}
+                                      className="bg-white text-gray-500 border border-gray-300 hover:text-rose-600 hover:border-rose-300"
+                                    />
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>
@@ -1070,30 +1186,14 @@ export default function SettingsPage() {
           )}
           {activeTab === "policies" && (
             <form onSubmit={handleSaveSettings} className={PANEL_CLASS}>
-              <PanelHeader icon={Sliders} title={t("policies.title")} subtitle={t("policies.subtitle")} />
-              <div className="p-4 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                  <div className={CARD_FIELD_CLASS}>
-                    <label className="text-label-text font-bold text-gray-800 mb-1 flex items-center gap-1.5">
-                      <Clock size={15} className="text-gray-400 shrink-0" />
-                      <span className="whitespace-normal break-words">{t("policies.dailyHours")}</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="24"
-                      dir="ltr"
-                      onFocus={(e) => e.target.select()}
-                      onWheel={(e) => e.target.blur()}
-                      value={settings.standard_daily_hours}
-                      onChange={(e) =>
-                        setSettings({ ...settings, standard_daily_hours: e.target.value })
-                      }
-                      className={NUMERIC_INPUT_CLASS}
-                    />
-                    <span className={HINT_CLASS}>{t("policies.dailyHoursHint")}</span>
-                  </div>
-                  <div className={CARD_FIELD_CLASS}>
+              <PanelHeader
+                icon={Sliders}
+                title={t("policies.title")}
+                subtitle={t("policies.subtitle")}
+              />
+              <div className="space-y-5 p-4 sm:p-5">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  <div className={`${CARD_FIELD_CLASS} flex flex-col`}>
                     <label className="text-label-text font-bold text-gray-800 mb-1 flex items-center gap-1.5">
                       <DollarSign size={15} className="text-gray-400 shrink-0" />
                       <span className="whitespace-normal break-words">{t("policies.currency")}</span>
@@ -1107,9 +1207,9 @@ export default function SettingsPage() {
                       ]}
                       buttonClassName="w-full px-3 py-2 bg-white border border-gray-300 rounded-input text-label-text font-bold text-gray-800"
                     />
-                    <span className={HINT_CLASS}>{t("policies.currencyHint")}</span>
+                    <span className={`${HINT_CLASS} flex-1`}>{t("policies.currencyHint")}</span>
                   </div>
-                  <div className={CARD_FIELD_CLASS}>
+                  <div className={`${CARD_FIELD_CLASS} flex flex-col`}>
                     <label className="text-label-text font-bold text-gray-800 mb-1 flex items-center gap-1.5">
                       <DollarSign size={15} className="text-gray-400 shrink-0" />
                       <span className="whitespace-normal break-words">{t("policies.usdRate")}</span>
@@ -1125,9 +1225,9 @@ export default function SettingsPage() {
                       onChange={(e) => setSettings({ ...settings, usd_rate: e.target.value })}
                       className={NUMERIC_INPUT_CLASS}
                     />
-                    <span className={HINT_CLASS}>{t("policies.usdRateHint")}</span>
+                    <span className={`${HINT_CLASS} flex-1`}>{t("policies.usdRateHint")}</span>
                   </div>
-                  <div className={CARD_FIELD_CLASS}>
+                  <div className={`${CARD_FIELD_CLASS} flex flex-col`}>
                     <label className="text-label-text font-bold text-gray-800 mb-1 flex items-center gap-1.5">
                       <AlertTriangle size={15} className="text-amber-600 shrink-0" />
                       <span className="whitespace-normal break-words">{t("policies.lowBalance")}</span>
@@ -1144,52 +1244,10 @@ export default function SettingsPage() {
                       }
                       className={NUMERIC_INPUT_CLASS}
                     />
-                    <span className={HINT_CLASS}>{t("policies.lowBalanceHint")}</span>
-                  </div>
-                  <div className={CARD_FIELD_CLASS}>
-                    <label className="text-label-text font-bold text-gray-800 mb-1 flex items-center gap-1.5">
-                      <CalendarClock size={15} className="text-gray-400 shrink-0" />
-                      <span className="whitespace-normal break-words">{t("policies.accountStart")}</span>
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        min={ACCOUNT_START_MIN_YEAR}
-                        max={ACCOUNT_START_MAX_YEAR}
-                        step="1"
-                        dir="ltr"
-                        placeholder={t("policies.accountStartYear")}
-                        onFocus={(e) => e.target.select()}
-                        onWheel={(e) => e.target.blur()}
-                        value={accountStart.year}
-                        onChange={(e) =>
-                          setSettings({
-                            ...settings,
-                            employee_account_start: composeAccountStart(
-                              e.target.value,
-                              accountStart.month,
-                            ),
-                          })
-                        }
-                        className={`${NUMERIC_INPUT_CLASS} w-28 shrink-0`}
-                      />
-                      <CustomDropdown
-                        value={accountStart.month}
-                        onChange={(val) =>
-                          setSettings({
-                            ...settings,
-                            employee_account_start: composeAccountStart(accountStart.year, val),
-                          })
-                        }
-                        options={ACCOUNT_START_MONTHS}
-                        placeholder={t("policies.accountStartMonth")}
-                        buttonClassName="w-full px-3 py-2 bg-white border border-gray-300 rounded-input text-label-text font-bold text-gray-800"
-                      />
-                    </div>
-                    <span className={HINT_CLASS}>{t("policies.accountStartHint")}</span>
+                    <span className={`${HINT_CLASS} flex-1`}>{t("policies.lowBalanceHint")}</span>
                   </div>
                 </div>
-                <div className="pt-1 flex justify-end">
+                <div className="flex justify-end border-t border-gray-100 pt-4">
                   <button
                     type="submit"
                     disabled={savingSettings}
@@ -1224,8 +1282,74 @@ export default function SettingsPage() {
           )}
           {activeTab === "branches" && (
             <div className={PANEL_CLASS}>
-              <PanelHeader icon={MapPin} title={t("branches.title")} subtitle={t("branches.subtitle")} />
-              <div className="p-4">
+              <PanelHeader
+                icon={MapPin}
+                title={t("branches.title")}
+                subtitle={t("branches.subtitle")}
+              >
+                {canEditSettings && (
+                  <button
+                    type="button"
+                    onClick={branchFormOpen ? () => setBranchFormOpen(false) : openNewBranchForm}
+                    className={PRIMARY_BTN_CLASS}
+                  >
+                    <Plus size={15} />
+                    <span>{t(branchFormOpen ? "branches.cancel" : "branches.add")}</span>
+                  </button>
+                )}
+              </PanelHeader>
+              <div className="space-y-4 p-4">
+                {branchFormOpen && (
+                  <form
+                    onSubmit={saveBranch}
+                    className="grid grid-cols-1 gap-3 rounded-card border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2"
+                  >
+                    <label className="text-sm font-semibold text-gray-700">
+                      {t("branches.name")}
+                      <input
+                        className={`${INPUT_CLASS} mt-1`}
+                        value={branchForm.name}
+                        onChange={(event) =>
+                          setBranchForm((form) => ({ ...form, name: event.target.value }))
+                        }
+                        maxLength={255}
+                        required
+                        autoFocus
+                      />
+                    </label>
+                    <label className="text-sm font-semibold text-gray-700">
+                      {t("branches.location")}
+                      <input
+                        className={`${INPUT_CLASS} mt-1`}
+                        value={branchForm.location}
+                        onChange={(event) =>
+                          setBranchForm((form) => ({ ...form, location: event.target.value }))
+                        }
+                        maxLength={255}
+                      />
+                    </label>
+                    <div className="flex gap-2 sm:col-span-2">
+                      <button
+                        type="submit"
+                        disabled={savingBranch}
+                        className={PRIMARY_BTN_CLASS}
+                      >
+                        <Save size={15} />
+                        <span>
+                          {savingBranch ? t("branches.saving") : t("branches.save")}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={savingBranch}
+                        onClick={() => setBranchFormOpen(false)}
+                        className={SECONDARY_BTN_CLASS}
+                      >
+                        {t("branches.cancel")}
+                      </button>
+                    </div>
+                  </form>
+                )}
                 {branches.length === 0 ? (
                   <div className="py-12 text-center text-gray-400">
                     <Building size={30} className="mx-auto mb-2 opacity-40" />
@@ -1242,15 +1366,47 @@ export default function SettingsPage() {
                           <Building size={18} />
                         </div>
                         <div className="min-w-0">
-                          <h3 className="font-bold text-gray-900 text-body-text whitespace-normal break-words">
-                            {b.name}
-                          </h3>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="font-bold text-gray-900 text-body-text whitespace-normal break-words">
+                              {b.name}
+                            </h3>
+                            {b.is_default && (
+                              <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                                {t("branches.defaultBadge")}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-caption-text text-gray-500 mt-1 whitespace-normal break-words">
                             {b.location || t("branches.defaultLocation")}
                           </p>
                           {b.phone && (
                             <p className="text-caption-text font-mono text-gray-400 mt-0.5" dir="ltr">
                               {b.phone}
+                            </p>
+                          )}
+                          {canEditSettings && !b.is_default && (
+                            <div className="mt-3 flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => openEditBranchForm(b)}
+                                className="inline-flex items-center gap-1 rounded-btn border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-100"
+                              >
+                                <Edit2 size={13} />
+                                {t("branches.edit")}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => deleteBranch(b)}
+                                className="inline-flex items-center gap-1 rounded-btn border border-rose-200 bg-white px-2.5 py-1.5 text-xs font-bold text-rose-700 transition-colors hover:bg-rose-50"
+                              >
+                                <Trash2 size={13} />
+                                {t("branches.delete")}
+                              </button>
+                            </div>
+                          )}
+                          {b.is_default && (
+                            <p className="mt-2 text-xs text-gray-500">
+                              {t("branches.defaultLocked")}
                             </p>
                           )}
                         </div>
@@ -1263,7 +1419,7 @@ export default function SettingsPage() {
           )}
           {activeTab === "backup" && (
             <div className={PANEL_CLASS}>
-              <PanelHeader icon={Database} title={t("backup.title")} subtitle={t("backup.subtitle")} />
+              <PanelHeader icon={Download} title={t("backup.title")} subtitle={t("backup.subtitle")} />
               <div className="p-4 space-y-4">
                 <div className="p-4 rounded-card bg-slate-800 text-white flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
@@ -1282,32 +1438,6 @@ export default function SettingsPage() {
                     <Download size={16} />
                     <span>{t("backup.download")}</span>
                   </button>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className={`${CARD_FIELD_CLASS} text-center`}>
-                    <span className="text-caption-text font-bold text-gray-500 block">
-                      {t("backup.version")}
-                    </span>
-                    <span className="text-base font-bold text-gray-900 font-mono mt-1 block" dir="ltr">
-                      v2.0 PRO
-                    </span>
-                  </div>
-                  <div className={`${CARD_FIELD_CLASS} text-center`}>
-                    <span className="text-caption-text font-bold text-gray-500 block">
-                      {t("backup.engine")}
-                    </span>
-                    <span className="text-base font-bold text-gray-900 font-mono mt-1 block" dir="ltr">
-                      MySQL 8.x
-                    </span>
-                  </div>
-                  <div className={`${CARD_FIELD_CLASS} text-center`}>
-                    <span className="text-caption-text font-bold text-gray-500 block">
-                      {t("backup.security")}
-                    </span>
-                    <span className="text-base font-bold text-emerald-700 mt-1 block">
-                      {t("backup.securityValue")}
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>

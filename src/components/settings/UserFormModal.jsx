@@ -97,22 +97,34 @@ export default function UserFormModal({
     }
     setError(null);
   }, [isOpen, user]);
-  const applyRoleDefaults = (roleId) => {
-    const targetRole = roles.find((r) => r.id === roleId);
-    const rolePerms = targetRole?.permissions || {};
+  const applyRoleDefaults = (roleIds) => {
     const newPerms = emptyMatrix();
-    PAGE_KEYS.forEach((pageKey) => {
-      PAGES[pageKey].actions.forEach((action) => {
-        const row = rolePerms[pageKey];
-        newPerms[pageKey][action] =
-          typeof row === "boolean" ? row : Boolean(row?.[action]);
+    roleIds.forEach((roleId) => {
+      const rolePerms =
+        roles.find((rolePreset) => rolePreset.id === roleId)?.permissions || {};
+      PAGE_KEYS.forEach((pageKey) => {
+        PAGES[pageKey].actions.forEach((action) => {
+          const row = rolePerms[pageKey];
+          if (typeof row === "boolean" ? row : Boolean(row?.[action])) {
+            newPerms[pageKey][action] = true;
+          }
+        });
       });
     });
     setPermissions(newPerms);
   };
-  const handleRoleChange = (roleId) => {
-    setFormData({ ...formData, role: roleId });
-    applyRoleDefaults(roleId);
+  const handleRoleToggle = (roleId) => {
+    const currentRoles = formData.roles || [];
+    const nextRoles = currentRoles.includes(roleId)
+      ? currentRoles.filter((selectedRole) => selectedRole !== roleId)
+      : [...currentRoles, roleId];
+
+    setFormData({
+      ...formData,
+      role: nextRoles[0] || "",
+      roles: nextRoles,
+    });
+    applyRoleDefaults(nextRoles);
   };
   const handleCellToggle = (pageKey, action) => {
     setPermissions((prev) => {
@@ -159,6 +171,10 @@ export default function UserFormModal({
     setError(null);
     if (!formData.name.trim() || !formData.username.trim() || !formData.email.trim()) {
       setError("لطفاً تمامی فیلدهای الزامی ستاره‌دار را تکمیل نمایید.");
+      return;
+    }
+    if (!formData.roles?.length) {
+      setError("لطفاً حداقل یک نقش برای کاربر انتخاب نمایید.");
       return;
     }
     if (!user && !formData.password) {
