@@ -238,7 +238,7 @@ export default function EmployeeFormPage() {
   const firstValidationError = () => {
     if (sanitizeName(formData.fullName).trim().length < MIN_NAME_LENGTH) return t("errors.fullNameInvalid");
     if (sanitizeName(formData.fatherName).trim().length < MIN_NAME_LENGTH) return t("errors.fatherNameInvalid");
-    if (!formData.branchId) return t("errors.branchRequired");
+    if (isMultiBranch && !formData.branchId) return t("errors.branchRequired");
     if (!formData.jobCategoryId) return t("errors.categoryRequired");
     if (!formData.jobPositionId) return t("errors.positionRequired");
     if (isCustomPosition && sanitizeTitle(formData.customPosition).trim().length < MIN_TITLE_LENGTH)
@@ -265,7 +265,7 @@ export default function EmployeeFormPage() {
       father_name: sanitizeName(formData.fatherName).trim(),
       phone: formData.phone ? sanitizePhone(formData.phone) : null,
       introduced_by: formData.introducedBy ? sanitizeName(formData.introducedBy).trim() : null,
-      branch_id: Number(formData.branchId),
+      branch_id: formData.branchId ? Number(formData.branchId) : null,
       job_category_id: Number(formData.jobCategoryId),
       job_position_id: isCustomPosition ? null : Number(formData.jobPositionId),
       position: isCustomPosition ? sanitizeTitle(formData.customPosition).trim() : null,

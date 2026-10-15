@@ -244,7 +244,7 @@ export default function WarehouseStockMoveModal({
       }),
     );
   const validate = () => {
-    if (!targetBranchId || targetBranchId === "all") {
+    if (showBranch && (!targetBranchId || targetBranchId === "all")) {
       return t(`messages.${config.missingBranchMessage}`);
     }
     const seen = new Set();
@@ -290,7 +290,7 @@ export default function WarehouseStockMoveModal({
       await apiFetch(config.path, {
         method: "POST",
         body: {
-          branch_id: Number(targetBranchId),
+          branch_id: targetBranchId ? Number(targetBranchId) : null,
           description: description.trim(),
           products: rows.map((r) => ({
             product_id: Number(r.product_id),

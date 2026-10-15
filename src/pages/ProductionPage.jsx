@@ -198,7 +198,7 @@ export default function ProductionPage() {
         quantity: Number(row.quantity),
       })),
       date: globalData.date,
-      branch_id: globalData.branch,
+      branch_id: globalData.branch || null,
       description: globalData.description,
       batch: savedBatchResult?.batch,
     });
@@ -208,11 +208,7 @@ export default function ProductionPage() {
   };
   const validateForm = () => {
     if (!globalData.date) return t("messages.selectDate");
-    if (!globalData.branch) {
-      return branches.length
-        ? t("messages.selectBranch")
-        : t("messages.noBranchAvailable");
-    }
+    if (isMultiBranch && !globalData.branch) return t("messages.selectBranch");
     if (!productionRows.length) return t("messages.addAtLeastOneRow");
     for (const [i, row] of productionRows.entries()) {
       const rowNum = i + 1;
@@ -234,7 +230,7 @@ export default function ProductionPage() {
     }
     const payload = {
       date: globalData.date,
-      branch_id: globalData.branch,
+      branch_id: globalData.branch || null,
       description: globalData.description?.trim() || "",
       products: productionRows.map((row) => ({
         product_id: row.product.id,
