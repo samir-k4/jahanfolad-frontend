@@ -200,7 +200,7 @@ export default function VaultDetailPage() {
   return (
     <div className="space-y-4 min-h-screen font-sans" dir="rtl">
       <nav className="flex items-center gap-1.5 text-xs text-gray-500 font-bold">
-        <Link to="/treasury" className="hover:text-slate-900 transition-colors">{t("vaultDetail.breadcrumb")}</Link>
+        <Link to="/treasury" className="hover:text-slate-900 transition-colors">{t("navigation.pages.treasury", { ns: "common" })}</Link>
         <ChevronRight size={14} className="text-gray-400" />
         <span className="text-slate-900 font-bold bg-slate-100 px-2 py-0.5 rounded-badge border border-slate-200">
           {vaultLoading ? "..." : vault?.name || `حساب #${id}`}

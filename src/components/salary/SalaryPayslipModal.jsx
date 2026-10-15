@@ -84,7 +84,7 @@ export default function SalaryPayslipModal({
           {isLoadingPreview ? (
             <div className="flex flex-col items-center justify-center gap-3 py-24 text-gray-600">
               <Loader2 className="w-7 h-7 animate-spin text-slate-800" />
-              <span className="text-label-text">{t("payslip.loading")}</span>
+              <span className="text-label-text">{t("pdf.loading", { ns: "common" })}</span>
             </div>
           ) : (
             <iframe

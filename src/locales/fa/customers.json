@@ -8,21 +8,15 @@
     "details": "مشاهده پرونده کامل",
     "edit": "ویرایش مشخصات مشتری",
     "delete": "حذف مشتری",
-    "cancel": "انصراف",
     "submit": "ثبت مشتری",
     "saveChanges": "ویرایش و ذخیره",
-    "submitting": "در حال ثبت...",
-    "deleting": "در حال حذف..."
+    "submitting": "در حال ثبت..."
   },
   "filters": {
     "searchPlaceholder": "جستجو بر اساس نام، کد مشتری (۴ رقمی)، شماره تماس یا ولایت...",
     "allProvinces": "همه ولایات",
     "allStatuses": "همه وضعیت‌ها",
     "activeOnly": "فقط فعال",
-    "inactive": "غیرفعال"
-  },
-  "status": {
-    "active": "فعال",
     "inactive": "غیرفعال"
   },
   "table": {
@@ -66,17 +60,70 @@
   "defaults": {
     "createdBy": "مدیریت فروش"
   },
+  "createPage": {
+    "title": "ثبت پرونده مشتری جدید",
+    "subtitle": "ایجاد حساب مشتری، شماره‌های تماس، موقعیت و سقف اعتبار",
+    "identityHeading": "مشخصات هویتی و شماره‌های تماس",
+    "backToList": "بازگشت به لیست مشتریان",
+    "customerCode": "کد شناسایی مشتری (۴ رقمی)",
+    "customerCodePlaceholder": "مثال: 1001",
+    "namePlaceholder": "مثال: حاجی عبدالمجید یا شرکت ساختمانی کابل",
+    "phoneTableHint": "(نمایش در جدول مشتریان)",
+    "phonePlaceholder": "مثال: 0799123456",
+    "phoneProfileHint": "(نمایش در پروفایل مشتری)",
+    "phone2Placeholder": "مثال: 0788123456",
+    "locationHeading": "موقعیت جغرافیایی و آدرس",
+    "provinceTableHint": "(نمایش در جدول)",
+    "provincePlaceholder": "انتخاب ولایت",
+    "profileHint": "(نمایش در پروفایل)",
+    "addressPlaceholder": "مثال: سرک نو، چهارراهی صدارت، مارکیت فولاد، دکان شماره ۱۲",
+    "notesHeading": "توضیحات و یادداشت پرونده",
+    "notesPlaceholder": "هرگونه یادداشت اختیاری در مورد سابقه مشتری، نحوه تسویه یا ضمانت...",
+    "accountSettingsHeading": "تنظیمات مالی و وضعیت حساب",
+    "creditLimitHint": "حداکثر بدهی مجاز مشتری جهت صدور فاکتور قرضه",
+    "activeStatus": "فعال (مجاز به انجام معامله)",
+    "inactiveStatus": "غیرفعال (مسدود)",
+    "createdBy": "کاربر ثبت‌کننده پرونده",
+    "submit": "ثبت و ایجاد پرونده مشتری",
+    "submitting": "در حال ثبت پرونده...",
+    "cancel": "انصراف و بازگشت",
+    "nameRequired": "لطفاً نام و نام خانوادگی مشتری را وارد نمایید.",
+    "connectionError": "خطا در اتصال به سرور"
+  },
+  "loans": {
+    "subtitle": "مشتریانی که قرضدار یا طلبکار هستند",
+    "printReport": "چاپ راپور قرضداری",
+    "searchPlaceholder": "جستجو بر اساس نام، کد مشتری، شماره تماس یا ولایت...",
+    "accountType": "نوع حساب",
+    "refresh": "بروزرسانی لیست",
+    "fetchFailed": "خطا در دریافت لیست قرضداری مشتریان",
+    "loading": "در حال دریافت اطلاعات قرضداری مشتریان...",
+    "empty": "هیچ سابقه قرضداری با فیلترهای انتخابی یافت نشد.",
+    "otherCurrenciesTitle": "این مشتری حساب دیگری هم به {{currencies}} دارد",
+    "overCreditLimit": "مانده حساب از سقف اعتبار بیشتر است",
+    "viewStatement": "مشاهده صورت حساب کامل مشتری",
+    "columns": {
+      "lastInvoice": "مبلغ آخرین فاکتور",
+      "lastPaymentDate": "تاریخ آخرین پرداخت",
+      "lastPaymentAmount": "مبلغ آخرین پرداخت",
+      "balance": "مانده حساب"
+    },
+    "status": {
+      "all": "همه",
+      "debtor": "قرضدار ها",
+      "creditor": "طلبکار ها",
+      "settled": "تسویه‌شده"
+    },
+    "currency": {
+      "all": "همه ارزها",
+      "usd": "دالر (USD)",
+      "afn": "افغانی (AFN)",
+      "label": "ارز"
+    }
+  },
   "delete": {
     "title": "تایید حذف مشتری",
     "itemName": "{{name}} (کد: {{code}})"
-  },
-  "deleteConfirm": {
-    "confirmButton": "تایید و حذف",
-    "itemPrefix": "مورد",
-    "itemSuffix": "به‌طور دائمی از سیستم حذف خواهد شد.",
-    "question": "آیا از حذف این مورد مطمئن هستید؟",
-    "title": "تایید حذف",
-    "warning": " این عملیات قابل بازگشت نیست. لطفاً مطمئن باشید."
   },
   "emptyValue": "—",
   "pagination": {

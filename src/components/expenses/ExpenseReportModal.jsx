@@ -462,7 +462,7 @@ export default function ExpenseReportModal({ isOpen, onClose, expenseType = null
                 onClick={onClose}
                 className="px-4 py-2 border border-line-strong text-content-body text-btn-text font-medium rounded-btn cursor-pointer hover:bg-surface-subtle transition-colors"
               >
-                {tx("reportModal.cancel")}
+                {tx("actions.cancel", { ns: "common" })}
               </button>
               <button
                 type="button"

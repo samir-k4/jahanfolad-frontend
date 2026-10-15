@@ -137,12 +137,12 @@ export default function TxDetailModal({ tx, onClose, onPrint, namespace = "treas
                     {isDeposit ? (
                       <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold px-2 py-0.5 rounded-badge">
                         <TrendingUp size={11} />
-                        <span>{t("txDetail.typeDeposit")}</span>
+                        <span>{t("form.depositType")}</span>
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 bg-rose-50 text-rose-800 border border-rose-200 text-xs font-bold px-2 py-0.5 rounded-badge">
                         <TrendingDown size={11} />
-                        <span>{t("txDetail.typeWithdraw")}</span>
+                        <span>{t("form.withdrawType")}</span>
                       </span>
                     )}
                   </td>

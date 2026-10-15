@@ -67,7 +67,6 @@
     "modalTitle": "ورق پرداخت معاش: {{name}}",
     "modalMeta": "کد پرسونل: {{code}} • ماه {{month}} {{year}}",
     "iframeTitle": "پیش‌نمایش ورق معاش",
-    "loading": "در حال دریافت پیش‌نمایش از سرور...",
     "loadError": "خطا در دریافت پیش‌نمایش ورق معاش.",
     "downloadPdf": "دانلود PDF",
     "downloading": "در حال تولید PDF...",
@@ -195,7 +194,6 @@
     "modalTitle": "جدول  پرداخت معاشات",
     "modalMeta": "{{branch}} • ماه {{month}} {{year}} • {{count}} کارمند",
     "iframeTitle": "پیش‌نمایش جدول معاشات",
-    "loading": "در حال دریافت پیش‌نمایش از سرور...",
     "loadError": "خطا در دریافت پیش‌نمایش جدول معاشات.",
     "print": "چاپ جدول",
     "downloadPdf": "دانلود PDF",
@@ -294,8 +292,6 @@
     "presets": {
       "current_month": "ماه جاری",
       "today": "امروز",
-      "last_7_days": "۷ روز اخیر",
-      "last_30_days": "۳۰ روز اخیر",
       "all": "همه تاریخ‌ها"
     },
     "delete": {

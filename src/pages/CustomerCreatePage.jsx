@@ -18,17 +18,23 @@ import {
 import { SearchableSelect, CustomDropdown } from "../components/common";
 import { showToast, toEnglishDigits } from "../utils";
 import { apiUrl } from "../api";
+import { useTranslation } from "react-i18next";
 
 const AFGHAN_PROVINCES = [
-  "کابل", "هرات", "بلخ", "ننگرهار", "کندز", "کندهار", "غزنی", "بغلان",
-  "تخار", "بدخشان", "فاریاب", "جوزجان", "سرپل", "سمنگان", "پروان",
-  "کاپیسا", "پنجشیر", "وردک", "لوگر", "خوست", "پکتیا", "پکتیکا",
-  "هلمند", "زابل", "ارزگان", "غور", "بادغیس", "فراه", "نیمروز",
-  "دایکندی", "بامیان", "کنر", "لغمان", "نورستان"
+  ["kabul", "کابل"], ["herat", "هرات"], ["balkh", "بلخ"], ["nangarhar", "ننگرهار"],
+  ["kunduz", "کندز"], ["kandahar", "کندهار"], ["ghazni", "غزنی"], ["baghlan", "بغلان"],
+  ["takhar", "تخار"], ["badakhshan", "بدخشان"], ["faryab", "فاریاب"], ["jawzjan", "جوزجان"],
+  ["sar_e_pol", "سرپل"], ["samangan", "سمنگان"], ["parwan", "پروان"], ["kapisa", "کاپیسا"],
+  ["panjshir", "پنجشیر"], ["wardak", "وردک"], ["logar", "لوگر"], ["khost", "خوست"],
+  ["paktia", "پکتیا"], ["paktika", "پکتیکا"], ["helmand", "هلمند"], ["zabul", "زابل"],
+  ["uruzgan", "ارزگان"], ["ghor", "غور"], ["badghis", "بادغیس"], ["farah", "فراه"],
+  ["nimroz", "نیمروز"], ["daykundi", "دایکندی"], ["bamyan", "بامیان"], ["kunar", "کنر"],
+  ["laghman", "لغمان"], ["nuristan", "نورستان"],
 ];
 
 export default function CustomerCreatePage() {
   const navigate = useNavigate();
+  const { t } = useTranslation("customers");
 
   const [customerCode, setCustomerCode] = useState("1001");
   const [name, setName] = useState("");
@@ -69,7 +75,7 @@ export default function CustomerCreatePage() {
     e.preventDefault();
 
     if (!name.trim()) {
-      showToast("لطفاً نام و نام خانوادگی مشتری را وارد نمایید.", "error");
+      showToast(t("createPage.nameRequired"), "error");
       return;
     }
 
@@ -102,17 +108,17 @@ export default function CustomerCreatePage() {
       const resData = await res.json();
 
       if (!res.ok) {
-        throw new Error(resData.message || "خطا در ثبت مشتری");
+        throw new Error(resData.message || t("messages.saveFailed"));
       }
 
-      showToast("مشتری جدید با موفقیت در سیستم ثبت گردید.");
+      showToast(t("messages.created"));
 
       setTimeout(() => {
         navigate("/customers");
       }, 1000);
     } catch (err) {
       console.error("Submit customer error:", err);
-      showToast(err.message || "خطا در اتصال به سرور", "error");
+      showToast(err.message || t("createPage.connectionError"), "error");
     } finally {
       setSubmitting(false);
     }
@@ -128,10 +134,10 @@ export default function CustomerCreatePage() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-                ثبت پرونده مشتری جدید
+                {t("createPage.title")}
               </h1>
               <p className="text-xs text-gray-500">
-                ایجاد حساب مشتری، شماره‌های تماس، موقعیت و سقف اعتبار
+                {t("createPage.subtitle")}
               </p>
             </div>
           </div>
@@ -143,7 +149,7 @@ export default function CustomerCreatePage() {
             className="px-3.5 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
           >
             <ArrowRight size={15} />
-            <span>بازگشت به لیست مشتریان</span>
+            <span>{t("createPage.backToList")}</span>
           </Link>
         </div>
       </div>
@@ -155,10 +161,10 @@ export default function CustomerCreatePage() {
               <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                 <div className="flex items-center gap-2 text-gray-900 font-bold text-sm">
                   <User size={16} className="text-emerald-600" />
-                  <span>مشخصات هویتی و شماره‌های تماس</span>
+                  <span>{t("createPage.identityHeading")}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>کد مشتری:</span>
+                  <span>{t("form.code")}</span>
                   <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                     {loadingCode ? "..." : customerCode}
                   </span>
@@ -168,7 +174,7 @@ export default function CustomerCreatePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                    کد شناسایی مشتری (۴ رقمی) <span className="text-rose-500">*</span>
+                    {t("createPage.customerCode")} <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -176,7 +182,7 @@ export default function CustomerCreatePage() {
                       required
                       value={customerCode}
                       onChange={(e) => setCustomerCode(e.target.value)}
-                      placeholder="مثال: 1001"
+                      placeholder={t("createPage.customerCodePlaceholder")}
                       className="w-full h-[40px] px-3 bg-emerald-50/50 border border-emerald-300 rounded text-xs font-mono font-bold text-emerald-900 focus:outline-none focus:border-emerald-600"
                     />
                     <Hash size={15} className="absolute left-3 top-2.5 text-emerald-600" />
@@ -185,22 +191,22 @@ export default function CustomerCreatePage() {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                    نام و نام خانوادگی مشتری <span className="text-rose-500">*</span>
+                    {t("form.name")} <span className="text-rose-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="مثال: حاجی عبدالمجید یا شرکت ساختمانی کابل"
+                    placeholder={t("createPage.namePlaceholder")}
                     className="w-full h-[40px] px-3 bg-white border border-gray-300 rounded text-xs text-gray-800 focus:outline-none focus:border-emerald-600"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                    شماره تماس ۱ (اصلی) <span className="text-rose-500">*</span>
-                    <span className="text-[10.5px] font-normal text-emerald-700 mr-1.5">(نمایش در جدول مشتریان)</span>
+                    {t("form.phone")} <span className="text-rose-500">*</span>
+                    <span className="text-[10.5px] font-normal text-emerald-700 mr-1.5">{t("createPage.phoneTableHint")}</span>
                   </label>
                   <div className="relative">
                     <input
@@ -208,7 +214,7 @@ export default function CustomerCreatePage() {
                       
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="مثال: 0799123456"
+                      placeholder={t("createPage.phonePlaceholder")}
                       className="w-full h-[40px] px-3 bg-white border border-gray-300 rounded text-xs font-mono text-gray-800 focus:outline-none focus:border-emerald-600 text-left"
                     />
                     <Phone size={15} className="absolute right-3 top-2.5 text-gray-400" />
@@ -217,15 +223,15 @@ export default function CustomerCreatePage() {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                    شماره تماس ۲ (اختیاری)
-                    <span className="text-[10.5px] font-normal text-gray-500 mr-1.5">(نمایش در پروفایل مشتری)</span>
+                    {t("form.phone2")}
+                    <span className="text-[10.5px] font-normal text-gray-500 mr-1.5">{t("createPage.phoneProfileHint")}</span>
                   </label>
                   <div className="relative">
                     <input
                       type="text"
                       value={phone2}
                       onChange={(e) => setPhone2(e.target.value)}
-                      placeholder="مثال: 0788123456"
+                      placeholder={t("createPage.phone2Placeholder")}
                       className="w-full h-[40px] px-3 bg-white border border-gray-300 rounded text-xs font-mono text-gray-800 focus:outline-none focus:border-emerald-600 text-left"
                     />
                     <Phone size={15} className="absolute right-3 top-2.5 text-gray-400" />
@@ -237,34 +243,39 @@ export default function CustomerCreatePage() {
             <div className="bg-white border border-gray-200 rounded-card shadow-2xs p-5 space-y-4">
               <div className="flex items-center gap-2 text-gray-900 font-bold text-sm border-b border-gray-100 pb-3">
                 <MapPin size={16} className="text-emerald-600" />
-                <span>موقعیت جغرافیایی و آدرس</span>
+                <span>{t("createPage.locationHeading")}</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                    ولایت <span className="text-rose-500">*</span>
-                    <span className="text-[10.5px] font-normal text-emerald-700 mr-1.5">(نمایش در جدول)</span>
+                    {t("form.province")} <span className="text-rose-500">*</span>
+                    <span className="text-[10.5px] font-normal text-emerald-700 mr-1.5">{t("createPage.provinceTableHint")}</span>
                   </label>
                   <SearchableSelect
                     value={province}
                     onChange={(val) => setProvince(val)}
-                    options={AFGHAN_PROVINCES.map((p) => ({ value: p, label: p }))}
-                    placeholder="انتخاب ولایت"
+                    options={AFGHAN_PROVINCES.map(([key, value]) => ({
+                      value,
+                      label: key === "kabul"
+                        ? t("company.defaultLocation", { ns: "common" })
+                        : t(`provinces.${key}`, { ns: "common" }),
+                    }))}
+                    placeholder={t("createPage.provincePlaceholder")}
                     buttonClassName="w-full h-[40px] px-3 bg-white border border-gray-300 rounded-lg text-xs font-bold text-gray-800"
                   />
                 </div>
 
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                    آدرس و موقعیت دقیق (اختیاری)
-                    <span className="text-[10.5px] font-normal text-gray-500 mr-1.5">(نمایش در پروفایل)</span>
+                    {t("form.address")}
+                    <span className="text-[10.5px] font-normal text-gray-500 mr-1.5">{t("createPage.profileHint")}</span>
                   </label>
                   <textarea
                     rows={2}
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    placeholder="مثال: سرک نو، چهارراهی صدارت، مارکیت فولاد، دکان شماره ۱۲"
+                    placeholder={t("createPage.addressPlaceholder")}
                     className="w-full p-2.5 bg-white border border-gray-300 rounded-input text-xs text-gray-800 focus:outline-none focus:border-emerald-600 leading-relaxed"
                   />
                 </div>
@@ -274,7 +285,7 @@ export default function CustomerCreatePage() {
             <div className="bg-white border border-gray-200 rounded-card shadow-2xs p-5 space-y-4">
               <div className="flex items-center gap-2 text-gray-900 font-bold text-sm border-b border-gray-100 pb-3">
                 <FileText size={16} className="text-emerald-600" />
-                <span>توضیحات و یادداشت پرونده</span>
+                <span>{t("createPage.notesHeading")}</span>
               </div>
 
               <div>
@@ -282,7 +293,7 @@ export default function CustomerCreatePage() {
                   rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="هرگونه یادداشت اختیاری در مورد سابقه مشتری، نحوه تسویه یا ضمانت..."
+                  placeholder={t("createPage.notesPlaceholder")}
                   className="w-full p-2.5 bg-white border border-gray-300 rounded-input text-xs text-gray-800 focus:outline-none focus:border-emerald-600 leading-relaxed"
                 />
               </div>
@@ -293,13 +304,13 @@ export default function CustomerCreatePage() {
             <div className="bg-white border border-gray-200 rounded-card shadow-2xs p-5 space-y-4">
               <div className="flex items-center gap-2 text-gray-900 font-bold text-sm border-b border-gray-100 pb-3">
                 <ShieldCheck size={16} className="text-emerald-600" />
-                <span>تنظیمات مالی و وضعیت حساب</span>
+                <span>{t("createPage.accountSettingsHeading")}</span>
               </div>
 
               <div className="space-y-4 text-xs">
                 <div>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                    سقف اعتبار خرید قرضه ($ دالر)
+                    {t("form.creditLimit")}
                   </label>
                   <div className="relative">
                     <input
@@ -316,19 +327,19 @@ export default function CustomerCreatePage() {
                     />
                     <span className="absolute right-3 top-2.5 text-xs text-gray-400 font-bold">$ USD</span>
                   </div>
-                  <p className="text-[10.5px] text-gray-400 mt-1">حداکثر بدهی مجاز مشتری جهت صدور فاکتور قرضه</p>
+                  <p className="text-[10.5px] text-gray-400 mt-1">{t("createPage.creditLimitHint")}</p>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                    وضعیت حساب مشتری <span className="text-rose-500">*</span>
+                    {t("form.status")} <span className="text-rose-500">*</span>
                   </label>
                   <CustomDropdown
                     value={status}
                     onChange={(val) => setStatus(val)}
                     options={[
-                      { value: "active", label: "فعال (مجاز به انجام معامله)" },
-                      { value: "inactive", label: "غیرفعال (مسدود)" },
+                      { value: "active", label: t("createPage.activeStatus") },
+                      { value: "inactive", label: t("createPage.inactiveStatus") },
                     ]}
                     buttonClassName="w-full h-[40px] px-3 bg-white border border-gray-300 rounded text-xs font-bold text-gray-800"
                   />
@@ -336,7 +347,7 @@ export default function CustomerCreatePage() {
 
                 <div>
                   <label className="block text-xs font-bold text-gray-500 mb-1.5">
-                    کاربر ثبت‌کننده پرونده
+                    {t("createPage.createdBy")}
                   </label>
                   <input
                     type="text"
@@ -354,14 +365,16 @@ export default function CustomerCreatePage() {
                   className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded transition-colors shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <Save size={15} />
-                  <span>{submitting ? "در حال ثبت پرونده..." : "ثبت و ایجاد پرونده مشتری"}</span>
+                  <span>
+                    {submitting ? t("createPage.submitting") : t("createPage.submit")}
+                  </span>
                 </button>
 
                 <Link
                   to="/customers"
                   className="w-full py-2 px-4 bg-white hover:bg-gray-50 text-gray-700 font-semibold text-xs border border-gray-300 rounded transition-colors flex items-center justify-center gap-1.5"
                 >
-                  انصراف و بازگشت
+                  {t("createPage.cancel")}
                 </Link>
               </div>
             </div>

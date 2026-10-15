@@ -242,7 +242,7 @@ export default function PayRulesTable({ canEdit = false }) {
                         ) : (
                           <Save size={14} />
                         )}
-                        <span>{t("payRules.save")}</span>
+                        <span>{t("branches.save")}</span>
                       </button>
                     </td>
                   </tr>

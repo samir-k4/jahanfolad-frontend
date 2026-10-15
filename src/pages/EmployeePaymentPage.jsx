@@ -356,7 +356,12 @@ export default function EmployeePaymentPage() {
     }
   };
   const datePresets = useMemo(
-    () => PRESET_KEYS.map((key) => ({ key, label: t(`payment.presets.${key}`) })),
+    () => PRESET_KEYS.map((key) => ({
+      key,
+      label: ["last_7_days", "last_30_days"].includes(key)
+        ? t(`datePreset.${key}`, { ns: "common" })
+        : t(`payment.presets.${key}`),
+    })),
     [t]
   );
   const sourceFilters = useMemo(

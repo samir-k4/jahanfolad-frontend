@@ -217,7 +217,7 @@ export default function CustomerIncomeReportModal({
                 <div>
                   <label className="block text-label-text font-bold text-gray-700 mb-1.5">{t("report.type")}</label>
                   <div className="h-[38px] px-3 flex items-center justify-between bg-emerald-50/70 border border-emerald-200 rounded-input text-body-text font-bold text-emerald-800 select-none">
-                    <span>{t("label.customerIncome")}</span>
+                    <span>{t("navigation.pages.incomes", { ns: "common" })}</span>
                     <span className="text-caption-text font-normal text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-badge">{t("report.typeAll")}</span>
                   </div>
                 </div>

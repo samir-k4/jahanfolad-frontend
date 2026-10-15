@@ -53,12 +53,12 @@ export default function UserProfilePage() {
       const data = await apiFetch(`/users/${id}`);
       setUser(data?.data ?? data?.user ?? data);
     } catch (err) {
-      setError(err.message || "خطا در دریافت اطلاعات کاربر");
-      showToast.error(err.message || "خطا در دریافت اطلاعات کاربر");
+      setError(err.message || t("userProfile.loadError"));
+      showToast.error(err.message || t("userProfile.loadError"));
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, t]);
 
   useEffect(() => {
     load();
@@ -67,7 +67,7 @@ export default function UserProfilePage() {
   if (loading) {
     return (
       <div className="p-16 text-center text-gray-500 font-medium font-sans text-sm" dir="rtl">
-        در حال بارگذاری مشخصات کاربر...
+        {t("userProfile.loading")}
       </div>
     );
   }
@@ -76,14 +76,14 @@ export default function UserProfilePage() {
     return (
       <div className="p-16 text-center font-sans" dir="rtl">
         <p className="text-rose-600 font-bold text-sm mb-4">
-          {error || "کاربر یافت نشد"}
+          {error || t("userProfile.notFound")}
         </p>
         <button
           type="button"
           onClick={() => navigate("/settings?tab=users")}
           className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg cursor-pointer"
         >
-          بازگشت به فهرست کاربران
+          {t("userProfile.backToUsers")}
         </button>
       </div>
     );
@@ -108,7 +108,7 @@ export default function UserProfilePage() {
           <button
             type="button"
             onClick={() => navigate("/settings?tab=users")}
-            title="بازگشت"
+            title={t("actions.back")}
             className="p-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-600 cursor-pointer transition-colors"
           >
             <ArrowRight size={16} />
@@ -135,7 +135,7 @@ export default function UserProfilePage() {
             }`}
           >
             {isActive ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-            {isActive ? "فعال" : "غیرفعال"}
+            {isActive ? t("status.active") : t("status.inactive")}
           </span>
           {signedInUser?.id === user.id && (
             <button
@@ -153,7 +153,7 @@ export default function UserProfilePage() {
               onClick={() => navigate("/settings?tab=users")}
               className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg cursor-pointer transition-colors"
             >
-              ویرایش کاربر
+              {t("userProfile.edit")}
             </button>
           )}
         </div>
@@ -163,23 +163,23 @@ export default function UserProfilePage() {
       <div className="bg-white rounded-xl border border-gray-200 shadow-2xs p-5 space-y-4">
         <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-slate-700" />
-          مشخصات حساب
+          {t("userProfile.accountDetails")}
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <Field icon={Mail} label="ایمیل" value={user.email} />
-          <Field icon={Phone} label="شماره تماس" value={user.phone} />
+          <Field icon={Mail} label={t("userProfile.email")} value={user.email} />
+          <Field icon={Phone} label={t("form.phone", { ns: "employee" })} value={user.phone} />
           <Field
             icon={Building2}
-            label="نمایندگی"
-            value={user.branch?.name || "دفتر مرکزی"}
+            label={t("userProfile.branch")}
+            value={user.branch?.name || t("company.headOffice")}
           />
           <Field
             icon={Clock}
-            label="آخرین ورود"
+            label={t("userProfile.lastLogin")}
             value={
               user.last_login_at
                 ? formatAfghanDateTime(user.last_login_at)
-                : "تا کنون وارد نشده"
+                : t("userProfile.neverLoggedIn")
             }
           />
         </div>
@@ -189,7 +189,7 @@ export default function UserProfilePage() {
       <div className="bg-white rounded-xl border border-gray-200 shadow-2xs p-5 space-y-3">
         <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-blue-500" />
-          نقش‌های کاربری
+          {t("userProfile.roles")}
           <span className="text-[10px] font-medium text-gray-400">
             ({roleTitles.length})
           </span>
@@ -212,11 +212,11 @@ export default function UserProfilePage() {
         <div className="p-5 pb-3">
           <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-amber-500" />
-            دسترسی‌های مؤثر
+            {t("userProfile.effectivePermissions")}
           </h2>
           {isSuper && (
             <p className="text-[11px] text-emerald-700 font-medium mt-1">
-              این کاربر مدیر ارشد است و به تمام بخش‌ها دسترسی کامل دارد.
+              {t("userProfile.superAdminNote")}
             </p>
           )}
         </div>
@@ -226,7 +226,7 @@ export default function UserProfilePage() {
             <thead>
               <tr className="bg-gray-50 border-y border-gray-200">
                 <th className="p-2.5 text-[11px] font-bold text-gray-700">
-                  نام صفحه
+                  {t("userProfile.pageName")}
                 </th>
                 {ACTIONS.map((a) => (
                   <th

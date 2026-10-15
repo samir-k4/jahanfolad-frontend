@@ -8,6 +8,8 @@
   "create": {
     "afnLong": "افغانی (؋ AFN)",
     "afnOption": "؋ افغانی (AFN)",
+    "applyCurrency": "منظور به حساب با واحد پولی",
+    "appliedAmount": "مبلغ منظورشده به حساب",
     "afnShort": "؋ افغانی",
     "amountLabel": "مبلغ:",
     "amountRequired": "لطفاً مبلغ دریافتی معتبر وارد نمایید.",
@@ -43,6 +45,7 @@
     "sectionSummary": "خلاصه سند دریافتی",
     "submit": "ثبت و ذخیره سند دریافتی",
     "successAmount": "مبلغ واریز:",
+    "successAppliedAmount": "مبلغ منظورشده به حساب:",
     "successTitle": "سند دریافتی با موفقیت ثبت شد",
     "successVault": "صندوق:",
     "summaryAmount": "مبلغ کل ثبت:",
@@ -64,6 +67,7 @@
     "vaultEmpty": "صندوقی یافت نشد.",
     "vaultPlaceholder": "انتخاب صندوق مقصد...",
     "vaultRequired": "لطفاً صندوق / حساب مقصد واریز را انتخاب نمایید.",
+    "vaultConversion": "مبلغ واریزی به صندوق",
     "vaultSearch": "جستجوی صندوق...",
     "viewList": "مشاهده لیست دریافتی‌ها"
   },
@@ -79,6 +83,7 @@
     "warning": "با حذف این سند، مبلغ دریافتی از موجودی حساب/صندوق مربوطه کسر خواهد شد."
   },
   "detail": {
+    "appliedToAccount": "منظورشده در حساب مشتری",
     "cashier": "صندوقدار",
     "close": "بستن",
     "customer": "نام مشتری (پرداخت‌کننده)",
@@ -93,6 +98,7 @@
     "viewVoucher": "مشاهده و چاپ رسید"
   },
   "edit": {
+    "applyCurrency": "منظور به حساب با واحد پولی",
     "amountRequired": "مبلغ دریافتی باید عدد معتبر بزرگتر از صفر باشد.",
     "category": "بابت / دسته‌بندی",
     "categoryEmpty": "دسته‌بندی یافت نشد",
@@ -105,7 +111,6 @@
     "notesPlaceholder": "شرح و جزئیات سند...",
     "rate": "نرخ تبادله",
     "receiverPlaceholder": "نام تحویل‌گیرنده...",
-    "save": "ذخیره تغییرات",
     "updateError": "خطا در ویرایش سند دریافتی.",
     "vault": "حساب واریزی *",
     "vaultEmpty": "حسابی یافت نشد",
@@ -130,8 +135,7 @@
     "misc": "دریافتی متفرقه",
     "prepayment": "پیش پرداخت فاکتور",
     "prepaymentShort": "پیش پرداخت",
-    "scrapSale": "فروش ضایعات و آهن قراضه",
-    "scrapSaleShort": "فروش ضایعات"
+    "scrapSale": "فروش ضایعات و آهن قراضه"
   },
   "label": {
     "amount": "مبلغ دریافتی",
@@ -140,7 +144,6 @@
     "createTitle": "ثبت دریافتی مشتری",
     "currency": "واحد پولی",
     "currencyLabel": "واحد پولی:",
-    "customerIncome": "دریافتی مشتری",
     "date": "تاریخ",
     "editTitle": "ویرایش سند دریافتی",
     "misc": "متفرقه",
@@ -185,7 +188,6 @@
     "zoomOut": "کوچک‌نمایی"
   },
   "table": {
-    "actions": "عملیات",
     "customerFallback": "مشتری",
     "deleteTip": "حذف سند",
     "detailTip": "مشاهده جزئیات دریافتی",

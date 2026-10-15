@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import TooltipButton from "./TooltipButton";
 import CustomDropdown from "./CustomDropdown";
+import { useTranslation } from "react-i18next";
 
 export default function TablePagination({
   currentPage = 1,
@@ -17,9 +18,10 @@ export default function TablePagination({
   onPerPageChange,
   onPageSizeChange,
   perPageOptions = [10, 15, 20, 25, 50, 100],
-  unit = "مورد",
+  unit,
   className = "",
 }) {
+  const { t } = useTranslation("common");
   const externalPerPage = perPage ?? pageSize ?? recordsPerPage;
   const [internalPerPage, setInternalPerPage] = useState(externalPerPage ? Number(externalPerPage) : 15);
 
@@ -65,7 +67,7 @@ export default function TablePagination({
     >
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-1.5">
-          <span className="text-gray-500 font-medium">تعداد در صفحه:</span>
+          <span className="text-gray-500 font-medium">{t("pagination.perPageLabel")}</span>
           <CustomDropdown
             value={currentPerPage}
             onChange={handlePerPageSelect}
@@ -77,17 +79,17 @@ export default function TablePagination({
           />
         </div>
         <span className="text-gray-500 font-normal">
-          (نمایش {from} تا {to} از مجموع {totalCount} {unit})
+          {t("pagination.range", { from, to, total: totalCount, unit: unit || t("pagination.itemUnit") })}
         </span>
       </div>
 
       <div className="flex items-center gap-1.5">
         <span className="text-gray-500 ml-2">
-          صفحه {page} از {finalLastPage}
+          {t("pagination.page", { page, total: finalLastPage })}
         </span>
 
         <TooltipButton
-          tooltip="صفحه اول"
+          tooltip={t("pagination.first")}
           disabled={page <= 1}
           onClick={() => handlePageClick(1)}
           className="p-1.5 rounded-btn border border-gray-300 bg-white hover:bg-gray-100 text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors shadow-2xs"
@@ -95,7 +97,7 @@ export default function TablePagination({
         />
 
         <TooltipButton
-          tooltip="صفحه قبلی"
+          tooltip={t("pagination.previous")}
           disabled={page <= 1}
           onClick={() => handlePageClick(page - 1)}
           className="p-1.5 rounded-btn border border-gray-300 bg-white hover:bg-gray-100 text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors shadow-2xs"
@@ -103,7 +105,7 @@ export default function TablePagination({
         />
 
         <TooltipButton
-          tooltip="صفحه بعدی"
+          tooltip={t("pagination.next")}
           disabled={page >= finalLastPage}
           onClick={() => handlePageClick(page + 1)}
           className="p-1.5 rounded-btn border border-gray-300 bg-white hover:bg-gray-100 text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors shadow-2xs"
@@ -111,7 +113,7 @@ export default function TablePagination({
         />
 
         <TooltipButton
-          tooltip="صفحه آخر"
+          tooltip={t("pagination.last")}
           disabled={page >= finalLastPage}
           onClick={() => handlePageClick(finalLastPage)}
           className="p-1.5 rounded-btn border border-gray-300 bg-white hover:bg-gray-100 text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors shadow-2xs"

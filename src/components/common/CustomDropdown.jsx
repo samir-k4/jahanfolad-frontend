@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function CustomDropdown({
   trigger,
   options = [],
   value,
   onChange,
-  placeholder = "انتخاب...",
+  placeholder,
   icon = null,
   header = null,
   align = "left",
@@ -19,6 +20,7 @@ export default function CustomDropdown({
   usePortal = false,
   children,
 }) {
+  const { t } = useTranslation("common");
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const menuRef = useRef(null);
@@ -29,12 +31,21 @@ export default function CustomDropdown({
     const rect = dropdownRef.current.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const openUp = spaceBelow < 220 && rect.top > 220;
+    const viewportPadding = Math.min(8, window.innerWidth / 2);
+    const menuWidth = Math.min(
+      Math.max(rect.width, 224),
+      window.innerWidth - viewportPadding * 2,
+    );
+    const desiredLeft =
+      align === "left" ? rect.left : rect.right - menuWidth;
     setCoords({
       top: openUp ? "auto" : `${rect.bottom + 4}px`,
       bottom: openUp ? `${window.innerHeight - rect.top + 4}px` : "auto",
-      left: align === "left" ? `${rect.left}px` : "auto",
-      right: align === "right" ? `${window.innerWidth - rect.right}px` : "auto",
-      minWidth: `${rect.width}px`,
+      left: `${Math.min(
+        Math.max(desiredLeft, viewportPadding),
+        window.innerWidth - menuWidth - viewportPadding,
+      )}px`,
+      width: `${menuWidth}px`,
     });
   };
 
@@ -130,8 +141,8 @@ export default function CustomDropdown({
               top: coords.top,
               bottom: coords.bottom,
               left: coords.left,
-              right: coords.right,
-              minWidth: coords.minWidth,
+              width: coords.width,
+              maxWidth: `calc(100vw - ${Math.min(16, window.innerWidth)}px)`,
               zIndex: 99999,
             }
           : undefined
@@ -235,7 +246,7 @@ export default function CustomDropdown({
                   : "text-gray-800 font-medium"
               }`}
             >
-              {selectedOption ? getOptionLabel(selectedOption) : placeholder}
+              {selectedOption ? getOptionLabel(selectedOption) : placeholder || t("actions.select")}
             </span>
             {selectedOption?.badge !== undefined && selectedOption?.badge !== null && (
               <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-700 border border-gray-200 shrink-0">

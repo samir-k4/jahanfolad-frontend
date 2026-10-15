@@ -20,7 +20,7 @@ export default function Login() {
     try {
       await login(email.trim(), password);
     } catch (err) {
-      setError(err.message || "ورود انجام نشد. لطفاً دوباره تلاش کنید.");
+      setError(err.message || t("login.error"));
       setPassword("");
     } finally {
       setIsSubmitting(false);
@@ -37,13 +37,13 @@ export default function Login() {
         <div className="p-7 sm:p-9">
           <header className="mb-8 text-center">
             <p className="mb-1 text-xs font-semibold tracking-[0.18em] text-slate-500">
-              سیستم مدیریت مالی
+              {t("login.productType")}
             </p>
             <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-              سیستم حسابدار نور
+              {t("app.title")}
             </h1>
             <p className="mt-2 text-sm text-slate-600">
-              برای ادامه، به حساب کاربری خود وارد شوید
+              {t("login.subtitle")}
             </p>
           </header>
 
@@ -53,7 +53,7 @@ export default function Login() {
                 htmlFor="login-email"
                 className="mb-2 block text-sm font-semibold text-slate-700"
               >
-                ایمیل یا نام کاربری
+                {t("login.username")}
               </label>
               <input
                 id="login-email"
@@ -67,7 +67,7 @@ export default function Login() {
                 disabled={isSubmitting}
                 className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-left text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 disabled:opacity-60"
                 dir="ltr"
-                placeholder="Email or username"
+                placeholder={t("login.usernamePlaceholder")}
               />
             </div>
 
@@ -76,7 +76,7 @@ export default function Login() {
                 htmlFor="login-password"
                 className="mb-2 block text-sm font-semibold text-slate-700"
               >
-                رمز عبور
+                {t("login.password")}
               </label>
               <input
                 id="login-password"
@@ -89,7 +89,7 @@ export default function Login() {
                 disabled={isSubmitting}
                 className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-left text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 disabled:opacity-60"
                 dir="ltr"
-                placeholder="Enter your password"
+                placeholder={t("login.passwordPlaceholder")}
               />
             </div>
 
@@ -99,7 +99,7 @@ export default function Login() {
                 onClick={() => setShowRecoveryNotice(true)}
                 className="text-sm font-semibold text-slate-700 transition hover:text-slate-950 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-500"
               >
-                رمز عبور خود را فراموش کرده‌اید؟
+                {t("login.forgotPassword")}
               </button>
             </div>
 
@@ -128,12 +128,12 @@ export default function Login() {
               disabled={isSubmitting}
               className="flex w-full cursor-pointer items-center justify-center rounded-lg bg-slate-900 px-4 py-3 font-bold text-white transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {isSubmitting ? "در حال ورود..." : "ورود به سیستم"}
+              {isSubmitting ? t("login.submitting") : t("login.submit")}
             </button>
           </form>
         </div>
         <footer className="border-t border-slate-200 px-7 py-4 text-center text-xs text-slate-500 sm:px-9">
-          دسترسی مجاز برای کاربران ثبت‌شده
+          {t("login.footer")}
         </footer>
       </section>
 
@@ -157,21 +157,21 @@ export default function Login() {
                 onClick={() => setShowRecoveryNotice(false)}
                 className="rounded-lg px-2 py-1 text-sm font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
               >
-                بستن
+                {t("actions.close")}
               </button>
             </div>
             <h2 id="recovery-notice-title" className="text-lg font-bold">
-              بازیابی رمز عبور
+              {t("login.recoveryTitle")}
             </h2>
             <p className="mt-2 text-sm leading-7 text-slate-600">
-              برای بازیابی یا تغییر رمز عبور، لطفاً با مدیر سیستم تماس بگیرید.
+              {t("login.recoveryInstructions")}
             </p>
             <button
               type="button"
               onClick={() => setShowRecoveryNotice(false)}
               className="mt-5 w-full rounded-lg bg-slate-900 px-4 py-2.5 font-bold text-white transition hover:bg-slate-800"
             >
-              فهمیدم
+              {t("actions.understood")}
             </button>
           </section>
         </div>

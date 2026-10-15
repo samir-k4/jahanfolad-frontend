@@ -8,11 +8,7 @@
     "createWithdraw": "ثبت برداشت جدید",
     "printReport": "چاپ راپور",
     "refresh": "تازه‌سازی",
-    "details": "جزئیات",
-    "edit": "ویرایش",
-    "delete": "حذف",
-    "cancel": "انصراف",
-    "deleting": "در حال حذف..."
+    "details": "جزئیات"
   },
   "filters": {
     "rangeLabel": "بازه زمانی:",
@@ -58,10 +54,6 @@
   "status": {
     "loading": "در حال دریافت اطلاعات معاملات...",
     "empty": "هیچ معامله‌ای در این بازه زمانی یافت نشد."
-  },
-  "badges": {
-    "deposit": "واریز به حساب",
-    "withdraw": "برداشت از حساب"
   },
   "emptyValue": "—",
   "messages": {
@@ -143,8 +135,6 @@
     "date": "تاریخ سند:"
   },
   "txDetail": {
-    "typeDeposit": "واریز به حساب",
-    "typeWithdraw": "برداشت از حساب",
     "balanceAfter": "مانده حساب پس از معامله",
     "close": "بستن",
     "deposit": "واریز",
@@ -173,8 +163,13 @@
     "AFN": "افغانی (AFN)",
     "USD": "دالر (USD)"
   },
+  "preset": {
+    "current_month": "ماه جاری",
+    "today": "امروز"
+  },
   "report": {
     "allCategories": "تمام دسته‌بندی‌ها",
+    "allDocs": "تمام اسناد",
     "allTypes": "تمام انواع تراکنش‌ها",
     "allVaults": "تمام حساب‌ها و صندوق‌ها",
     "allVaultsOption": "همه حساب‌ها و صندوق‌ها",
@@ -203,14 +198,6 @@
   },
   "vaultCreate": {
     "currencyLabel": "واحد پولی:"
-  },
-  "deleteConfirm": {
-    "confirmButton": "تایید و حذف",
-    "itemPrefix": "مورد",
-    "itemSuffix": "به‌طور دائمی از سیستم حذف خواهد شد.",
-    "question": "آیا از حذف این مورد مطمئن هستید؟",
-    "title": "تایید حذف",
-    "warning": " این عملیات قابل بازگشت نیست. لطفاً مطمئن باشید."
   },
   "defaults": {
     "depositCategory": "علاوه کردن سهم",
@@ -314,10 +301,6 @@
   "timeSuffix": {
     "am": "ق.ظ",
     "pm": "ب.ظ"
-  },
-  "breadcrumb": {
-    "treasury": "خزانه‌داری",
-    "depositsWithdrawals": "واریز و برداشت"
   },
   "note": {
     "category": "دسته‌بندی: {{value}}",

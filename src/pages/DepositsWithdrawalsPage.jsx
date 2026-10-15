@@ -73,7 +73,12 @@ export default function DepositsWithdrawalsPage() {
   const [deleteTx, setDeleteTx] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const typeOptions = TYPE_FILTER_VALUES.map((value) => ({ value, label: t(`filters.types.${value}`) }));
-  const datePresets = DATE_PRESET_KEYS.map((key) => ({ key, label: t(`presets.${key}`) }));
+  const datePresets = DATE_PRESET_KEYS.map((key) => ({
+    key,
+    label: ["last_7_days", "last_30_days"].includes(key)
+      ? t(`datePreset.${key}`, { ns: "common" })
+      : t(`presets.${key}`),
+  }));
   const currencyOptions = CURRENCY_CODES.map((value) => ({ value, label: t(`currencies.${value}`) }));
   const [vaults, setVaults] = useState([]);
   const [vaultsLoading, setVaultsLoading] = useState(false);
@@ -419,11 +424,11 @@ export default function DepositsWithdrawalsPage() {
                       <td className={TABLE_CELL}>
                         {isDeposit ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-badge bg-positive-soft text-positive-text border border-positive-line font-bold text-xs">
-                            {t("badges.deposit")}
+                            {t("form.depositType")}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-badge bg-danger-soft text-danger-text border border-danger-line font-bold text-xs">
-                            {t("badges.withdraw")}
+                            {t("form.withdrawType")}
                           </span>
                         )}
                       </td>
@@ -471,11 +476,11 @@ export default function DepositsWithdrawalsPage() {
                     </span>
                     {isDeposit ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-badge bg-positive-soft text-positive-text border border-positive-line font-bold text-xs">
-                        {t("badges.deposit")}
+                        {t("form.depositType")}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-badge bg-danger-soft text-danger-text border border-danger-line font-bold text-xs">
-                        {t("badges.withdraw")}
+                        {t("form.withdrawType")}
                       </span>
                     )}
                   </div>

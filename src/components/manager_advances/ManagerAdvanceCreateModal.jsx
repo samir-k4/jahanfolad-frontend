@@ -151,7 +151,7 @@ export default function ManagerAdvanceCreateModal({
       if (onSuccess) onSuccess(resData);
       onClose();
     } catch (err) {
-      setErrorMessage(err.message || t("messages.serverError"));
+      setErrorMessage(err.message || t("toast.serverError", { ns: "common" }));
     } finally {
       setSubmitting(false);
     }

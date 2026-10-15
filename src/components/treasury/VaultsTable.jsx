@@ -177,7 +177,7 @@ export default function VaultsTable({
                         <div className="w-6 h-6 rounded-full border bg-gray-100 text-gray-500 border-gray-200 flex items-center justify-center shrink-0">
                           <Wallet size={15} />
                         </div>
-                        <span className="font-bold text-gray-900 text-xs">{t("vaultsTable.advanceVault")}</span>
+                        <span className="font-bold text-gray-900 text-xs">{t("navigation.pages.advances", { ns: "common" })}</span>
                       </div>
                     </td>
                     <td className="py-1.5 px-2 text-center text-xs text-gray-700 font-medium border border-gray-200">{t("vaultsTable.shortAdvance")}</td>
@@ -199,7 +199,7 @@ export default function VaultsTable({
                         {canDelete && (
                           <TooltipButton
                             tooltip={t("vaultsTable.deleteTip")}
-                            onClick={() => setDeleteVault({ id: "manager-advances", name: t("vaultsTable.advanceVault"), currency: t("vaultsTable.advances") })}
+                            onClick={() => setDeleteVault({ id: "manager-advances", name: t("navigation.pages.advances", { ns: "common" }), currency: t("vaultsTable.advances") })}
                             className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 rounded border border-gray-200 transition-colors cursor-pointer"
                           >
                             <Trash2 size={15} />

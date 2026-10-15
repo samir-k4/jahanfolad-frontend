@@ -21,12 +21,12 @@ export default function ExpenseDetailsModal({ isOpen, expense, onClose }) {
     [t("detailsModal.date"), expense.shamsi_date],
     [t("detailsModal.time"), expense.expense_time],
     [t("detailsModal.type"), expense.expense_type_name],
-    [t("detailsModal.category"), expense.category_title],
+    [t("table.category"), expense.category_title],
     [t("detailsModal.source"), expense.source_title],
     [t("detailsModal.vault"), expense.vault_name],
     [t("detailsModal.amount"), expense.amount == null ? null : `${fmt(expense.amount)} ${currency}`],
-    [t("detailsModal.rate"), expense.exchange_rate == null ? null : fmt(expense.exchange_rate)],
-    [t("detailsModal.usd"), expense.converted_amount_usd == null ? null : `$${fmt(expense.converted_amount_usd)}`],
+    [t("table.exchangeRate"), expense.exchange_rate == null ? null : fmt(expense.exchange_rate)],
+    [t("table.convertedUsd"), expense.converted_amount_usd == null ? null : `$${fmt(expense.converted_amount_usd)}`],
     [t("detailsModal.paidTo"), expense.paid_to],
     [t("detailsModal.state"), expense.state_label],
     [t("detailsModal.createdBy"), expense.created_by],
@@ -66,7 +66,7 @@ export default function ExpenseDetailsModal({ isOpen, expense, onClose }) {
               </div>
             ))}
             <div className="sm:col-span-2 min-w-0">
-              <dt className="text-caption-text text-gray-500">{t("detailsModal.description")}</dt>
+              <dt className="text-caption-text text-gray-500">{t("table.description")}</dt>
               <dd className="text-body-text text-gray-900 whitespace-pre-line break-words">{orDash(expense.description)}</dd>
             </div>
           </div>

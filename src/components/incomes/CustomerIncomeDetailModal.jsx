@@ -55,6 +55,8 @@ export default function CustomerIncomeDetailModal({
   const amountInWords = `${numberToWordsDari(amount)} ${currencyTitle}`;
   const convertedUsd = parseFloat(income.converted_amount_usd || 0);
   const exchangeRate = parseFloat(income.exchange_rate || 70.0);
+  const settlementCurrency = income.settlement_currency || income.customer_transaction?.currency;
+  const settlementAmount = income.settlement_amount ?? income.customer_transaction?.credit;
   return createPortal(
     <div
       className="fixed inset-0 z-[110] flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs font-sans"
@@ -130,20 +132,27 @@ export default function CustomerIncomeDetailModal({
               }
               extra={income.customer?.phone ? `تلفن: ${income.customer.phone}` : null}
             />
+            {settlementCurrency && settlementAmount !== null && settlementAmount !== undefined && (
+              <DetailCard
+                label={t("detail.appliedToAccount")}
+                value={`${fmt(settlementAmount)} ${settlementCurrency}`}
+                subValue={settlementCurrency !== currency ? `نرخ: ${exchangeRate} AFN / USD` : null}
+              />
+            )}
             <DetailCard
               label={t("detail.vault")}
               value={income.vault?.name || t("detail.mainVault")}
-              badge={income.currency}
+              badge={income.vault?.currency || income.currency}
               subValue={
                 income.vault
-                  ? `موجودی: ${fmt(income.vault.current_balance)} ${income.currency}`
+                  ? `موجودی: ${fmt(income.vault.current_balance)} ${income.vault.currency || income.currency}`
                   : null
               }
             />
             <DetailCard
               label={t("label.category")}
               value={
-                income.category?.name || income.category_name || t("label.customerIncome")
+                income.category?.name || income.category_name || t("navigation.pages.incomes", { ns: "common" })
               }
               subValue={income.title ? `عنوان: ${income.title}` : null}
             />

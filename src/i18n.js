@@ -43,6 +43,7 @@ i18n.use(initReactI18next).init({
   },
   lng: "fa",
   fallbackLng: "fa",
+  fallbackNS: "common",
   defaultNS: "common",
   ns: ["common", "attendance", "employee", "production", "warehouse", "products", "sales", "overtime", "salary", "treasury", "advances", "incomes", "settings", "expenses", "depositsWithdrawals", "transfers", "customers"],
   interpolation: {

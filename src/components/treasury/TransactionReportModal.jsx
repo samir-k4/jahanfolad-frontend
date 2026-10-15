@@ -23,10 +23,10 @@ import { showToast } from "../../utils/toast";
 import { getCleanErrorMessage } from "../../utils/errorHandler";
 import { toEnglishDigits } from "../../utils";
 const PRESET_OPTION_KEYS = [
-  ["today", "preset.today"],
-  ["last_7_days", "preset.last_7_days"],
-  ["current_month", "preset.current_month"],
-  ["last_30_days", "preset.last_30_days"],
+  ["today", "datePreset.today", "common"],
+  ["last_7_days", "datePreset.last_7_days", "common"],
+  ["current_month", "datePreset.current_month", "common"],
+  ["last_30_days", "datePreset.last_30_days", "common"],
   ["all", "report.allDocs"],
 ];
 export default function TransactionReportModal({
@@ -37,7 +37,10 @@ export default function TransactionReportModal({
 }) {
   const { t } = useTranslation(namespace);
   const PRESET_OPTIONS = useMemo(
-    () => PRESET_OPTION_KEYS.map(([key, label]) => ({ key, label: t(label) })),
+    () => PRESET_OPTION_KEYS.map(([key, label, ns]) => ({
+      key,
+      label: t(label, ns ? { ns } : undefined),
+    })),
     [t]
   );
   useBodyScrollLock(isOpen);

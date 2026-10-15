@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ShieldAlert } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { PAGES } from "../../constants/permissions";
+import { useTranslation } from "react-i18next";
 
 /**
  * The permission page the current route belongs to. RequirePage provides it,
@@ -67,6 +68,7 @@ export function NavGroup({ pages = [], children }) {
 /** Wraps a route element; refuses the page when the user lacks `view`. */
 export function RequirePage({ page, children }) {
   const { can } = useAuth();
+  const { t } = useTranslation("common");
   if (!page || can(page)) {
     return <PageContext.Provider value={page}>{children}</PageContext.Provider>;
   }
@@ -81,16 +83,27 @@ export function RequirePage({ page, children }) {
         <ShieldAlert size={26} />
       </div>
       <h2 className="text-lg font-bold text-gray-900 mb-1">
-        دسترسی به این بخش برای شما مجاز نیست
+        {t("permission.denied")}
       </h2>
       <p className="text-sm text-gray-500 max-w-sm">
-        برای دسترسی به «{label}» با مدیر سیستم تماس بگیرید.
+        {t("permission.contactAdmin", {
+          label: t(
+            page === "expenses"
+              ? "navigation.groups.expenses"
+              : page === "customers"
+                ? "navigation.groups.customers"
+                : page === "overtime"
+                  ? "navigation.pages.overtime"
+                  : `navigation.pageLabels.${page}`,
+            { defaultValue: label },
+          ),
+        })}
       </p>
       <Link
         to="/"
         className="mt-5 px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg transition-colors"
       >
-        بازگشت به داشبورد
+        {t("permission.backToDashboard")}
       </Link>
     </div>
   );

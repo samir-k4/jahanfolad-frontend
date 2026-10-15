@@ -138,7 +138,7 @@ export default function TreasuryVaultsPage() {
     });
     const resData = await res.json();
     if (!res.ok) throw new Error(resData.message || t("messages.operationFailed"));
-    showToast.success(resData.message || t("messages.operationSuccess"));
+    showToast.success(resData.message || t("toast.successGeneric", { ns: "common" }));
     setActiveModal(null);
     fetchVaults();
     fetchTransactions(currentPage);

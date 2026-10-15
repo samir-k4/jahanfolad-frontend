@@ -17,7 +17,7 @@ export default function BranchSelect({
   buttonClassName = "",
   width = "w-48",
   align = "right",
-  usePortal = false,
+  usePortal = true,
 }) {
   const { t } = useTranslation("common");
   const { branches, isMultiBranch } = useBranch();

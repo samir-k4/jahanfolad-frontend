@@ -40,7 +40,12 @@ export default function TransactionFilters({
 }) {
   const { t } = useTranslation("treasury");
   const PRESETS = useMemo(
-    () => PRESET_KEYS.map((key) => ({ key, label: t(`preset.${key}`) })),
+    () => PRESET_KEYS.map((key) => ({
+      key,
+      label: ["last_7_days", "last_30_days"].includes(key)
+        ? t(`datePreset.${key}`, { ns: "common" })
+        : t(`preset.${key}`),
+    })),
     [t]
   );
   const TRANSACTION_TYPES = useMemo(

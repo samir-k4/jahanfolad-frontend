@@ -46,7 +46,7 @@ export default function ProductionEntryForm({
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-800 tracking-tight">
-              {t("page.title")}
+              {t("navigation.pages.production", { ns: "common" })}
             </h1>
           </div>
         </div>
@@ -115,7 +115,7 @@ export default function ProductionEntryForm({
             {showBranch && (
               <div>
                 <label className="block text-label-text text-gray-700 mb-1.5">
-                  {t("form.branchLabel")}{" "}
+                  {t("branch.gateTitle", { ns: "common" })}{" "}
                   <span className="text-rose-600">*</span>
                 </label>
                 <SearchableSelect

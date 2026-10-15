@@ -38,7 +38,6 @@
   },
   "detail": {
     "amountReceived": "مبلغ دریافتی امانت",
-    "backToList": "بازگشت به لیست",
     "backToListLong": "بازگشت به لیست امانات",
     "cancelAdvance": "لغو امانت",
     "cancelError": "خطا در لغو امانت",
@@ -56,6 +55,7 @@
     "expenseAmount": "مبلغ مصرف",
     "expenseCategory": "کتگوری مصرف",
     "expenseDate": "تاریخ مصرف",
+    "expenseCount": "{{count}} سند مصرف",
     "expenseDeleteError": "خطا در حذف مصرف",
     "expenseDeleted": "مصرف حذف شد.",
     "expenseDescription": "شرح مصرف",
@@ -63,6 +63,7 @@
     "expensesTotal": "مجموع کل مصارف ثبت‌شده:",
     "inProgress": "در جریان مصرف",
     "initialWithdraw": "برداشت اولیه از حساب",
+    "documentNumber": "سند شماره {{number}}",
     "loadError": "خطا در بارگذاری اطلاعات امانت",
     "loading": "در حال بارگذاری اطلاعات امانت...",
     "noExpenses": "هنوز هیچ مصرفی برای این امانت ثبت نشده است.",
@@ -88,6 +89,8 @@
     "settling": "در حال تسویه...",
     "sourceVault": "حساب منبع پرداخت:",
     "staffFallback": "پرسونل",
+    "companyEmployee": "کارمند شرکت ({{person}})",
+    "spentPercent": "{{percent}}٪ مصرف",
     "subtitle": "مشاهده وضعیت امانت، ریز مصارف ثبت‌شده، چاپ سند رسمی و تسویه نهایی",
     "title": "جزئیات و صورت حساب امانت",
     "totalSpent": "مجموع مصارف انجام‌شده"
@@ -141,8 +144,7 @@
     "employeesError": "خطا در بارگذاری اطلاعات کارمندان",
     "expenseCreated": "سند مصرف با موفقیت ثبت شد.",
     "genericError": "خطا",
-    "listError": "خطا در بارگذاری لیست امانت‌ها",
-    "serverError": "خطا در برقراری ارتباط با سرور."
+    "listError": "خطا در بارگذاری لیست امانت‌ها"
   },
   "page": {
     "addExpense": "ثبت مصرف امانت",
@@ -152,7 +154,6 @@
   "preset": {
     "all": "کل دوره (همه زمان‌ها)",
     "custom": "تاریخ انتخابی",
-    "last_30_days": "۳۰ روز اخیر",
     "this_month": "این ماه",
     "this_week": "این هفته",
     "today": "امروز"
@@ -163,9 +164,7 @@
     "settled": "تسویه‌شده"
   },
   "table": {
-    "actions": "عملیات",
     "amount": "مبلغ امانت",
-    "date": "تاریخ",
     "deleteTip": "حذف امانت",
     "detailTip": "مشاهده جزئیات و صورت حساب امانت",
     "docCode": "کد سند",
@@ -176,7 +175,6 @@
     "remaining": "مانده امانت",
     "spent": "مصرف‌شده",
     "staff": "پرسونل شرکت",
-    "status": "وضعیت",
     "unit": "امانت"
   }
 }

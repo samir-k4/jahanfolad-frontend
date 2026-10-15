@@ -357,7 +357,7 @@ export default function ExpenseCreateModal({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">
-                  {tx("createModal.category")} <span className="text-rose-600">*</span>
+                  {tx("table.category")} <span className="text-rose-600">*</span>
                 </label>
                 {categories.length === 0 ? (
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs">
@@ -434,7 +434,7 @@ export default function ExpenseCreateModal({
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">
-                  {tx("createModal.rate")}
+                  {tx("table.exchangeRate")}
                   {needsRate && <span className="text-rose-600"> *</span>}
                 </label>
                 {needsRate ? (
@@ -486,7 +486,7 @@ export default function ExpenseCreateModal({
                 </span>
               </div>
               <div className="px-2.5 py-2 rounded-lg bg-gray-50 border border-gray-200">
-                <span className="block text-[9.5px] font-bold text-gray-500">{tx("createModal.usdEquivalent")}</span>
+                <span className="block text-[9.5px] font-bold text-gray-500">{tx("table.convertedUsd")}</span>
                 <span className="block text-xs font-black font-mono text-blue-700 mt-0.5" dir="ltr">
                   {convertedUsdPreview === null ? "—" : `$${fmt(convertedUsdPreview)}`}
                 </span>
@@ -535,7 +535,7 @@ export default function ExpenseCreateModal({
               disabled={submitting}
               className="px-4 py-2 text-xs font-bold text-gray-700 hover:bg-gray-200 bg-gray-100 rounded-lg transition-colors cursor-pointer"
             >
-              {tx("createModal.cancel")}
+              {tx("actions.cancel", { ns: "common" })}
             </button>
             <button
               type="button"

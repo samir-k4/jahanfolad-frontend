@@ -2,6 +2,7 @@ import  { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Search, X, Loader2 } from "lucide-react";
 import TooltipButton from "./TooltipButton";
+import { useTranslation } from "react-i18next";
 
 export default function SearchableInput({
   value = null,
@@ -11,8 +12,8 @@ export default function SearchableInput({
   onSelect,
   onClear,
   loading = false,
-  placeholder = "جستجو...",
-  noResultsText = "موردی یافت نشد.",
+  placeholder,
+  noResultsText,
   getOptionLabel = (opt) => opt?.name || String(opt || ""),
   getOptionValue = (opt) => opt?.id || opt,
   renderOption = null,
@@ -22,6 +23,7 @@ export default function SearchableInput({
   inputClassName = "",
   disabled = false,
 }) {
+  const { t } = useTranslation("common");
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
   const inputRef = useRef(null);
@@ -129,18 +131,18 @@ export default function SearchableInput({
       {loading && options.length > 0 && (
         <div className="py-2 px-3 bg-emerald-50/50 border-b border-emerald-100/60 flex items-center justify-center gap-2 text-[11px] text-emerald-800 font-medium">
           <Loader2 size={13} className="animate-spin text-emerald-600" />
-          <span>در حال جستجو...</span>
+          <span>{t("search.loading")}</span>
         </div>
       )}
       <div className="overflow-y-auto divide-y divide-gray-50 flex-1">
         {loading && options.length === 0 ? (
           <div className="py-5 px-3 flex items-center justify-center gap-2 text-xs text-gray-500">
             <Loader2 size={16} className="animate-spin text-emerald-600" />
-            <span>در حال جستجو...</span>
+            <span>{t("search.loading")}</span>
           </div>
         ) : options.length === 0 ? (
           <div className="py-5 px-3 text-center text-xs text-gray-400">
-            {noResultsText}
+            {noResultsText || t("search.noResults")}
           </div>
         ) : (
           options.map((opt) => {
@@ -187,7 +189,7 @@ export default function SearchableInput({
           {!disabled && (
             <TooltipButton
               onClick={handleClear}
-              tooltip="تغییر انتخاب"
+              tooltip={t("search.changeSelection")}
               className="p-1 hover:bg-rose-50 text-gray-400 hover:text-rose-600 rounded-btn transition-colors cursor-pointer shrink-0"
             >
               <X size={15} />
@@ -208,7 +210,7 @@ export default function SearchableInput({
                 setIsOpen(true);
               }
             }}
-            placeholder={placeholder}
+            placeholder={placeholder || t("search.placeholder")}
             className={`w-full h-[40px] pr-8 pl-3 bg-white border border-gray-300 rounded-input text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all ${inputClassName}`}
           />
           <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">

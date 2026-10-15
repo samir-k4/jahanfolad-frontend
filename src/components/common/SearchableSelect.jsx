@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Search, X, Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function SearchableSelect({
   options = [],
@@ -25,6 +26,7 @@ export default function SearchableSelect({
   renderOption,
   usePortal = false,
 }) {
+  const { t } = useTranslation("common");
   const [isOpen, setIsOpen] = useState(false);
   const [internalSearchTerm, setInternalSearchTerm] = useState("");
   const searchTerm = searchValue !== undefined ? searchValue : internalSearchTerm;
@@ -45,12 +47,19 @@ export default function SearchableSelect({
     const rect = containerRef.current.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const openUp = spaceBelow < 260 && rect.top > 260;
-    const menuWidth = Math.max(rect.width, 240);
+    const viewportPadding = Math.min(8, window.innerWidth / 2);
+    const menuWidth = Math.min(
+      Math.max(rect.width, 240),
+      window.innerWidth - viewportPadding * 2,
+    );
+    const left = Math.min(
+      Math.max(rect.left, viewportPadding),
+      window.innerWidth - menuWidth - viewportPadding,
+    );
     setCoords({
       top: openUp ? "auto" : `${rect.bottom + 4}px`,
       bottom: openUp ? `${window.innerHeight - rect.top + 4}px` : "auto",
-      left: `${rect.left}px`,
-      right: `${window.innerWidth - rect.right}px`,
+      left: `${left}px`,
       width: `${menuWidth}px`,
     });
   };
@@ -131,7 +140,7 @@ export default function SearchableSelect({
               position: "fixed",
               top: coords.top,
               bottom: coords.bottom,
-              right: coords.right,
+              left: coords.left,
               width: coords.width,
               zIndex: 99999,
             }
@@ -164,11 +173,11 @@ export default function SearchableSelect({
       <div className="max-h-60 overflow-y-auto divide-y divide-gray-50">
         {loading ? (
           <div className="p-3 text-center text-xs text-gray-400">
-            در حال جستجو...
+            {t("search.loading")}
           </div>
         ) : filteredOptions.length === 0 ? (
           <div className="p-3 text-center text-xs text-gray-400">
-            {noResultsText || "موردی یافت نشد"}
+            {noResultsText || t("search.noResults")}
           </div>
         ) : (
           filteredOptions.map((opt, idx) => {

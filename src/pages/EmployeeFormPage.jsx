@@ -306,7 +306,9 @@ export default function EmployeeFormPage() {
         </Link>
         <ChevronLeft size={13} className="text-gray-400" />
         <span className="text-gray-900">
-          {isEdit ? t("form.breadcrumbEdit") : t("form.breadcrumbCreate")}
+          {isEdit
+            ? t("form.breadcrumbEdit")
+            : t("navigation.pages.employeeCreate", { ns: "common" })}
         </span>
       </nav>
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 border-b border-gray-200 pb-4">

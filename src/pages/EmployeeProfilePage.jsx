@@ -257,7 +257,7 @@ export default function EmployeeProfilePage() {
                 <div className="w-7 h-7 rounded-btn bg-slate-100 text-slate-800 flex items-center justify-center font-bold">
                   <User size={16} />
                 </div>
-                <h3 className="text-base font-bold text-gray-900">۱. مشخصات فردی و هویتی</h3>
+                <h3 className="text-base font-bold text-gray-900">{t("profile.personalHeading")}</h3>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -270,7 +270,7 @@ export default function EmployeeProfilePage() {
                 <div className="relative flex items-center">
                   <User size={16} className="text-gray-400 absolute right-3 pointer-events-none" />
                   <div className="w-full h-10 bg-gray-50 border border-gray-300 rounded-input pr-9 pl-3.5 text-base text-gray-800 flex items-center">
-                    <span className="text-gray-400 text-xs ml-1">ولد:</span>
+                    <span className="text-gray-400 text-xs ml-1">{t("profile.fatherNamePrefix")}</span>
                     <span className="font-bold">{safeText(employee.father_name)}</span>
                   </div>
                 </div>
@@ -395,7 +395,7 @@ export default function EmployeeProfilePage() {
                       />
                     ) : (
                       <div className="w-full h-full bg-slate-700 text-white flex items-center justify-center text-3xl font-black">
-                        {safeText(employee.full_name)?.charAt(0) || "ک"}
+                        {safeText(employee.full_name)?.charAt(0) || t("profile.initialFallback")}
                       </div>
                     )}
                   </div>

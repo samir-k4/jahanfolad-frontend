@@ -215,7 +215,15 @@ export default function SettingsPage() {
       setEditingBranch(null);
       notify("success", t(editingBranch ? "branches.updated" : "branches.created"));
     } catch (error) {
-      notify("error", error.message || t("branches.saveError"));
+      const validationMessage = Object.values(error.data?.errors || {})
+        .flat()
+        .find((message) => typeof message === "string");
+      notify(
+        "error",
+        error.status === 422 && validationMessage
+          ? validationMessage
+          : t("branches.saveError"),
+      );
     } finally {
       setSavingBranch(false);
     }
@@ -327,7 +335,10 @@ export default function SettingsPage() {
     if (activeTab === "users") fetchUsers();
     if (activeTab === "categories") fetchCategories();
   }, [activeTab, fetchUsers, fetchCategories]);
-  const domainLabel = (domain) => t(`domain.${domain}`, { defaultValue: domain });
+  const domainLabel = (domain) =>
+    domain === "expense_type"
+      ? t("navigation.pages.expenseTypes", { ns: "common" })
+      : t(`domain.${domain}`, { defaultValue: domain });
   const roleLabel = (roleKey) => t(`role.${roleKey}`, { defaultValue: roleKey });
   const handleToggleUserStatus = async (user) => {
     try {
@@ -541,7 +552,7 @@ export default function SettingsPage() {
               className="text-caption-text text-gray-400 hover:text-gray-600 font-medium inline-flex items-center gap-1 transition-colors"
             >
               <ChevronLeft size={12} />
-              <span>{t("page.back")}</span>
+              <span>{t("permission.backToDashboard", { ns: "common" })}</span>
             </Link>
             <h1 className="text-xl font-bold text-gray-800 tracking-tight mt-1">
               {t("page.title")}
@@ -559,7 +570,7 @@ export default function SettingsPage() {
               className={PRIMARY_BTN_CLASS}
             >
               <Save size={15} />
-              <span>{savingSettings ? t("action.saving") : t("action.save")}</span>
+              <span>{savingSettings ? t("action.saving") : t("actions.saveChanges", { ns: "common" })}</span>
             </button>
           </div>
         </div>
@@ -652,7 +663,7 @@ export default function SettingsPage() {
                           <th className={TH_CLASS}>{t("users.col.username")}</th>
                           <th className={TH_CLASS}>{t("users.col.role")}</th>
                           <th className={TH_CLASS}>{t("users.col.branch")}</th>
-                          <th className={TH_CLASS}>{t("users.col.status")}</th>
+                          <th className={TH_CLASS}>{t("table.status", { ns: "common" })}</th>
                           <th className={`${TH_CLASS} w-36 text-center`}>{t("users.col.actions")}</th>
                         </tr>
                       </thead>
@@ -692,7 +703,7 @@ export default function SettingsPage() {
                               </span>
                             </td>
                             <td className={`${TD_CLASS} text-gray-600`}>
-                              {u.branch ? u.branch.name : t("users.centralOffice")}
+                              {u.branch ? u.branch.name : t("company.headOffice", { ns: "common" })}
                             </td>
                             <td className={TD_CLASS}>
                               <div className="flex items-center gap-2">
@@ -747,7 +758,7 @@ export default function SettingsPage() {
                               {t("users.col.branch")}
                             </span>
                             <span className="text-table-cell-text text-gray-800">
-                              {u.branch ? u.branch.name : t("users.centralOffice")}
+                              {u.branch ? u.branch.name : t("company.headOffice", { ns: "common" })}
                             </span>
                           </div>
                           <div>
@@ -764,7 +775,7 @@ export default function SettingsPage() {
                           </div>
                           <div>
                             <span className="text-caption-text text-gray-500 block mb-0.5">
-                              {t("users.col.status")}
+                              {t("table.status", { ns: "common" })}
                             </span>
                             <StatusToggle
                               isActive={u.status === "active"}
@@ -861,7 +872,7 @@ export default function SettingsPage() {
                           <th className="whitespace-nowrap px-4 py-3">{t("categories.col.domain")}</th>
                           <th className="whitespace-nowrap px-4 py-3">{t("categories.col.related")}</th>
                           <th className="px-4 py-3">{t("categories.col.description")}</th>
-                          <th className="whitespace-nowrap px-4 py-3">{t("categories.col.status")}</th>
+                          <th className="whitespace-nowrap px-4 py-3">                          {t("table.status", { ns: "common" })}</th>
                           <th className="whitespace-nowrap px-4 py-3 text-center">{t("categories.col.actions")}</th>
                         </tr>
                       </thead>
@@ -1384,7 +1395,7 @@ export default function SettingsPage() {
                               {b.phone}
                             </p>
                           )}
-                          {canEditSettings && !b.is_default && (
+                          {canEditSettings && (
                             <div className="mt-3 flex gap-2">
                               <button
                                 type="button"
@@ -1394,19 +1405,21 @@ export default function SettingsPage() {
                                 <Edit2 size={13} />
                                 {t("branches.edit")}
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => deleteBranch(b)}
-                                className="inline-flex items-center gap-1 rounded-btn border border-rose-200 bg-white px-2.5 py-1.5 text-xs font-bold text-rose-700 transition-colors hover:bg-rose-50"
-                              >
-                                <Trash2 size={13} />
-                                {t("branches.delete")}
-                              </button>
+                              {!b.is_default && (
+                                <button
+                                  type="button"
+                                  onClick={() => deleteBranch(b)}
+                                  className="inline-flex items-center gap-1 rounded-btn border border-rose-200 bg-white px-2.5 py-1.5 text-xs font-bold text-rose-700 transition-colors hover:bg-rose-50"
+                                >
+                                  <Trash2 size={13} />
+                                  {t("branches.delete")}
+                                </button>
+                              )}
                             </div>
                           )}
                           {b.is_default && (
                             <p className="mt-2 text-xs text-gray-500">
-                              {t("branches.defaultLocked")}
+                              {t("branches.defaultDeleteLocked")}
                             </p>
                           )}
                         </div>

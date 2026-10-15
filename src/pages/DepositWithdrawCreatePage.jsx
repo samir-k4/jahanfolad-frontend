@@ -521,11 +521,11 @@ export default function DepositWithdrawCreatePage() {
         <div>
           <div className="flex items-center gap-2 text-xs text-gray-500 font-medium mb-1">
             <Link to="/treasury" className="hover:text-gray-800 transition-colors">
-              {t("breadcrumb.treasury")}
+              {t("navigation.pages.treasury", { ns: "common" })}
             </Link>
             <span>›</span>
             <Link to="/deposits-withdrawals" className="hover:text-gray-800 transition-colors">
-              {t("breadcrumb.depositsWithdrawals")}
+              {t("navigation.pages.depositsWithdrawals", { ns: "common" })}
             </Link>
             <span>›</span>
             <span className="text-gray-800 font-bold">

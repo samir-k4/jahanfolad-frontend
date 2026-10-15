@@ -153,7 +153,9 @@ export default function ManagerAdvanceDetailPage() {
           <span>{t("page.title")}</span>
         </Link>
         <ChevronLeft size={13} className="text-gray-400" />
-        <span className="text-gray-800">سند #{String(advance.id).padStart(4, "0")}</span>
+        <span className="text-gray-800">
+          {t("detail.documentNumber", { number: String(advance.id).padStart(4, "0") })}
+        </span>
       </nav>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-200 pb-4">
         <div>
@@ -197,7 +199,7 @@ export default function ManagerAdvanceDetailPage() {
             className="px-3.5 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-btn hover:bg-gray-50 transition-colors shadow-2xs flex items-center gap-1.5"
           >
             <ArrowRight size={15} />
-            <span>{t("detail.backToList")}</span>
+            <span>{t("actions.backToList", { ns: "common" })}</span>
           </Link>
         </div>
       </div>
@@ -209,7 +211,9 @@ export default function ManagerAdvanceDetailPage() {
               <div className="flex items-center gap-1.5 mt-1">
                 {advance.employee ? (
                   <span className="text-3xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                    کارمند شرکت ({advance.employee.position || advance.employee.employee_ID || t("detail.staffFallback")})
+                    {t("detail.companyEmployee", {
+                      person: advance.employee.position || advance.employee.employee_ID || t("detail.staffFallback"),
+                    })}
                   </span>
                 ) : (
                   <span className="text-3xs text-gray-600 bg-gray-50 px-2 py-0.5 rounded border border-gray-200">{t("label.external")}</span>
@@ -283,8 +287,10 @@ export default function ManagerAdvanceDetailPage() {
               </span>
             </div>
             <div className="mt-2 pt-2 border-t border-gray-100 text-3xs text-gray-500 flex justify-between items-center">
-              <span>{advance.expenses?.length || 0} قلم سند مصرف</span>
-              <span className="font-bold font-mono text-rose-700">{spentPercent}% مصرف</span>
+              <span>{t("detail.expenseCount", { count: advance.expenses?.length || 0 })}</span>
+              <span className="font-bold font-mono text-rose-700">
+                {t("detail.spentPercent", { percent: spentPercent })}
+              </span>
             </div>
           </div>
           <div className="bg-white rounded-card border border-gray-200 p-3.5 shadow-2xs flex flex-col justify-between">
@@ -330,7 +336,7 @@ export default function ManagerAdvanceDetailPage() {
           <div className="flex items-center gap-2">
             <h3 className="text-sm font-bold text-gray-900">{t("detail.expensesTitle")}</h3>
             <span className="text-xs bg-gray-100 font-mono font-bold text-gray-700 px-2 py-0.5 rounded border border-gray-200">
-              {advance.expenses?.length || 0} سند
+              {t("detail.expenseCount", { count: advance.expenses?.length || 0 })}
             </span>
           </div>
           {canCreate && isOpen && (
@@ -368,7 +374,7 @@ export default function ManagerAdvanceDetailPage() {
                       {idx + 1}
                     </td>
                     <td className="py-1.5 px-2.5 text-xs text-gray-800 border border-gray-200 font-medium">
-                      {exp.category?.name || exp.category_name || (typeof exp.category === "string" ? exp.category : "") || "متفرقه"}
+                      {exp.category?.name || exp.category_name || (typeof exp.category === "string" ? exp.category : "") || t("expenseModal.defaultCategory")}
                     </td>
                     <td className="py-1.5 px-2.5 text-xs text-gray-700 border border-gray-200 font-normal">
                       {exp.description || "—"}

@@ -214,7 +214,7 @@ export default function ManagerAdvancesPage() {
             { value: "today", label: t("preset.today") },
             { value: "this_week", label: t("preset.this_week") },
             { value: "this_month", label: t("preset.this_month") },
-            { value: "last_30_days", label: t("preset.last_30_days") },
+            { value: "last_30_days", label: t("datePreset.last_30_days", { ns: "common" }) },
             { value: "custom", label: t("preset.custom") },
           ]}
           placeholder={t("filters.rangePlaceholder")}

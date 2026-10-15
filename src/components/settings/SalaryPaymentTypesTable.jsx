@@ -174,7 +174,7 @@ export default function SalaryPaymentTypesTable({ canEdit = false }) {
           <div className="flex items-center gap-2">
             <button type="submit" disabled={!draft.name.trim() || busyId !== null} className={PRIMARY_BTN_CLASS}>
               <Save size={15} />
-              <span>{t("paymentTypes.save")}</span>
+              <span>{t("branches.save")}</span>
             </button>
             <button type="button" onClick={closeForm} className={SECONDARY_BTN_CLASS}>
               <X size={15} />
@@ -195,7 +195,7 @@ export default function SalaryPaymentTypesTable({ canEdit = false }) {
                 <th className={TH_CLASS}>{t("paymentTypes.col.name")}</th>
                 <th className={TH_CLASS}>{t("paymentTypes.col.scope")}</th>
                 <th className={TH_CLASS}>{t("paymentTypes.col.description")}</th>
-                <th className={`${TH_CLASS} text-center`}>{t("paymentTypes.col.status")}</th>
+                <th className={`${TH_CLASS} text-center`}>{t("table.status", { ns: "common" })}</th>
                 <th className={`${TH_CLASS} w-36 text-center`}>{t("table.actions", { ns: "common" })}</th>
               </tr>
             </thead>

@@ -195,7 +195,7 @@ export default function DepositWithdrawModal({
                   : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
               }`}
             >
-              <ArrowDownCircle size={15} />{t("txDetail.typeDeposit")}</button>
+              <ArrowDownCircle size={15} />{t("form.depositType")}</button>
             <button
               type="button"
               onClick={() => handleTypeChange("withdraw")}
@@ -205,7 +205,7 @@ export default function DepositWithdrawModal({
                   : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
               }`}
             >
-              <ArrowUpCircle size={15} />{t("txDetail.typeWithdraw")}</button>
+              <ArrowUpCircle size={15} />{t("form.withdrawType")}</button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-gray-50 p-3 rounded-sm border border-gray-200">
             <div>

@@ -33,7 +33,9 @@ export default function CustomerReceiptCreatePage() {
       INCOME_TYPE_IDS.map((id) => ({
         id,
         name: t(`incomeType.${INCOME_TYPE_KEYS[id]}`),
-        short: t(`incomeType.${INCOME_TYPE_KEYS[id]}Short`),
+        short: id === INCOME_TYPE.SCRAP_SALE
+          ? t("sales.scrapCategory", { ns: "common" })
+          : t(`incomeType.${INCOME_TYPE_KEYS[id]}Short`),
       })),
     [t]
   );
@@ -62,6 +64,7 @@ export default function CustomerReceiptCreatePage() {
   const [isVaultDropdownOpen, setIsVaultDropdownOpen] = useState(false);
   const vaultDropdownRef = useRef(null);
   const [currency, setCurrency] = useState("USD");
+  const [settlementCurrency, setSettlementCurrency] = useState("USD");
   const [exchangeRate, setExchangeRate] = useState("70.00");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
@@ -91,7 +94,7 @@ export default function CustomerReceiptCreatePage() {
           const vList = Array.isArray(vData.data) ? vData.data : (Array.isArray(vData) ? vData : []);
           setVaults(vList);
           const customerVault = vList.find((v) => 
-            (v.name && v.name.includes(t("label.customerIncome"))) ||
+            (v.name && v.name.includes(t("navigation.pages.incomes", { ns: "common" }))) ||
             (v.name && v.name.includes(t("create.defaultShort")))
           );
           if (customerVault) {
@@ -169,12 +172,12 @@ export default function CustomerReceiptCreatePage() {
   }, [selectedCustomer?.id]);
   const matchingLoan = useMemo(() => {
     const loans = Array.isArray(customerLoanDetails) ? customerLoanDetails : [];
-    return loans.find((l) => l.currency === currency) || loans[0] || null;
-  }, [customerLoanDetails, currency]);
+    return loans.find((l) => l.currency === settlementCurrency) || null;
+  }, [customerLoanDetails, settlementCurrency]);
   const customerBalance = matchingLoan?.current_balance !== undefined
     ? parseFloat(matchingLoan.current_balance) || 0
     : 0;
-  const accountCurrency = matchingLoan?.currency || currency || "USD";
+  const accountCurrency = settlementCurrency;
   const accountCurrencySymbol = accountCurrency === "USD" ? "$" : "؋";
   const filteredTypes = useMemo(() => {
     if (!typeSearchQuery.trim()) return incomeTypes;
@@ -193,9 +196,19 @@ export default function CustomerReceiptCreatePage() {
   const currentVault = useMemo(() => {
     return vaults.find((v) => String(v.id) === String(selectedVaultId));
   }, [vaults, selectedVaultId]);
+  const vaultCurrency = String(currentVault?.currency || currency).toUpperCase();
   const numAmount = parseFloat(toEnglishDigits(amount)) || 0;
   const numRate = parseFloat(toEnglishDigits(exchangeRate)) || 1;
   const isAfn = currency === "AFN";
+  const needsExchangeRate = isAfn || settlementCurrency === "AFN" || vaultCurrency === "AFN";
+  const convertAmount = (from, to) => {
+    if (from === to) return numAmount;
+    if (from === "AFN" && to === "USD") return numRate > 0 ? numAmount / numRate : 0;
+    if (from === "USD" && to === "AFN") return numAmount * numRate;
+    return 0;
+  };
+  const settlementAmount = convertAmount(currency, settlementCurrency);
+  const vaultAmount = currentVault ? convertAmount(currency, vaultCurrency) : numAmount;
   const calculatedUsd = useMemo(() => {
     if (!isAfn) return numAmount;
     if (numRate > 0) {
@@ -219,7 +232,7 @@ export default function CustomerReceiptCreatePage() {
       showToast.error(t("create.amountRequired"));
       return;
     }
-    if (isAfn && numRate <= 0) {
+    if (needsExchangeRate && numRate <= 0) {
       showToast.error(t("create.rateRequired"));
       return;
     }
@@ -235,7 +248,8 @@ export default function CustomerReceiptCreatePage() {
         customer_id: selectedCustomer ? selectedCustomer.id : null,
         amount: numAmount,
         currency: currency,
-        exchange_rate: isAfn ? numRate : 1.0,
+        settlement_currency: settlementCurrency,
+        exchange_rate: needsExchangeRate ? numRate : 1.0,
         category_name: selectedType,
         receipt_number: receiptNumber.trim() || String(Math.floor(1000 + Math.random() * 9000)),
         shamsi_date: shamsiDateStr,
@@ -264,6 +278,8 @@ export default function CustomerReceiptCreatePage() {
         customer: selectedCustomer,
         vaultName: currentVault?.name || t("create.defaultVault"),
         calculatedUsd: calculatedUsd,
+        settlement_currency: resData.data?.settlement_currency || null,
+        settlementAmount: resData.data?.settlement_amount ?? null,
       });
       setIsSuccessModalOpen(true);
     } catch (err) {
@@ -511,7 +527,19 @@ export default function CustomerReceiptCreatePage() {
                     buttonClassName="w-full h-[40px] px-3 bg-white border border-gray-300 rounded-btn text-xs font-bold text-gray-800"
                   />
                 </div>
-                {isAfn ? (
+                <div>
+                  <label className="block text-xs font-bold text-gray-800 mb-1.5">{t("create.applyCurrency")}<span className="text-rose-500">*</span></label>
+                  <CustomDropdown
+                    value={settlementCurrency}
+                    onChange={setSettlementCurrency}
+                    options={[
+                      { value: "USD", label: t("create.usdOption") },
+                      { value: "AFN", label: t("create.afnOption") },
+                    ]}
+                    buttonClassName="w-full h-[40px] px-3 bg-white border border-gray-300 rounded-btn text-xs font-bold text-gray-800"
+                  />
+                </div>
+                {needsExchangeRate && (
                   <div className="animate-in fade-in duration-200">
                     <label className="block text-xs font-bold text-emerald-800 mb-1.5">{t("create.rate")}<span className="text-rose-500">*</span>
                       <span className="text-[11px] font-normal text-gray-500 mr-2">{t("create.rateHint")}</span>
@@ -520,6 +548,8 @@ export default function CustomerReceiptCreatePage() {
                       <input
                         type="number"
                         step="0.01"
+                        min="0.0001"
+                        required
                         dir="ltr"
                         onFocus={(e) => e.target.select()}
                         onWheel={(e) => e.target.blur()}
@@ -533,19 +563,18 @@ export default function CustomerReceiptCreatePage() {
                       </span>
                     </div>
                   </div>
-                ) : (
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1.5">{t("create.receiver")}</label>
-                    <input
-                      type="text"
-                      maxLength={TEXT_FIELD_MAX_LENGTH}
-                      value={receivedBy}
-                      onChange={(e) => setReceivedBy(e.target.value)}
-                      placeholder={t("create.receiverPlaceholder")}
-                      className="w-full h-[40px] px-3 bg-white border border-gray-300 rounded-btn text-xs text-gray-800 focus:outline-none focus:border-emerald-600"
-                    />
-                  </div>
                 )}
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 mb-1.5">{t("create.receiver")}</label>
+                  <input
+                    type="text"
+                    maxLength={TEXT_FIELD_MAX_LENGTH}
+                    value={receivedBy}
+                    onChange={(e) => setReceivedBy(e.target.value)}
+                    placeholder={t("create.receiverPlaceholder")}
+                    className="w-full h-[40px] px-3 bg-white border border-gray-300 rounded-btn text-xs text-gray-800 focus:outline-none focus:border-emerald-600"
+                  />
+                </div>
               </div>
             </div>
             <div className="bg-white border border-gray-200 rounded-card shadow-2xs p-5 space-y-5">
@@ -579,10 +608,10 @@ export default function CustomerReceiptCreatePage() {
                     </div>
                   )}
                 </div>
-                <div className="p-4 bg-gray-50 border border-gray-200 rounded-btn flex flex-col justify-center h-[76px]">
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-btn flex flex-col justify-center min-h-[76px]">
                   <div className="text-xs text-gray-500 font-medium flex items-center justify-between">
                     <span>{t("create.usdTotal")}</span>
-                    {isAfn && (
+                    {needsExchangeRate && (
                       <span className="text-[10px] text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-badge font-bold">{t("create.usdHint")}</span>
                     )}
                   </div>
@@ -591,6 +620,16 @@ export default function CustomerReceiptCreatePage() {
                     <span>{fmt(calculatedUsd)}</span>
                     <span className="text-xs text-gray-500 font-normal">USD</span>
                   </div>
+                  {selectedCustomer && (
+                    <div className="mt-2 text-[11px] text-gray-600">
+                      {t("create.appliedAmount")}: <strong className="font-mono text-slate-800">{fmt(settlementAmount)} {settlementCurrency}</strong>
+                    </div>
+                  )}
+                  {currentVault && vaultCurrency !== currency && (
+                    <div className="mt-1 text-[11px] text-gray-600">
+                      {t("create.vaultConversion")}: <strong className="font-mono text-slate-800">{fmt(vaultAmount)} {vaultCurrency}</strong>
+                    </div>
+                  )}
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">{t("create.notes")}</label>
@@ -754,6 +793,14 @@ export default function CustomerReceiptCreatePage() {
                   {fmt(createdReceiptData.amount)} {createdReceiptData.currency === 'USD' ? '$' : '؋'}
                 </span>
               </div>
+              {createdReceiptData.settlement_currency && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">{t("create.successAppliedAmount")}</span>
+                  <span className="font-bold text-slate-700 font-mono text-sm">
+                    {fmt(createdReceiptData.settlementAmount)} {createdReceiptData.settlement_currency}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-gray-500">{t("create.successVault")}</span>
                 <span className="font-medium text-gray-800">{createdReceiptData.vaultName}</span>
@@ -788,6 +835,7 @@ export default function CustomerReceiptCreatePage() {
         title={t("common:voucher.receiptTitle")}
         subtitle={voucherReceipt ? t("common:voucher.receiptMeta", { doc: voucherReceipt.docNum, payer: voucherReceipt.payer_name || "" }) : ""}
         icon={<Receipt className="w-5 h-5" />}
+        sheetWidth={560}
       />
     </div>
   );

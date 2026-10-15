@@ -1,17 +1,13 @@
 {
   "actions": {
-    "cancel": "انصراف",
-    "edit": "ویرایش",
     "loading": "در حال بارگذاری...",
     "refresh": "تازه‌سازی",
-    "saveChanges": "ذخیره تغییرات",
     "saving": "در حال ثبت..."
   },
   "category": {
     "cashSale": "فروش نقدی",
     "currencyExchange": "تبادله ارز",
     "expense": "مصارف عمومی",
-    "income": "دریافتی مشتری",
     "managerAdvance": "مساعده مدیریت",
     "personalOut": "برداشت شخصی",
     "salaryAdvance": "مساعده معاشات",
@@ -135,7 +131,6 @@
     "editFailed": "خطا در ویرایش",
     "invalidAmount": "لطفاً مبلغ معتبر وارد کنید.",
     "operationFailed": "خطا در انجام عملیات",
-    "operationSuccess": "عملیات با موفقیت انجام شد.",
     "reportLoadError": "خطا در بارگذاری راپور خزانه‌داری از سرور",
     "reportPdfError": "خطا در دانلود فایل PDF از سرور",
     "saveError": "خطا در ذخیره‌سازی اطلاعات",
@@ -158,8 +153,6 @@
   "preset": {
     "all": "همه",
     "current_month": "ماه جاری",
-    "last_30_days": "۳۰ روز اخیر",
-    "last_7_days": "۷ روز اخیر",
     "today": "امروز"
   },
   "receiptType": {
@@ -271,7 +264,6 @@
   },
   "vaultDetail": {
     "balanceColumn": "مانده حساب",
-    "breadcrumb": "خزانه‌داری",
     "currencyLabel": "واحد پولی",
     "currentBalance": "موجودی فعلی حساب",
     "editTitle": "ویرایش اطلاعات حساب",
@@ -290,7 +282,6 @@
   "vaultsTable": {
     "accountNumber": "شماره حساب",
     "advanceDeleted": "حساب امانتی با موفقیت حذف گردید.",
-    "advanceVault": "حساب امانتی",
     "advances": "امانات",
     "balance": "موجودی",
     "deleteBlocked": "امکان حذف حسابی که دارای مانده است وجود ندارد. لطفاً ابتدا موجودی آن را تسویه یا صفر نمایید.",

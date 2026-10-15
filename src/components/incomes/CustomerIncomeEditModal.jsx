@@ -38,6 +38,7 @@ export default function CustomerIncomeEditModal({
     income_category_id: "",
     amount: "",
     currency: "",
+    settlement_currency: "",
     exchange_rate: "",
     shamsi_date: "",
     income_date: "",
@@ -48,13 +49,18 @@ export default function CustomerIncomeEditModal({
   const [dateObj, setDateObj] = useState(null);
   useEffect(() => {
     if (income && isOpen) {
+      const settlementCurrency = income.settlement_currency || income.customer_transaction?.currency || income.currency || "";
+      const vaultCurrency = income.vault?.currency || income.currency;
+      const needsExchangeRate = income.currency === "AFN" || settlementCurrency === "AFN" || vaultCurrency === "AFN";
+      const savedRate = Number(income.exchange_rate || 0);
       setFormData({
         payer_name: income.payer_name || "",
         vault_id: String(income.vault_id || ""),
         income_category_id: String(income.income_category_id || ""),
         amount: String(income.amount || ""),
         currency: income.currency || "",
-        exchange_rate: String(income.exchange_rate || ""),
+        settlement_currency: settlementCurrency,
+        exchange_rate: String(needsExchangeRate && savedRate <= 1 ? "70.00" : (savedRate || 70)),
         shamsi_date: income.shamsi_date || "",
         income_date: income.income_date || "",
         title: income.title || "",
@@ -131,6 +137,7 @@ export default function CustomerIncomeEditModal({
         income_category_id: formData.income_category_id ? parseInt(formData.income_category_id) : null,
         amount: parseFloat(formData.amount),
         currency: formData.currency,
+        settlement_currency: formData.settlement_currency,
         exchange_rate: parseFloat(formData.exchange_rate) || 1.0,
         shamsi_date: formData.shamsi_date,
         income_date: formData.income_date,
@@ -168,6 +175,8 @@ export default function CustomerIncomeEditModal({
   const docCode = income.receipt_number || income.id;
   const parsedAmount = parseFloat(formData.amount || 0);
   const currencyTitle = formData.currency === "USD" ? t("currency.USD") : t("currency.AFN");
+  const vaultCurrency = vaults.find((vault) => String(vault.id) === String(formData.vault_id))?.currency || formData.currency;
+  const needsExchangeRate = formData.currency === "AFN" || formData.settlement_currency === "AFN" || vaultCurrency === "AFN";
   const amountInWords =
     parsedAmount > 0 ? `${numberToWordsDari(parsedAmount)} ${currencyTitle}` : "";
   return createPortal(
@@ -242,7 +251,7 @@ export default function CustomerIncomeEditModal({
                     </div>
                   )}
                 </div>
-                <div className="sm:col-span-5 grid grid-cols-2 gap-2">
+                <div className="sm:col-span-5 grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <div className="space-y-1">
                     <label className="text-caption-text font-medium text-emerald-900/80 block">{t("label.currency")}</label>
                     <CustomDropdown
@@ -258,10 +267,26 @@ export default function CustomerIncomeEditModal({
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-caption-text font-medium text-emerald-900/80 block">{t("edit.rate")}</label>
+                    <label className="text-caption-text font-medium text-emerald-900/80 block">{t("edit.applyCurrency")}</label>
+                    <CustomDropdown
+                      value={formData.settlement_currency}
+                      onChange={(val) => handleInputChange("settlement_currency", val)}
+                      options={[
+                        { value: "USD", label: t("currency.usdLong") },
+                        { value: "AFN", label: t("currency.afnLong") },
+                      ]}
+                      buttonClassName="w-full p-2.5 text-btn-text font-bold rounded-input border border-emerald-200 bg-white text-emerald-900 outline-none hover:border-emerald-400 shadow-2xs cursor-pointer"
+                      width="w-full"
+                      usePortal={true}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-caption-text font-medium text-emerald-900/80 block">{t("edit.rate")}{needsExchangeRate && <span className="text-rose-500"> *</span>}</label>
                     <input
                       type="number"
                       step="any"
+                      min="0.0001"
+                      required={needsExchangeRate}
                       dir="ltr"
                       onFocus={(e) => e.target.select()}
                       onWheel={(e) => e.target.blur()}
@@ -373,7 +398,7 @@ export default function CustomerIncomeEditModal({
               className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-btn-text font-bold rounded-btn flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
             >
               {submitting && <Loader2 size={13} className="animate-spin" />}
-              <span>{submitting ? t("label.saving") : t("edit.save")}</span>
+              <span>{submitting ? t("label.saving") : t("actions.saveChanges", { ns: "common" })}</span>
             </button>
           </div>
         </form>

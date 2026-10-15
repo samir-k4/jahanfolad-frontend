@@ -137,7 +137,7 @@ export default function CustomerReceiptsPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-200 pb-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-page-title text-gray-900 tracking-tight">{t("label.customerIncome")}</h1>
+            <h1 className="text-page-title text-gray-900 tracking-tight">{t("navigation.pages.incomes", { ns: "common" })}</h1>
           </div>
         </div>
         <div className="flex items-center gap-2.5">
@@ -347,6 +347,7 @@ export default function CustomerReceiptsPage() {
         title={t("common:voucher.receiptTitle")}
         subtitle={selectedIncomeForVoucher ? t("common:voucher.receiptMeta", { doc: formatDocNumber(selectedIncomeForVoucher.receipt_number, selectedIncomeForVoucher.id), payer: selectedIncomeForVoucher.payer_name || "" }) : ""}
         icon={<Receipt className="w-5 h-5" />}
+        sheetWidth={560}
       />
       <CustomerIncomeDetailModal
         isOpen={!!selectedIncomeForDetail}

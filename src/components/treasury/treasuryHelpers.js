@@ -10,7 +10,6 @@ import {
 } from "../../constants/treasuryDomain";
 const t = (key) => i18n.t(key, { ns: "treasury" });
 const CATEGORY_BY_REFERENCE = {
-  [REFERENCE_TYPE.INCOME]: "category.income",
   [REFERENCE_TYPE.EXPENSE]: "category.expense",
   [REFERENCE_TYPE.EXPENSES]: "category.expense",
   [REFERENCE_TYPE.SALARY_ADVANCES]: "category.salaryAdvance",
@@ -45,7 +44,9 @@ export { formatDocNumber } from "../../utils/formatDocNumber";
 export const getCategoryName = (tx, deposit) =>
   tx?.category?.name ||
   fromNotes(tx?.notes, NOTE_KEY.CATEGORY) ||
-  t(CATEGORY_BY_REFERENCE[tx?.reference_type] || (deposit ? "category.shareIn" : "category.personalOut"));
+  (tx?.reference_type === REFERENCE_TYPE.INCOME
+    ? i18n.t("navigation.pages.incomes", { ns: "common" })
+    : t(CATEGORY_BY_REFERENCE[tx?.reference_type] || (deposit ? "category.shareIn" : "category.personalOut")));
 export const getSourceTitle = (tx) => t(SOURCE_BY_REFERENCE[tx?.reference_type] || "source.direct");
 export const getPaymentMethod = (tx) => t(`receiptType.${tx?.receipt_type || RECEIPT_TYPE.CASH}`);
 export const getPartyName = (tx, deposit) =>

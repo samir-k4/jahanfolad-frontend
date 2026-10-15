@@ -38,12 +38,7 @@ export default function CustomerProfilePage() {
   const [invoices, setInvoices] = useState([]);
   const [receipts, setReceipts] = useState([]);
   const [statement, setStatement] = useState([]);
-  const [summary, setSummary] = useState({
-    currency: "AFN",
-    total_due: 0,
-    total_paid: 0,
-    total_invoiced: 0,
-  });
+  const [summary, setSummary] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("statement");
@@ -118,7 +113,7 @@ export default function CustomerProfilePage() {
       setReceipts(json.receipts || []);
       setStatement(json.statement || []);
       if (json.summary) {
-        setSummary(json.summary);
+        setSummary(Array.isArray(json.loans) ? json.loans : (json.summary.by_currency || []));
       }
 
       if (cust) {
@@ -369,22 +364,29 @@ export default function CustomerProfilePage() {
                 <thead>
                   <tr className="bg-slate-100/90 text-slate-800 font-bold border-b border-gray-200">
                     <th className="py-1.5 px-3 border-l border-gray-200">واحد پول</th>
-                    <th className="py-1.5 px-3 border-l border-gray-200">طلب</th>
+                    <th className="py-1.5 px-3 border-l border-gray-200">مانده حساب</th>
                     <th className="py-1.5 px-3">پرداختی</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="divide-x divide-x-reverse divide-gray-200 font-mono font-bold text-sm bg-gray-50/50">
-                    <td className="py-2 px-3 text-slate-900 font-bold">
-                      {summary.currency || "USD"}
-                    </td>
-                    <td className="py-2 px-3 text-rose-700 font-black">
-                      {Number(summary.total_due || 0).toLocaleString()}
-                    </td>
-                    <td className="py-2 px-3 text-emerald-700 font-black">
-                      {Number(summary.total_paid || 0).toLocaleString()}
-                    </td>
-                  </tr>
+                  {summary.length ? summary.map((loan) => (
+                    <tr key={loan.currency} className="divide-x divide-x-reverse divide-gray-200 font-mono font-bold text-sm bg-gray-50/50">
+                      <td className="py-2 px-3 text-slate-900 font-bold">{loan.currency}</td>
+                      <td className={`py-2 px-3 font-black ${Number(loan.current_balance || 0) > 0 ? "text-rose-700" : "text-emerald-700"}`}>
+                        <div>{Math.abs(Number(loan.current_balance || 0)).toLocaleString()}</div>
+                        <span className="text-[10px] font-sans">
+                          {Number(loan.current_balance || 0) > 0 ? "بدهکار" : Number(loan.current_balance || 0) < 0 ? "بستانکار / پیش‌پرداخت" : "تسویه"}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 text-emerald-700 font-black">
+                        {Number(loan.total_paid || 0).toLocaleString()}
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={3} className="py-3 px-3 text-center text-gray-500">حسابی ثبت نشده است</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -952,6 +954,7 @@ export default function CustomerProfilePage() {
         title="رسید دریافتی"
         subtitle={selectedIncomeForVoucher ? `#${selectedIncomeForVoucher.receipt_number || selectedIncomeForVoucher.id}` : ""}
         icon={<FileText size={18} />}
+        sheetWidth={560}
       />
 
       <DocumentPreviewModal

@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Routes,
   Route,
@@ -47,12 +48,16 @@ import { useBranch } from "./context/BranchContext";
 import useExpenseTypes from "./hooks/useExpenseTypes";
 import { AppToaster } from "./utils/toast";
 export default function App() {
+  const { t, i18n } = useTranslation("common");
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isRestoring, isAuthenticated, mustChangePassword, logout, refreshUser, can } =
     useAuth();
   const { needsBranchGate } = useBranch();
   const { types: expenseTypes } = useExpenseTypes(isAuthenticated);
+  useEffect(() => {
+    document.title = t("app.title");
+  }, [i18n.resolvedLanguage, t]);
   const activeTab = location.pathname;
   const isFluidPage = [
     "/treasury",
@@ -134,12 +139,12 @@ export default function App() {
                 : "text-slate-300"
             }`}
           >
-            صفحه اصلی
+            {t("navigation.home")}
           </Link>
           <NavGroup pages={["production", "products", "warehouse"]}>
           <div className="relative group cursor-pointer">
             <div className="flex items-center space-x-1 space-x-reverse hover:text-slate-300 py-1.5 text-slate-300">
-              <span>تولیدات و گدام</span>
+              <span>{t("navigation.groups.productionWarehouse")}</span>
               <ChevronDown size={14} />
             </div>
             <div className="absolute right-0 w-52 bg-white text-gray-800 rounded-card shadow-xl hidden group-hover:block border border-gray-200 overflow-hidden z-50">
@@ -148,21 +153,21 @@ export default function App() {
                 to="/production"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 font-bold text-slate-900"
               >
-                ثبت تولیدات روزانه
+                {t("navigation.pages.production")}
               </PageLink>
               <PageLink
                 page="products"
                 to="/products"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
               >
-                لیست محصولات
+                {t("navigation.pages.products")}
               </PageLink>
               <PageLink
                 page="warehouse"
                 to="/godam"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
               >
-                موجودی گدام
+                {t("navigation.pages.warehouse")}
               </PageLink>
             </div>
           </div>
@@ -170,7 +175,7 @@ export default function App() {
           <NavGroup pages={["employees", "attendance", "overtime", "salaries"]}>
           <div className="relative group cursor-pointer">
             <div className="flex items-center space-x-1 space-x-reverse hover:text-slate-300 py-1.5 text-slate-300">
-              <span>منابع بشری</span>
+              <span>{t("navigation.groups.humanResources")}</span>
               <ChevronDown size={14} />
             </div>
             <div className="absolute right-0 w-52 bg-white text-gray-800 rounded-card shadow-xl hidden group-hover:block border border-gray-200 overflow-hidden z-50">
@@ -179,28 +184,28 @@ export default function App() {
                 to="/employees"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
               >
-                لیست کارمندان
+                {t("navigation.pages.employees")}
               </PageLink>
               <PageLink
                 page="attendance"
                 to="/attendance"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
               >
-                ثبت حاضری
+                {t("navigation.pages.attendance")}
               </PageLink>
               <PageLink
                 page="overtime"
                 to="/overtime"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
               >
-                اضافه کاری
+                {t("navigation.pages.overtime")}
               </PageLink>
               <PageLink
                 page="salaries"
                 to="/salaries"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
               >
-                پرداخت معاش
+                {t("navigation.pages.salary")}
               </PageLink>
             </div>
           </div>
@@ -208,7 +213,7 @@ export default function App() {
           <NavGroup pages={["treasury", "advances", "incomes"]}>
           <div className="relative group cursor-pointer">
             <div className="flex items-center space-x-1 space-x-reverse hover:text-slate-300 py-1.5 text-slate-300">
-              <span>حسابات</span>
+              <span>{t("navigation.groups.accounts")}</span>
               <ChevronDown size={14} />
             </div>
             <div className="absolute right-0 w-48 bg-white text-gray-800 rounded-card shadow-xl hidden group-hover:block border border-gray-200 overflow-hidden z-50">
@@ -217,21 +222,21 @@ export default function App() {
                 to="/treasury"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
               >
-                خزانه‌داری
+                {t("navigation.pages.treasury")}
               </PageLink>
               <PageLink
                 page="advances"
                 to="/manager-advances"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
               >
-                حساب امانتی
+                {t("navigation.pages.advances")}
               </PageLink>
               <PageLink
                 page="incomes"
                 to="/incomes"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
               >
-                دریافتی مشتری
+                {t("navigation.pages.incomes")}
               </PageLink>
             </div>
           </div>
@@ -239,7 +244,7 @@ export default function App() {
           <NavGroup pages={["treasury"]}>
           <div className="relative group cursor-pointer">
             <div className="flex items-center space-x-1 space-x-reverse hover:text-slate-300 py-1.5 text-slate-300">
-              <span>معاملات</span>
+              <span>{t("navigation.groups.transactions")}</span>
               <ChevronDown size={14} />
             </div>
             <div className="absolute right-0 w-48 bg-white text-gray-800 rounded-card shadow-xl hidden group-hover:block border border-gray-200 overflow-hidden z-50">
@@ -248,14 +253,14 @@ export default function App() {
                 to="/deposits-withdrawals"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
               >
-                واریز و برداشت
+                {t("navigation.pages.depositsWithdrawals")}
               </PageLink>
               <PageLink
                 page="treasury"
                 to="/transfers"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
               >
-                انتقال
+                {t("navigation.pages.transfers")}
               </PageLink>
             </div>
           </div>
@@ -263,7 +268,7 @@ export default function App() {
           <NavGroup pages={["expenses", "settings"]}>
           <div className="relative group cursor-pointer">
             <div className="flex items-center space-x-1 space-x-reverse hover:text-slate-300 py-1.5 text-slate-300">
-              <span>مصارف</span>
+              <span>{t("navigation.groups.expenses")}</span>
               <ChevronDown size={14} />
             </div>
             <div className="absolute right-0 w-56 bg-white text-gray-800 rounded-card shadow-xl hidden group-hover:block border border-gray-200 overflow-hidden z-50">
@@ -272,7 +277,7 @@ export default function App() {
                 to="/expenses"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700 font-bold"
               >
-                همه مصارف
+                {t("navigation.pages.expenses")}
               </PageLink>
               {expenseTypes.map((type) => (
                 <PageLink
@@ -289,7 +294,7 @@ export default function App() {
                 to="/settings?tab=categories&domain=expense_type"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
               >
-                نوعیت مصارف
+                {t("navigation.pages.expenseTypes")}
               </PageLink>
             </div>
           </div>
@@ -301,7 +306,7 @@ export default function App() {
                 isCustomersPage ? "text-white font-bold" : "text-slate-300"
               }`}
             >
-              <span>مشتریان</span>
+              <span>{t("navigation.groups.customers")}</span>
               <ChevronDown size={14} />
             </div>
             <div className="absolute right-0 w-48 bg-white text-gray-800 rounded-card shadow-xl hidden group-hover:block border border-gray-200 overflow-hidden z-50">
@@ -310,14 +315,14 @@ export default function App() {
                 to="/customers"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
               >
-                لیست مشتریان
+                {t("navigation.pages.customers")}
               </PageLink>
               <PageLink
                 page="customers"
                 to="/customer-loans"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
               >
-                لیست قرضداری
+                {t("navigation.pages.customerLoans")}
               </PageLink>
             </div>
           </div>
@@ -325,7 +330,7 @@ export default function App() {
           <NavGroup pages={["sales"]}>
           <div className="relative group cursor-pointer">
             <div className="flex items-center space-x-1 space-x-reverse hover:text-slate-300 py-1.5 text-slate-300">
-              <span>فروش</span>
+              <span>{t("navigation.groups.sales")}</span>
               <ChevronDown size={14} />
             </div>
             <div className="absolute right-0 w-48 bg-white text-gray-800 rounded-card shadow-xl hidden group-hover:block border border-gray-200 overflow-hidden z-50">
@@ -334,14 +339,14 @@ export default function App() {
                 to="/sales/invoices"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
               >
-                فاکتور
+                {t("navigation.pages.invoices")}
               </PageLink>
               <PageLink
                 page="sales"
                 to="/sales/scrap"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
               >
-                فروش مواد ضایع
+                {t("sales.scrapCategory")}
               </PageLink>
             </div>
           </div>
@@ -351,7 +356,7 @@ export default function App() {
             to="/reports"
             className={`hover:text-slate-300 py-1.5 ${activeTab === "/reports" ? "text-white border-b-2 border-white font-bold" : "text-slate-300"}`}
           >
-            راپور ها
+            {t("navigation.pages.reports")}
           </PageLink>
         </div>
         <div className="flex items-center space-x-3.5 space-x-reverse">
@@ -388,8 +393,8 @@ export default function App() {
           <button
             type="button"
             onClick={logout}
-            title="خروج از سیستم"
-            aria-label="خروج از سیستم"
+            title={t("navigation.logout")}
+            aria-label={t("navigation.logout")}
             className="hidden md:flex items-center space-x-1 space-x-reverse text-slate-300 hover:text-rose-400 p-1.5 rounded-btn transition-colors cursor-pointer"
           >
             <LogOut size={17} />
@@ -403,55 +408,55 @@ export default function App() {
           onChange={handleMobileNavChange}
         >
           {can("dashboard") && (
-            <option value="/">داشبورد</option>
+            <option value="/">{t("navigation.pages.dashboard")}</option>
           )}
           {can("production") && (
-            <option value="/production">ثبت تولیدات</option>
+            <option value="/production">{t("navigation.pages.production")}</option>
           )}
           {can("products") && (
-            <option value="/products">لیست محصولات</option>
+            <option value="/products">{t("navigation.pages.products")}</option>
           )}
           {can("warehouse") && (
-            <option value="/godam">موجودی گدام</option>
+            <option value="/godam">{t("navigation.pages.warehouse")}</option>
           )}
           {can("employees") && (
-            <option value="/employees">لیست کارمندان</option>
+            <option value="/employees">{t("navigation.pages.employees")}</option>
           )}
           {can("employees") && (
-            <option value="/employees/create">پذیرش کارمند جدید</option>
+            <option value="/employees/create">{t("navigation.pages.employeeCreate")}</option>
           )}
           {can("attendance") && (
-            <option value="/attendance">حاضری</option>
+            <option value="/attendance">{t("navigation.pages.attendance")}</option>
           )}
           {can("overtime") && (
-            <option value="/overtime">اضافه کاری</option>
+            <option value="/overtime">{t("navigation.pages.overtime")}</option>
           )}
           {can("salaries") && (
-            <option value="/salaries">پرداخت معاش</option>
+            <option value="/salaries">{t("navigation.pages.salary")}</option>
           )}
           {can("treasury") && (
-            <option value="/treasury">حسابات - خزانه‌داری</option>
+            <option value="/treasury">{t("navigation.pages.treasuryMobile")}</option>
           )}
           {can("advances") && (
-            <option value="/manager-advances">امانتی مدیران</option>
+            <option value="/manager-advances">{t("navigation.pages.advancesMobile")}</option>
           )}
           {can("incomes") && (
-            <option value="/incomes">دریافتی‌ها و واریزی‌ها</option>
+            <option value="/incomes">{t("navigation.pages.incomesMobile")}</option>
           )}
           {can("customers") && (
-            <option value="/customers">لیست مشتریان</option>
+            <option value="/customers">{t("navigation.pages.customers")}</option>
           )}
           {can("customers") && (
-            <option value="/customer-loans">لیست قرضداری مشتریان</option>
+            <option value="/customer-loans">{t("navigation.pages.customerLoansMobile")}</option>
           )}
           {can("expenses") && (
-            <option value="/expenses">مصارف عمومی شرکت</option>
+            <option value="/expenses">{t("navigation.pages.expensesMobile")}</option>
           )}
           {can("reports") && (
-            <option value="/reports">راپور ها</option>
+            <option value="/reports">{t("navigation.pages.reports")}</option>
           )}
           {can("settings") && (
-            <option value="/settings">تنظیمات سیستم و کاربران</option>
+            <option value="/settings">{t("navigation.pages.settings")}</option>
           )}
         </select>
       </div>

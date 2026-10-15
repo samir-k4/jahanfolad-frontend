@@ -1,6 +1,8 @@
 import React from "react";
 import { useCompany } from "../../context/CompanyContext";
 import { apiUrl } from "../../api";
+import i18n from "../../i18n";
+import { useTranslation } from "react-i18next";
 
 /**
  * An uploaded logo is stored as a direct URL into the backend's public folder,
@@ -28,12 +30,14 @@ function resolveLogoSrc(logo) {
  */
 export default function CompanyLogoPlate({
   logo,
-  companyName = "شرکت تولیدی جهان فولاد",
+  companyName,
   height,
   width,
   className = "",
   style = {},
 }) {
+  const { t } = useTranslation("common");
+  const resolvedCompanyName = companyName || t("company.name");
   let globalSettings = null;
   try {
     const companyContext = useCompany();
@@ -67,7 +71,7 @@ export default function CompanyLogoPlate({
         <img
           src={logoSrc}
           crossOrigin="anonymous"
-          alt={companyName || "لوگوی شرکت"}
+          alt={resolvedCompanyName}
           style={{
             width: `${effectiveWidth}px`,
             height: `${effectiveHeight}px`,
@@ -240,7 +244,8 @@ export default function CompanyLogoPlate({
 /**
  * Generates raw HTML string for iframe printing and downloadable PDFs
  */
-export function getCompanyLogoHtml(logo, companyName = "شرکت تولیدی جهان فولاد", height = 80, width = 80) {
+export function getCompanyLogoHtml(logo, companyName, height = 80, width = 80) {
+  companyName ||= i18n.t("company.name", { ns: "common" });
   if (logo) {
     return `<div style="display:inline-flex;align-items:center;justify-content:center;width:${width}px;height:${height}px;min-width:${width}px;min-height:${height}px;text-align:left;" dir="ltr">
       <img src="${logo}" alt="${companyName || 'Logo'}" style="width:${width}px;height:${height}px;min-width:${width}px;min-height:${height}px;object-fit:contain;display:block;" />

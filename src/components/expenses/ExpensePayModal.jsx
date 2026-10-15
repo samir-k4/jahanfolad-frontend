@@ -245,7 +245,7 @@ export default function ExpensePayModal({ isOpen, mode = "pay", expense, vaults 
             onClick={onClose}
             className="px-4 py-2 rounded-btn border border-gray-300 bg-white hover:bg-gray-50 text-btn-text font-bold text-gray-700 cursor-pointer"
           >
-            {t(isReject ? "rejectModal.cancel" : "payModal.cancel")}
+            {t("actions.cancel", { ns: "common" })}
           </button>
           <button
             type="button"

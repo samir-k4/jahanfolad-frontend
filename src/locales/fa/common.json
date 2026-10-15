@@ -1,4 +1,123 @@
 {
+  "app": {
+    "title": "سیستم حسابدار نور"
+  },
+  "navigation": {
+    "home": "صفحه اصلی",
+    "logout": "خروج از سیستم",
+    "groups": {
+      "productionWarehouse": "تولیدات و گدام",
+      "humanResources": "منابع بشری",
+      "accounts": "حسابات",
+      "transactions": "معاملات",
+      "sales": "فروش"
+    },
+    "pages": {
+      "dashboard": "داشبورد",
+      "production": "ثبت تولیدات روزانه",
+      "products": "لیست محصولات",
+      "warehouse": "موجودی گدام",
+      "employees": "لیست کارمندان",
+      "employeeCreate": "پذیرش کارمند جدید",
+      "attendance": "ثبت حاضری",
+      "salary": "پرداخت معاش",
+      "treasury": "خزانه‌داری",
+      "treasuryMobile": "حسابات - خزانه‌داری",
+      "advances": "حساب امانتی",
+      "advancesMobile": "امانتی مدیران",
+      "incomes": "دریافتی مشتری",
+      "incomesMobile": "دریافتی‌ها و واریزی‌ها",
+      "depositsWithdrawals": "واریز و برداشت",
+      "transfers": "انتقال",
+      "expenses": "همه مصارف",
+      "expensesMobile": "مصارف عمومی شرکت",
+      "expenseTypes": "نوعیت مصارف",
+      "customers": "لیست مشتریان",
+      "customerLoans": "لیست قرضداری",
+      "customerLoansMobile": "لیست قرضداری مشتریان",
+      "invoices": "فاکتور",
+      "reports": "راپور ها",
+      "settings": "تنظیمات سیستم و کاربران"
+    },
+    "pageLabels": {
+      "dashboard": "داشبورد",
+      "production": "ثبت تولیدات",
+      "products": "لیست محصولات",
+      "warehouse": "موجودی گدام",
+      "employees": "کارمندان",
+      "attendance": "حاضری",
+      "salaries": "معاشات",
+      "treasury": "خزانه‌داری",
+      "advances": "حساب امانتی",
+      "incomes": "دریافتی مشتری",
+      "reports": "راپور ها",
+      "settings": "تنظیمات"
+    }
+  },
+  "permission": {
+    "denied": "دسترسی به این بخش برای شما مجاز نیست",
+    "contactAdmin": "برای دسترسی به «{{label}}» با مدیر سیستم تماس بگیرید.",
+    "backToDashboard": "بازگشت به داشبورد"
+  },
+  "userProfile": {
+    "loadError": "خطا در دریافت اطلاعات کاربر",
+    "loading": "در حال بارگذاری مشخصات کاربر...",
+    "notFound": "کاربر یافت نشد",
+    "backToUsers": "بازگشت به فهرست کاربران",
+    "edit": "ویرایش کاربر",
+    "accountDetails": "مشخصات حساب",
+    "email": "ایمیل",
+    "branch": "نمایندگی",
+    "lastLogin": "آخرین ورود",
+    "neverLoggedIn": "تا کنون وارد نشده",
+    "roles": "نقش‌های کاربری",
+    "effectivePermissions": "دسترسی‌های مؤثر",
+    "superAdminNote": "این کاربر مدیر ارشد است و به تمام بخش‌ها دسترسی کامل دارد.",
+    "pageName": "نام صفحه"
+  },
+  "search": {
+    "placeholder": "جستجو...",
+    "loading": "در حال جستجو...",
+    "noResults": "موردی یافت نشد",
+    "changeSelection": "تغییر انتخاب"
+  },
+  "login": {
+    "error": "ورود انجام نشد. لطفاً دوباره تلاش کنید.",
+    "productType": "سیستم مدیریت مالی",
+    "subtitle": "برای ادامه، به حساب کاربری خود وارد شوید",
+    "username": "ایمیل یا نام کاربری",
+    "usernamePlaceholder": "Email or username",
+    "password": "رمز عبور",
+    "passwordPlaceholder": "Enter your password",
+    "forgotPassword": "رمز عبور خود را فراموش کرده‌اید؟",
+    "submitting": "در حال ورود...",
+    "submit": "ورود به سیستم",
+    "footer": "دسترسی مجاز برای کاربران ثبت‌شده",
+    "recoveryTitle": "بازیابی رمز عبور",
+    "recoveryInstructions": "برای بازیابی یا تغییر رمز عبور، لطفاً با مدیر سیستم تماس بگیرید."
+  },
+  "dashboardCards": {
+    "production": "تولید",
+    "products": "محصولات",
+    "warehouse": "گدام",
+    "salesInvoices": "فاکتور فروش",
+    "treasury": "حساب‌ها",
+    "depositsWithdrawals": "واریز و برداشت",
+    "incomes": "دریافتی‌ها",
+    "advances": "دخل امانتی",
+    "employees": "اشخاص",
+    "attendance": "حاضری",
+    "salaries": "معاشات",
+    "salaryPayment": "پرداخت معاش",
+    "reports": "گزارش",
+    "settings": "تنظیمات"
+  },
+  "dashboard": {
+    "footer": "© ۲۰۲۶ سیستم حسابدار نور. کلیه حقوق محفوظ است."
+  },
+  "sales": {
+    "scrapCategory": "فروش ضایعات"
+  },
   "actions": {
     "save": "ثبت و ذخیره",
     "saving": "در حال ذخیره...",
@@ -15,6 +134,8 @@
     "deleting": "در حال حذف...",
     "update": "به‌روزرسانی",
     "confirm": "تایید",
+    "back": "بازگشت",
+    "select": "انتخاب...",
     "backToList": "بازگشت به لیست",
     "addExpense": "ثبت مصرف جدید"
   },
@@ -33,7 +154,8 @@
   },
   "status": {
     "active": "فعال",
-    "inactive": "غیرفعال"
+    "inactive": "غیرفعال",
+    "developing": "در حال توسعه"
   },
   "toast": {
     "serverError": "خطا در برقراری ارتباط با سرور.",
@@ -58,6 +180,41 @@
     "security": "گارد امنیتی",
     "representation": "کارمند نمایندگی"
   },
+  "provinces": {
+    "herat": "هرات",
+    "balkh": "بلخ",
+    "nangarhar": "ننگرهار",
+    "kunduz": "کندز",
+    "kandahar": "کندهار",
+    "ghazni": "غزنی",
+    "baghlan": "بغلان",
+    "takhar": "تخار",
+    "badakhshan": "بدخشان",
+    "faryab": "فاریاب",
+    "jawzjan": "جوزجان",
+    "sar_e_pol": "سرپل",
+    "samangan": "سمنگان",
+    "parwan": "پروان",
+    "kapisa": "کاپیسا",
+    "panjshir": "پنجشیر",
+    "wardak": "وردک",
+    "logar": "لوگر",
+    "khost": "خوست",
+    "paktia": "پکتیا",
+    "paktika": "پکتیکا",
+    "helmand": "هلمند",
+    "zabul": "زابل",
+    "uruzgan": "ارزگان",
+    "ghor": "غور",
+    "badghis": "بادغیس",
+    "farah": "فراه",
+    "nimroz": "نیمروز",
+    "daykundi": "دایکندی",
+    "bamyan": "بامیان",
+    "kunar": "کنر",
+    "laghman": "لغمان",
+    "nuristan": "نورستان"
+  },
   "pdf": {
     "zoomIn": "بزرگ‌نمایی",
     "zoomOut": "کوچک‌نمایی",
@@ -68,7 +225,15 @@
   },
   "pagination": {
     "perPage": "رکورد در صفحه",
-    "noResults": "موردی یافت نشد"
+    "noResults": "موردی یافت نشد",
+    "perPageLabel": "تعداد در صفحه:",
+    "range": "(نمایش {{from}} تا {{to}} از مجموع {{total}} {{unit}})",
+    "itemUnit": "مورد",
+    "page": "صفحه {{page}} از {{total}}",
+    "first": "صفحه اول",
+    "previous": "صفحه قبلی",
+    "next": "صفحه بعدی",
+    "last": "صفحه آخر"
   },
   "voucher": {
     "transactionTitle": "سند گردش خزانه",

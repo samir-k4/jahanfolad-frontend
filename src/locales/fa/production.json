@@ -1,7 +1,4 @@
 {
-  "page": {
-    "title": "ثبت تولیدات روزانه"
-  },
   "form": {
     "printPreviewTitle": "پیش‌نمایش و چاپ راپور روزانه بدون نیاز به ذخیره مجدد",
     "printPreviewButton": "پیش‌نمایش و چاپ",
@@ -10,7 +7,6 @@
     "cancelEditButton": "انصراف از ویرایش",
     "dateLabel": "تاریخ تولید",
     "datePlaceholder": "تاریخ را انتخاب کنید",
-    "branchLabel": "انتخاب نمایندگی",
     "branchPlaceholder": "انتخاب نمایندگی...",
     "descriptionLabel": "توضیحات تولید",
     "optionalSuffix": "(اختیاری)",
@@ -41,7 +37,6 @@
     "searchPlaceholder": "جستجو...",
     "noResults": "موردی یافت نشد",
     "filterToday": "امروز",
-    "filter7Days": "۷ روز اخیر",
     "filterMonth": "ماه جاری",
     "filterAll": "همه",
     "tooltipRefresh": "تازه‌سازی اطلاعات",
@@ -138,9 +133,7 @@
     "generatingPdf": "در حال تولید PDF...",
     "downloadPdfBtn": "دانلود PDF",
     "presetMonth": "ماه جاری",
-    "preset7Days": "این هفته (۷ روز اخیر)",
-    "presetToday": "امروز",
-    "presetCustom": "تاریخ دلخواه"
+    "presetToday": "امروز"
   },
   "messages": {
     "fetchBatchesError": "خطا در دریافت لیست دسته‌های تولید",

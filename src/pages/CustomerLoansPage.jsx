@@ -12,24 +12,13 @@ import { apiUrl } from "../api";
 import { showToast } from "../utils/toast";
 import { TooltipButton, TablePagination, CustomDropdown } from "../components/common";
 import CustomerLoanReportModal from "../components/customers/CustomerLoanReportModal";
+import { useTranslation } from "react-i18next";
 
 const fmt = (n) => Number(n || 0).toLocaleString("en-US");
 const currSymbol = (c) => (c === "USD" ? "$" : "؋");
 
-const statusOptions = [
-  { value: "all", label: "همه" },
-  { value: "has_debt", label: "قرضدار ها" },
-  { value: "has_credit", label: "طلبکار ها" },
-  { value: "cleared", label: "تسویه‌شده" },
-];
-
-const currencyOptions = [
-  { value: "all", label: "همه ارزها" },
-  { value: "USD", label: "دالر (USD)" },
-  { value: "AFN", label: "افغانی (AFN)" },
-];
-
 export default function CustomerLoansPage() {
+  const { t } = useTranslation("customers");
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,7 +47,7 @@ export default function CustomerLoansPage() {
         });
 
         const res = await fetch(apiUrl(`/customer-loans?${params.toString()}`));
-        if (!res.ok) throw new Error("خطا در دریافت لیست قرضداری مشتریان");
+        if (!res.ok) throw new Error(t("loans.fetchFailed"));
         const result = await res.json();
         setLoans(result.data || []);
         setPagination(
@@ -75,7 +64,7 @@ export default function CustomerLoansPage() {
         setLoading(false);
       }
     },
-    [debouncedSearchQuery, selectedStatus, selectedCurrency, perPage]
+    [debouncedSearchQuery, selectedStatus, selectedCurrency, perPage, t]
   );
 
   useEffect(() => {
@@ -88,11 +77,11 @@ export default function CustomerLoansPage() {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-page-title text-gray-900 tracking-tight">
-              لیست قرضداری مشتریان
+              {t("navigation.pages.customerLoans", { ns: "common" })}
             </h1>
           </div>
           <p className="text-subtitle text-gray-500 mt-1">
-            مشتریانی که قرضدار یا طلبکار هستند
+            {t("loans.subtitle")}
           </p>
         </div>
 
@@ -102,7 +91,7 @@ export default function CustomerLoansPage() {
             className="px-3.5 py-2 text-btn-text font-bold text-gray-700 bg-white border border-gray-300 rounded-btn hover:bg-gray-50 transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
           >
             <Users size={15} />
-            <span>لیست مشتریان</span>
+            <span>{t("page.title")}</span>
           </Link>
 
           <button
@@ -111,7 +100,7 @@ export default function CustomerLoansPage() {
             className="px-4 py-2 text-btn-text font-bold text-white bg-slate-800 hover:bg-slate-900 rounded-btn transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
           >
             <Printer size={16} />
-            <span>چاپ راپور قرضداری</span>
+            <span>{t("loans.printReport")}</span>
           </button>
         </div>
       </div>
@@ -123,32 +112,41 @@ export default function CustomerLoansPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="جستجو بر اساس نام، کد مشتری، شماره تماس یا ولایت..."
+            placeholder={t("loans.searchPlaceholder")}
             className="w-full border border-gray-300 rounded-lg pr-9 pl-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-emerald-600 bg-white"
           />
         </div>
 
         <CustomDropdown
-          options={statusOptions}
+          options={[
+            { value: "all", label: t("loans.status.all") },
+            { value: "has_debt", label: t("loans.status.debtor") },
+            { value: "has_credit", label: t("loans.status.creditor") },
+            { value: "cleared", label: t("loans.status.settled") },
+          ]}
           value={selectedStatus}
           onChange={(val) => setSelectedStatus(val)}
-          placeholder="نوع حساب"
+          placeholder={t("loans.accountType")}
           buttonClassName="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white min-w-[150px]"
           width="w-48"
         />
 
         <CustomDropdown
-          options={currencyOptions}
+          options={[
+            { value: "all", label: t("loans.currency.all") },
+            { value: "USD", label: t("loans.currency.usd") },
+            { value: "AFN", label: t("loans.currency.afn") },
+          ]}
           value={selectedCurrency}
           onChange={(val) => setSelectedCurrency(val)}
-          placeholder="ارز"
+          placeholder={t("loans.currency.label")}
           buttonClassName="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white min-w-[110px]"
           width="w-36"
         />
 
         <TooltipButton
           icon={<RefreshCw size={14} className={loading ? "animate-spin" : ""} />}
-          tooltip="بروزرسانی لیست"
+          tooltip={t("loans.refresh")}
           onClick={() => fetchLoans(pagination.current_page)}
           colorClass="bg-white hover:bg-slate-800 hover:text-white text-gray-700 border border-gray-300"
         />
@@ -159,31 +157,31 @@ export default function CustomerLoansPage() {
           <table className="w-full text-right border-collapse text-xs">
             <thead>
               <tr className="bg-gray-50 text-gray-700 border-b border-gray-200 font-bold text-xs">
-                <th className="px-3.5 py-2.5 text-center w-12 border-l border-gray-200">#</th>
-                <th className="px-3.5 py-2.5 text-center w-24 border-l border-gray-200">کد مشتری</th>
-                <th className="px-3.5 py-2.5 border-l border-gray-200">نام مشتری</th>
-                <th className="px-3.5 py-2.5 border-l border-gray-200">شماره تماس</th>
-                <th className="px-3.5 py-2.5 text-center w-28 border-l border-gray-200 whitespace-nowrap">سقف اعتبار</th>
-                <th className="px-3.5 py-2.5 text-center w-28 border-l border-gray-200 whitespace-nowrap">مبلغ آخرین فاکتور</th>
-                <th className="px-3.5 py-2.5 text-center w-20 border-l border-gray-200 whitespace-nowrap">تاریخ آخرین پرداخت</th>
-                <th className="px-3.5 py-2.5 text-center w-28 border-l border-gray-200 whitespace-nowrap">مبلغ آخرین پرداخت</th>
-                <th className="px-3.5 py-2.5 text-center w-20 border-l border-gray-200">ارز</th>
-                <th className="px-3.5 py-2.5 text-center w-28 border-l border-gray-200 whitespace-nowrap">مانده حساب</th>
-                <th className="px-3.5 py-2.5 text-center w-24 border-l border-gray-200">وضعیت</th>
-                <th className="px-3.5 py-2.5 text-center w-20">عملیات</th>
+                <th className="px-3.5 py-2.5 text-center w-12 border-l border-gray-200">{t("table.columns.index")}</th>
+                <th className="px-3.5 py-2.5 text-center w-24 border-l border-gray-200">{t("table.columns.code")}</th>
+                <th className="px-3.5 py-2.5 border-l border-gray-200">{t("table.columns.name")}</th>
+                <th className="px-3.5 py-2.5 border-l border-gray-200">{t("table.columns.phone")}</th>
+                <th className="px-3.5 py-2.5 text-center w-28 border-l border-gray-200 whitespace-nowrap">{t("table.columns.creditLimit")}</th>
+                <th className="px-3.5 py-2.5 text-center w-28 border-l border-gray-200 whitespace-nowrap">{t("loans.columns.lastInvoice")}</th>
+                <th className="px-3.5 py-2.5 text-center w-20 border-l border-gray-200 whitespace-nowrap">{t("loans.columns.lastPaymentDate")}</th>
+                <th className="px-3.5 py-2.5 text-center w-28 border-l border-gray-200 whitespace-nowrap">{t("loans.columns.lastPaymentAmount")}</th>
+                <th className="px-3.5 py-2.5 text-center w-20 border-l border-gray-200">{t("loans.currency.label")}</th>
+                <th className="px-3.5 py-2.5 text-center w-28 border-l border-gray-200 whitespace-nowrap">{t("loans.columns.balance")}</th>
+                <th className="px-3.5 py-2.5 text-center w-24 border-l border-gray-200">{t("table.columns.status")}</th>
+                <th className="px-3.5 py-2.5 text-center w-20">{t("table.columns.actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white">
               {loading ? (
                 <tr>
                   <td colSpan={12} className="p-12 text-center text-gray-500 text-sm">
-                    در حال دریافت اطلاعات قرضداری مشتریان...
+                    {t("loans.loading")}
                   </td>
                 </tr>
               ) : loans.length === 0 ? (
                 <tr>
                   <td colSpan={12} className="p-12 text-center text-gray-500 text-sm">
-                    هیچ سابقه قرضداری با فیلترهای انتخابی یافت نشد.
+                    {t("loans.empty")}
                   </td>
                 </tr>
               ) : (
@@ -209,7 +207,9 @@ export default function CustomerLoansPage() {
                         {loan.other_currencies?.length > 0 && (
                           <span
                             className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200 font-mono font-bold text-3xs"
-                            title={`این مشتری حساب دیگری هم به ${loan.other_currencies.join(" و ")} دارد`}
+                            title={t("loans.otherCurrenciesTitle", {
+                              currencies: loan.other_currencies.join(" و "),
+                            })}
                           >
                             +{loan.other_currencies.join("/")}
                           </span>
@@ -224,7 +224,7 @@ export default function CustomerLoansPage() {
                         loan.over_credit_limit ? "text-rose-700 font-bold" : "text-gray-700"
                       }`}
                       dir="ltr"
-                      title={loan.over_credit_limit ? "مانده حساب از سقف اعتبار بیشتر است" : undefined}
+                      title={loan.over_credit_limit ? t("loans.overCreditLimit") : undefined}
                     >
                       {loan.credit_limit > 0 ? `${fmt(loan.credit_limit)} ${currSymbol(loan.currency)}` : "—"}
                     </td>
@@ -266,21 +266,21 @@ export default function CustomerLoansPage() {
                     >
                       {fmt(Math.abs(loan.current_balance))} {currSymbol(loan.currency)}
                       {loan.over_credit_limit && (
-                        <span className="mr-1 inline-block w-1.5 h-1.5 rounded-full bg-rose-600" title="بیشتر از سقف اعتبار" />
+                        <span className="mr-1 inline-block w-1.5 h-1.5 rounded-full bg-rose-600" title={t("loans.overCreditLimit")} />
                       )}
                     </td>
                     <td className="px-3.5 py-2.5 text-center border-l border-gray-200">
                       {loan.status === "has_debt" ? (
                         <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-rose-50 text-rose-800 border border-rose-200 font-bold text-xs">
-                          قرضدار
+                          {t("loans.status.debtor")}
                         </span>
                       ) : loan.status === "has_credit" ? (
                         <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-sky-50 text-sky-800 border border-sky-200 font-bold text-xs">
-                          طلبکار
+                          {t("loans.status.creditor")}
                         </span>
                       ) : (
                         <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold text-xs">
-                          تسویه‌شده
+                          {t("loans.status.settled")}
                         </span>
                       )}
                     </td>
@@ -289,7 +289,7 @@ export default function CustomerLoansPage() {
                         <Link
                           to={`/customers/${loan.customer_id}`}
                           className="p-1.5 bg-white hover:bg-slate-800 hover:text-white text-gray-500 border border-gray-300 rounded-lg shadow-2xs transition-all cursor-pointer inline-flex items-center justify-center"
-                          title="مشاهده صورت حساب کامل مشتری"
+                          title={t("loans.viewStatement")}
                         >
                           <FileText size={14} />
                         </Link>
@@ -312,7 +312,7 @@ export default function CustomerLoansPage() {
             setPerPage(size);
             fetchLoans(1, size);
           }}
-          unit="مشتری"
+          unit={t("pagination.unit")}
         />
       </div>
 
