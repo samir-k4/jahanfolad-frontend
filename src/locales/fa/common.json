@@ -10,7 +10,9 @@
       "humanResources": "منابع بشری",
       "accounts": "حسابات",
       "transactions": "معاملات",
-      "sales": "فروش"
+      "sales": "فروش",
+      "expenses": "مصارف",
+      "customers": "مشتریان"
     },
     "pages": {
       "dashboard": "داشبورد",
@@ -20,6 +22,7 @@
       "employees": "لیست کارمندان",
       "employeeCreate": "پذیرش کارمند جدید",
       "attendance": "ثبت حاضری",
+      "overtime": "ثبت اضافه‌کاری پرسونل",
       "salary": "پرداخت معاش",
       "treasury": "خزانه‌داری",
       "treasuryMobile": "حسابات - خزانه‌داری",
