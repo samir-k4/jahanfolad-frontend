@@ -4,9 +4,11 @@ import { useTranslation } from "react-i18next";
 import { AlertCircle, Building2, Calendar, CheckCheck, FileText, Loader2, RotateCcw, Users, X } from "lucide-react";
 import { apiUrl } from "../../api";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
+import useExpenseCategories from "../../hooks/useExpenseCategories";
 import { formatToGregorian } from "../../utils/dateHelpers";
 import { getCleanErrorMessage } from "../../utils/errorHandler";
 import { ALL_BRANCHES, RUN_STATE } from "../../constants/salaryDomain";
+import CustomDropdown from "../common/CustomDropdown";
 const TILE = "bg-gray-50 border border-gray-200 rounded-card p-3";
 const money = (value) => Number(value || 0).toLocaleString("en-US");
 export default function SalaryBatchSettleModal({
@@ -26,6 +28,11 @@ export default function SalaryBatchSettleModal({
   const [errorMessage, setErrorMessage] = useState("");
   const [cancelAcknowledged, setCancelAcknowledged] = useState(false);
   const [collectorIds, setCollectorIds] = useState([]);
+  const [expenseCategoryId, setExpenseCategoryId] = useState("");
+  const {
+    categories: expenseCategories,
+    loading: expenseCategoriesLoading,
+  } = useExpenseCategories(isOpen && !run);
   useEffect(() => {
     if (!isOpen) return;
     setErrorMessage("");
@@ -37,6 +44,17 @@ export default function SalaryBatchSettleModal({
       payrollList.filter((row) => !row.isPaidUp && !row.awaitingApproval && row.remaining > 0).map((row) => row.id)
     );
   }, [isOpen, payrollList]);
+  useEffect(() => {
+    setExpenseCategoryId((current) => {
+      if (current && expenseCategories.some((category) => String(category.id) === current)) {
+        return current;
+      }
+      const defaultCategory = expenseCategories.find(
+        (category) => category.slug === "salary" || category.name === "مصارف معاشات",
+      );
+      return defaultCategory ? String(defaultCategory.id) : "";
+    });
+  }, [expenseCategories]);
   const monthName = afghanMonthInfo?.shamsi_month_name || t("page.currentMonth");
   const yearName = afghanMonthInfo?.shamsi_year || "";
   const pending = useMemo(
@@ -75,6 +93,10 @@ export default function SalaryBatchSettleModal({
       setErrorMessage(t("batch.nothingPayable"));
       return;
     }
+    if (!expenseCategoryId) {
+      setErrorMessage(t("batch.expenseCategoryRequired"));
+      return;
+    }
     setIsProcessing(true);
     try {
       const data = await send("/payroll/runs", {
@@ -83,6 +105,7 @@ export default function SalaryBatchSettleModal({
         shamsi_month: afghanMonthInfo?.shamsi_month,
         payment_date: formatToGregorian(new Date()),
         employee_ids: chosen.map((row) => row.id),
+        expense_category_id: expenseCategoryId,
       });
       onDone?.(data?.message);
       onClose();
@@ -105,6 +128,10 @@ export default function SalaryBatchSettleModal({
       setIsProcessing(false);
     }
   };
+  const expenseCategoryOptions = expenseCategories.map((category) => ({
+    value: String(category.id),
+    label: category.name,
+  }));
   if (!isOpen) return null;
   return createPortal(
     <div
@@ -243,9 +270,28 @@ export default function SalaryBatchSettleModal({
                 </p>
               </div>
             ) : (
-              <p className="text-caption-text font-medium text-gray-600 rounded-card border border-gray-200 bg-gray-50 p-3">
-                {t("batch.closeHint")}
-              </p>
+              <div className="space-y-3">
+                <p className="text-caption-text font-medium text-gray-600 rounded-card border border-gray-200 bg-gray-50 p-3">
+                  {t("batch.closeHint")}
+                </p>
+                <div>
+                  <label className="block text-caption-text text-gray-700 mb-1">
+                    {t("payment.form.expenseCategory")} <span className="text-rose-600">*</span>
+                  </label>
+                  <CustomDropdown
+                    value={expenseCategoryId}
+                    onChange={setExpenseCategoryId}
+                    options={expenseCategoryOptions}
+                    placeholder={t("payment.form.expenseCategoryPlaceholder")}
+                    buttonClassName="w-full bg-white border border-gray-300 rounded-input py-2 px-3 text-label-text text-gray-800 outline-none focus:border-slate-700"
+                    className="w-full"
+                    width="w-full"
+                    align="right"
+                    usePortal
+                    disabled={expenseCategoriesLoading || expenseCategoryOptions.length === 0}
+                  />
+                </div>
+              </div>
             )}
             {isPendingRun && (
               <label className="flex items-start gap-2 rounded-card border border-rose-200 bg-rose-50 p-3 cursor-pointer">
@@ -298,7 +344,13 @@ export default function SalaryBatchSettleModal({
               <button
                 type="button"
                 onClick={handleClose}
-                disabled={isProcessing || pending.length === 0 || payableTotal <= 0}
+                disabled={
+                  isProcessing ||
+                  pending.length === 0 ||
+                  payableTotal <= 0 ||
+                  expenseCategoriesLoading ||
+                  !expenseCategoryId
+                }
                 className="inline-flex items-center gap-1.5 rounded-btn bg-slate-800 hover:bg-slate-900 px-4 py-2 text-btn-text font-bold text-white disabled:opacity-70 cursor-pointer"
               >
                 {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCheck className="w-4 h-4" />}

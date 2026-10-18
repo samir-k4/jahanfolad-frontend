@@ -19,6 +19,7 @@ import PaymentSlipModal from "../components/common/PaymentSlipModal";
 import useVaults from "../hooks/useVaults";
 import useDatePresets from "../hooks/useDatePresets";
 import useDebounce from "../hooks/useDebounce";
+import useExpenseCategories from "../hooks/useExpenseCategories";
 import { apiUrl } from "../api";
 import { toEnglishDigits, showToast, numberToWordsDari } from "../utils";
 import { getCleanErrorMessage } from "../utils/errorHandler";
@@ -92,11 +93,14 @@ export default function EmployeePaymentPage() {
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHOD.CASH);
   const [paymentTypes, setPaymentTypes] = useState([]);
   const [paymentTypeId, setPaymentTypeId] = useState("");
-  const [expenseCategories, setExpenseCategories] = useState([]);
-  const [expenseCategoriesLoading, setExpenseCategoriesLoading] = useState(true);
   const [expenseCategoryId, setExpenseCategoryId] = useState("");
   const [notes, setNotes] = useState("");
   const { vaults } = useVaults();
+  const {
+    categories: expenseCategories,
+    loading: expenseCategoriesLoading,
+    error: expenseCategoriesError,
+  } = useExpenseCategories();
   const [selectedVaultId, setSelectedVaultId] = useState("");
   const {
     activePreset,
@@ -166,26 +170,10 @@ export default function EmployeePaymentPage() {
     return () => controller.abort();
   }, []);
   useEffect(() => {
-    const controller = new AbortController();
-    const loadExpenseCategories = async () => {
-      try {
-        const res = await fetch(apiUrl("/categories/expense_category?active_only=1"), {
-          signal: controller.signal,
-        });
-        if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
-        const body = await res.json();
-        setExpenseCategories(Array.isArray(body) ? body : body?.data || []);
-      } catch (err) {
-        if (controller.signal.aborted) return;
-        console.error("Error fetching expense categories:", err);
-        showToast.error(t("payment.messages.loadExpenseCategoriesError"));
-      } finally {
-        if (!controller.signal.aborted) setExpenseCategoriesLoading(false);
-      }
-    };
-    loadExpenseCategories();
-    return () => controller.abort();
-  }, [t]);
+    if (expenseCategoriesError) {
+      showToast.error(t("payment.messages.loadExpenseCategoriesError"));
+    }
+  }, [expenseCategoriesError, t]);
   useEffect(() => {
     setExpenseCategoryId((current) => {
       if (current && expenseCategories.some((category) => String(category.id) === current)) {
