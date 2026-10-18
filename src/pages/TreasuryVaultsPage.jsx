@@ -74,7 +74,7 @@ export default function TreasuryVaultsPage() {
   }, []);
   const fetchAdvancesSummary = useCallback(async () => {
     try {
-      const res = await fetch(apiUrl("/manager-advances"));
+      const res = await fetch(apiUrl("/manager-advances/summary"));
       if (res.ok) {
         const json = await res.json();
         setAdvancesSummary(

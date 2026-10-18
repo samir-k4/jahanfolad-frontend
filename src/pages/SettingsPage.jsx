@@ -141,7 +141,7 @@ export default function SettingsPage() {
   };
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
-  const { branches, refreshBranches } = useBranch();
+  const { branches, ensureBranches, refreshBranches } = useBranch();
   const [branchFormOpen, setBranchFormOpen] = useState(false);
   const [editingBranch, setEditingBranch] = useState(null);
   const [branchForm, setBranchForm] = useState({ name: "", location: "" });
@@ -163,7 +163,14 @@ export default function SettingsPage() {
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [modalDefaultDomain, setModalDefaultDomain] = useState("expense");
-  const { updateLogo, removeLogo, syncSettingsToStateAndCache, saveLogoSize } = useCompany();
+  const {
+    settings: companySettings,
+    settingsLoaded,
+    updateLogo,
+    removeLogo,
+    syncSettingsToStateAndCache,
+    saveLogoSize,
+  } = useCompany();
   const [settings, setSettings] = useState({
     company_name: "شرکت تولیدی جهان فولاد",
     company_tagline:
@@ -173,6 +180,7 @@ export default function SettingsPage() {
     company_phone: "+93 799 000 111 / +93 700 222 333",
     company_email: "info@jahanfolad.af",
     company_address: "افغانستان، هرات، شهرک صنعتی فاز ۲، خیابان صنعت ۵",
+    company_website: "www.jahanfolad.af",
     company_logo: null,
     company_logo_size: LOGO_SIZE_DEFAULT,
     default_currency: "AFN",
@@ -238,16 +246,6 @@ export default function SettingsPage() {
       notify("error", error.message || t("branches.deleteError"));
     }
   };
-  const fetchSettings = useCallback(async () => {
-    try {
-      const data = await apiFetch("/settings/general");
-      if (data.settings) {
-        setSettings((prev) => ({ ...prev, ...data.settings }));
-      }
-    } catch (e) {
-      notify("error", e.message);
-    }
-  }, []);
   const fetchUsers = useCallback(async () => {
     setLoadingUsers(true);
     try {
@@ -270,9 +268,9 @@ export default function SettingsPage() {
     setLoadingCategories(true);
     try {
       if (catDomainFilter === "all") {
-        const [data, branches, vaults] = await Promise.all([
+        const [data, availableBranches, vaults] = await Promise.all([
           apiFetch("/categories/all-grouped"),
-          apiList("/branches"),
+          ensureBranches(),
           canViewTreasury ? apiList("/vaults") : Promise.resolve([]),
         ]);
         if (requestId !== categoriesRequestId.current) return;
@@ -288,13 +286,13 @@ export default function SettingsPage() {
           ...withDomain(data.expense_categories, "expense_category"),
           ...withDomain(jCats, "job_category"),
           ...withDomain(data.job_positions, "job_position"),
-          ...withDomain(branches, "warehouse_category"),
+          ...withDomain(availableBranches, "warehouse_category"),
           ...withDomain(vaults, "vault_type"),
         ]);
       } else {
         const domainData =
           catDomainFilter === "warehouse_category"
-            ? await apiList("/branches")
+            ? await ensureBranches()
             : catDomainFilter === "vault_type"
               ? canViewTreasury
                 ? await apiList("/vaults")
@@ -327,10 +325,12 @@ export default function SettingsPage() {
         setLoadingCategories(false);
       }
     }
-  }, [catDomainFilter, canViewTreasury, t]);
+  }, [catDomainFilter, canViewTreasury, ensureBranches, t]);
   useEffect(() => {
-    fetchSettings();
-  }, [fetchSettings]);
+    if (settingsLoaded) {
+      setSettings((prev) => ({ ...prev, ...companySettings }));
+    }
+  }, [companySettings, settingsLoaded]);
   useEffect(() => {
     if (activeTab === "users") fetchUsers();
     if (activeTab === "categories") fetchCategories();
@@ -1151,6 +1151,21 @@ export default function SettingsPage() {
                         className={`${INPUT_CLASS} pr-9 font-mono text-left`}
                       />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-label-text text-gray-700 mb-1">
+                      {t("company.field.website")}
+                    </label>
+                    <input
+                      type="text"
+                      dir="ltr"
+                      value={settings.company_website || ""}
+                      onChange={(e) =>
+                        setSettings({ ...settings, company_website: e.target.value })
+                      }
+                      className={`${INPUT_CLASS} font-mono text-left`}
+                      placeholder="www.example.com"
+                    />
                   </div>
                   <div>
                     <label className="block text-label-text text-gray-700 mb-1">

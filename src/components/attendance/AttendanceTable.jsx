@@ -3,6 +3,7 @@ import { User, Save, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { CustomDropdown, TablePagination, BranchEmptyState } from "../common";
 import { getWeekDayName } from "../../utils/dateHelpers";
+import useDebounce from "../../hooks/useDebounce";
 import {
   ATTENDANCE_STATUS,
   JOB_CATEGORY,
@@ -31,6 +32,7 @@ export default function AttendanceTable({
 }) {
   const { t } = useTranslation("attendance");
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("category-default");
   const [currentPage, setCurrentPage] = useState(1);
@@ -78,7 +80,7 @@ export default function AttendanceTable({
   );
 
   const filteredAndSortedEmployees = useMemo(() => {
-    const term = searchTerm.toLowerCase().trim();
+    const term = debouncedSearchTerm.toLowerCase().trim();
 
     const filtered = employees.filter((emp) => {
       const cat = employeeCategory(emp) || JOB_CATEGORY.HANGAR;
@@ -113,7 +115,7 @@ export default function AttendanceTable({
       const rankDiff = getAttendanceRank(a) - getAttendanceRank(b);
       return rankDiff !== 0 ? rankDiff : byName(a, b);
     });
-  }, [employees, searchTerm, categoryFilter, sortBy]);
+  }, [employees, debouncedSearchTerm, categoryFilter, sortBy]);
 
   const totalPages = Math.ceil(filteredAndSortedEmployees.length / recordsPerPage) || 1;
   const indexOfLastRecord = currentPage * recordsPerPage;

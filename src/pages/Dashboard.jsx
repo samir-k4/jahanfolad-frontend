@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from "react-i18next";
 import {
@@ -22,11 +22,40 @@ import {
   FcSettings,
 } from 'react-icons/fc';
 
+const DashboardCard = memo(function DashboardCard({ card, isActive, onActivate }) {
+  const Icon = card.icon;
+
+  return (
+    <Link
+      to={card.link}
+      onMouseEnter={() => onActivate(card.id)}
+      onMouseLeave={() => onActivate(null)}
+      className={`group flex flex-col items-center justify-between w-full aspect-square max-w-[136px] sm:max-w-[142px] 2xl:max-w-[168px] min-h-[126px] sm:min-h-[136px] p-3 sm:p-3.5 rounded-xl sm:rounded-2xl text-center transition-all duration-200 cursor-pointer ${
+        isActive
+          ? 'bg-[#00a6f4] text-white shadow-lg -translate-y-1'
+          : 'bg-[#e9edf2] hover:bg-[#dfe6ee] text-gray-800 border border-slate-200/60 shadow-xs'
+      }`}
+    >
+      <div className="flex-1 flex items-center justify-center pt-0.5 group-hover:scale-108 transition-transform duration-200">
+        <Icon size={46} className="drop-shadow-xs" />
+      </div>
+      <span
+        className={`text-xs sm:text-sm font-black tracking-tight line-clamp-1 transition-colors duration-200 mt-1 sm:mt-1.5 ${
+          isActive ? 'text-white' : 'text-gray-800 group-hover:text-slate-950'
+        }`}
+      >
+        {card.title}
+      </span>
+    </Link>
+  );
+});
+
 export default function Dashboard() {
   const { t } = useTranslation("common");
   const [activeCard, setActiveCard] = useState(null);
+  const activateCard = useCallback((cardId) => setActiveCard(cardId), []);
 
-  const cards = [
+  const cards = useMemo(() => [
     {
       id: 'production',
       title: t("dashboardCards.production"),
@@ -135,43 +164,21 @@ export default function Dashboard() {
       link: '/settings',
       icon: FcSettings,
     },
-  ];
+  ], [t]);
 
   return (
     <div className="min-h-[calc(100vh-140px)] flex flex-col justify-between py-6 px-4 sm:px-8 font-sans select-none" dir="rtl">
       
       <div className="w-full max-w-[1680px] mx-auto flex-1 flex flex-col justify-center">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-9 gap-3 sm:gap-3.5 justify-items-center">
-          {cards.map((card) => {
-            const Icon = card.icon;
-            const isActive = activeCard === card.id;
-
-            return (
-              <Link
-                key={card.id}
-                to={card.link}
-                onMouseEnter={() => setActiveCard(card.id)}
-                onMouseLeave={() => setActiveCard(null)}
-                className={`group flex flex-col items-center justify-between w-full aspect-square max-w-[136px] sm:max-w-[142px] 2xl:max-w-[168px] min-h-[126px] sm:min-h-[136px] p-3 sm:p-3.5 rounded-xl sm:rounded-2xl text-center transition-all duration-200 cursor-pointer ${
-                  isActive
-                    ? 'bg-[#00a6f4] text-white shadow-lg -translate-y-1'
-                    : 'bg-[#e9edf2] hover:bg-[#dfe6ee] text-gray-800 border border-slate-200/60 shadow-xs'
-                }`}
-              >
-                <div className="flex-1 flex items-center justify-center pt-0.5 group-hover:scale-108 transition-transform duration-200">
-                  <Icon size={46} className="drop-shadow-xs" />
-                </div>
-
-                <span
-                  className={`text-xs sm:text-sm font-black tracking-tight line-clamp-1 transition-colors duration-200 mt-1 sm:mt-1.5 ${
-                    isActive ? 'text-white' : 'text-gray-800 group-hover:text-slate-950'
-                  }`}
-                >
-                  {card.title}
-                </span>
-              </Link>
-            );
-          })}
+          {cards.map((card) => (
+            <DashboardCard
+              key={card.id}
+              card={card}
+              isActive={activeCard === card.id}
+              onActivate={activateCard}
+            />
+          ))}
         </div>
 
       </div>

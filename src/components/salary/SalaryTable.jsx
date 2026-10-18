@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { CalendarCheck, FileText, Search, Wallet } from "lucide-react";
 import { CustomDropdown, TablePagination, TooltipButton, BranchEmptyState } from "../common";
 import { JOB_CATEGORY } from "../../constants/attendanceDomain";
+import useDebounce from "../../hooks/useDebounce";
 const ALL = "all";
 const STATUS = { ALL, PAID: "paid", UNPAID: "unpaid" };
 const CATEGORY_KEYS = [
@@ -56,6 +57,7 @@ export default function SalaryTable({
 }) {
   const navigate = useNavigate();
   const { t } = useTranslation("salary");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const emDash = t("placeholder.dash");
   const zero = t("placeholder.zero");
   const currency = t("company.currency", { ns: "common" });
@@ -95,7 +97,7 @@ export default function SalaryTable({
     [counts, payrollList.length, t]
   );
   const visibleRows = useMemo(() => {
-    const term = searchTerm.toLowerCase().trim();
+    const term = debouncedSearchTerm.toLowerCase().trim();
     const matches = rowsWithCategory.filter(({ row, category }) => {
       if (categoryFilter !== ALL && category !== categoryFilter) return false;
       if (statusFilter === STATUS.PAID && !row.isPaidUp) return false;
@@ -104,7 +106,7 @@ export default function SalaryTable({
       return SEARCH_FIELDS.some((field) => String(row[field] || "").toLowerCase().includes(term));
     });
     return matches.map(({ row }) => row).sort(COMPARATORS[sortBy] || COMPARATORS.default);
-  }, [rowsWithCategory, searchTerm, categoryFilter, statusFilter, sortBy]);
+  }, [rowsWithCategory, debouncedSearchTerm, categoryFilter, statusFilter, sortBy]);
   const lastPage = Math.max(1, Math.ceil(visibleRows.length / perPage));
   const page = Math.min(currentPage, lastPage);
   const pageRows = useMemo(

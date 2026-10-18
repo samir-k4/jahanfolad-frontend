@@ -92,6 +92,9 @@ export default function EmployeePaymentPage() {
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHOD.CASH);
   const [paymentTypes, setPaymentTypes] = useState([]);
   const [paymentTypeId, setPaymentTypeId] = useState("");
+  const [expenseCategories, setExpenseCategories] = useState([]);
+  const [expenseCategoriesLoading, setExpenseCategoriesLoading] = useState(true);
+  const [expenseCategoryId, setExpenseCategoryId] = useState("");
   const [notes, setNotes] = useState("");
   const { vaults } = useVaults();
   const [selectedVaultId, setSelectedVaultId] = useState("");
@@ -162,6 +165,38 @@ export default function EmployeePaymentPage() {
       .catch(() => undefined);
     return () => controller.abort();
   }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    const loadExpenseCategories = async () => {
+      try {
+        const res = await fetch(apiUrl("/categories/expense_category?active_only=1"), {
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
+        const body = await res.json();
+        setExpenseCategories(Array.isArray(body) ? body : body?.data || []);
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        console.error("Error fetching expense categories:", err);
+        showToast.error(t("payment.messages.loadExpenseCategoriesError"));
+      } finally {
+        if (!controller.signal.aborted) setExpenseCategoriesLoading(false);
+      }
+    };
+    loadExpenseCategories();
+    return () => controller.abort();
+  }, [t]);
+  useEffect(() => {
+    setExpenseCategoryId((current) => {
+      if (current && expenseCategories.some((category) => String(category.id) === current)) {
+        return current;
+      }
+      const defaultCategory = expenseCategories.find(
+        (category) => category.name === "مصارف معاشات",
+      );
+      return defaultCategory ? String(defaultCategory.id) : "";
+    });
+  }, [expenseCategories]);
   useEffect(() => {
     if (location.state?.employeeId) setSelectedEmployeeId(String(location.state.employeeId));
   }, [location.state]);
@@ -245,6 +280,13 @@ export default function EmployeePaymentPage() {
     [employees, t, emDash]
   );
   const vaultOptions = useMemo(() => vaults.map(vaultOption), [vaults]);
+  const expenseCategoryOptions = useMemo(
+    () => expenseCategories.map((category) => ({
+      value: String(category.id),
+      label: category.name,
+    })),
+    [expenseCategories],
+  );
   const paymentTypeOptions = useMemo(
     () =>
       [...paymentTypes]
@@ -260,7 +302,13 @@ export default function EmployeePaymentPage() {
   const openMonths = useMemo(() => (account?.months || []).filter((month) => !month.is_closed), [account]);
   const exceedsAvailable = parsedAmount > available;
   const canSubmit =
-    canCreate && !submitting && !!selectedEmployeeId && parsedAmount > 0 && (!exceedsAvailable || minusAcknowledged);
+    canCreate &&
+    !submitting &&
+    !expenseCategoriesLoading &&
+    !!selectedEmployeeId &&
+    !!expenseCategoryId &&
+    parsedAmount > 0 &&
+    (!exceedsAvailable || minusAcknowledged);
   const minusAfter = Math.round((available - parsedAmount) * 100) / 100;
   const allocationPreview = useMemo(() => {
     if (!(parsedAmount > 0)) return [];
@@ -285,6 +333,10 @@ export default function EmployeePaymentPage() {
       showToast.error(t("payment.messages.selectEmployee"));
       return;
     }
+    if (!expenseCategoryId) {
+      showToast.error(t("payment.messages.selectExpenseCategory"));
+      return;
+    }
     if (!(parsedAmount > 0)) {
       showToast.error(t("payment.messages.invalidAmount"));
       return;
@@ -303,6 +355,7 @@ export default function EmployeePaymentPage() {
           amount: parsedAmount,
           payment_date: gregorianDateStr,
           vault_id: selectedVaultId || undefined,
+          expense_category_id: expenseCategoryId,
           payment_method: paymentMethod,
           payment_type_id: paymentTypeId || undefined,
           notes: notes.trim().slice(0, NOTES_MAX_LENGTH),
@@ -549,7 +602,7 @@ export default function EmployeePaymentPage() {
                 usePortal
               />
             </div>
-            <div className="sm:col-span-2 min-w-0 z-999">
+            <div className="min-w-0 z-999">
               <label className={LABEL}>
                 {t("payment.form.vault")} <span className="text-rose-600">*</span>
               </label>
@@ -560,6 +613,23 @@ export default function EmployeePaymentPage() {
                 placeholder={t("payment.form.vaultPlaceholder")}
                 searchPlaceholder={t("payment.form.vaultSearch")}
                 buttonClassName={FIELD}
+              />
+            </div>
+            <div className="min-w-0">
+              <label className={LABEL}>
+                {t("payment.form.expenseCategory")} <span className="text-rose-600">*</span>
+              </label>
+              <CustomDropdown
+                value={expenseCategoryId}
+                onChange={setExpenseCategoryId}
+                options={expenseCategoryOptions}
+                placeholder={t("payment.form.expenseCategoryPlaceholder")}
+                buttonClassName={FIELD}
+                className="w-full"
+                width="w-full"
+                align="right"
+                usePortal
+                disabled={expenseCategoriesLoading || expenseCategoryOptions.length === 0}
               />
             </div>
           </div>

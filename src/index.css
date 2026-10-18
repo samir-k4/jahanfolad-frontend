@@ -8,56 +8,50 @@
 
 @font-face {
   font-family: 'Roshan AL';
-  src: url('/Fonts/RoshanAL-Extralight.ttf') format('truetype'),
-       url('/fonts/RoshanAL-Extralight.ttf') format('truetype');
+  src: url('/Fonts/RoshanAL-Extralight.ttf') format('truetype');
   font-weight: 200;
   font-style: normal;
-  font-display: swap;
+  font-display: block;
 }
 
 @font-face {
   font-family: 'Roshan AL';
-  src: url('/Fonts/RoshanAL-Light.ttf') format('truetype'),
-       url('/fonts/RoshanAL-Light.ttf') format('truetype');
+  src: url('/Fonts/RoshanAL-Light.ttf') format('truetype');
   font-weight: 300;
   font-style: normal;
-  font-display: swap;
+  font-display: block;
 }
 
 @font-face {
   font-family: 'Roshan AL';
-  src: url('/Fonts/RoshanAL-Regular.ttf') format('truetype'),
-       url('/fonts/RoshanAL-Regular.ttf') format('truetype');
+  src: url('/Fonts/RoshanAL-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
-  font-display: swap;
+  font-display: block;
 }
 
 @font-face {
   font-family: 'Roshan AL';
-  src: url('/Fonts/RoshanAL-Medium.ttf') format('truetype'),
-       url('/fonts/RoshanAL-Medium.ttf') format('truetype');
+  src: url('/Fonts/RoshanAL-Medium.ttf') format('truetype');
   font-weight: 500;
   font-style: normal;
-  font-display: swap;
+  font-display: block;
 }
 
 @font-face {
   font-family: 'Roshan AL';
-  src: url('/Fonts/RoshanAL-Semibold.ttf') format('truetype'),
-       url('/fonts/RoshanAL-Semibold.ttf') format('truetype');
+  src: url('/Fonts/RoshanAL-Semibold.ttf') format('truetype');
   font-weight: 600;
   font-style: normal;
-  font-display: swap;
+  font-display: block;
 }
 
 @font-face {
   font-family: 'Roshan AL';
-  src: url('/Fonts/RoshanAL-Bold.ttf') format('truetype'),
-       url('/fonts/RoshanAL-Bold.ttf') format('truetype');
+  src: url('/Fonts/RoshanAL-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
-  font-display: swap;
+  font-display: block;
 }
 
 /* ========================================================================= */

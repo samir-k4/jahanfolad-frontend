@@ -4,10 +4,99 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0f172a" />
+    <link
+      rel="preload"
+      href="/Fonts/RoshanAL-Regular.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/Fonts/RoshanAL-Bold.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin
+    />
     <title></title>
+    <style>
+      html,
+      body,
+      #root {
+        min-height: 100%;
+        margin: 0;
+      }
+
+      body {
+        min-height: 100vh;
+        background: #f9fafb;
+      }
+
+      #font-gate {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+      }
+
+      #font-gate svg {
+        width: 42px;
+        height: 42px;
+      }
+
+      #font-gate .font-spinner {
+        animation: font-spin 0.8s linear infinite;
+      }
+
+      #font-gate .font-retry {
+        width: 56px;
+        height: 56px;
+        padding: 14px;
+        color: #334155;
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        cursor: pointer;
+      }
+
+      #font-gate .font-error {
+        color: #b91c1c;
+      }
+
+      @keyframes font-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #font-gate .font-spinner {
+          animation-duration: 2s;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="font-gate" role="status" aria-label="Loading required font">
+        <svg class="font-spinner" viewBox="0 0 42 42" aria-hidden="true">
+          <circle
+            cx="21"
+            cy="21"
+            r="17"
+            fill="none"
+            stroke="#cbd5e1"
+            stroke-width="4"
+          />
+          <path
+            d="M21 4a17 17 0 0 1 17 17"
+            fill="none"
+            stroke="#334155"
+            stroke-linecap="round"
+            stroke-width="4"
+          />
+        </svg>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

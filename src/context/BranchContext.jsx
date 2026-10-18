@@ -6,13 +6,26 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiList } from "../api";
 import { useAuth } from "./AuthContext";
 const BranchContext = createContext();
+const BRANCHES_QUERY_KEY = ["branches"];
+const loadBranches = () => apiList("/branches");
 export function BranchProvider({ children }) {
   const { isAuthenticated } = useAuth();
-  const [branches, setBranches] = useState([]);
-  const [isLoadingBranches, setIsLoadingBranches] = useState(false);
+  const queryClient = useQueryClient();
+  const {
+    data: cachedBranches = [],
+    isLoading: isLoadingBranches,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: BRANCHES_QUERY_KEY,
+    queryFn: loadBranches,
+    enabled: isAuthenticated,
+  });
+  const branches = isAuthenticated ? cachedBranches : [];
   const [pickedBranch, setPickedBranchState] = useState(() => {
     try {
       return localStorage.getItem("jfc_selected_branch") || "";
@@ -20,24 +33,29 @@ export function BranchProvider({ children }) {
       return "";
     }
   });
-  const fetchBranches = useCallback(async () => {
-    try {
-      setIsLoadingBranches(true);
-      const data = await apiList("/branches");
-      setBranches(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoadingBranches(false);
-    }
-  }, []);
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchBranches();
-    } else {
-      setBranches([]);
+    if (!isAuthenticated) {
+      queryClient.removeQueries({ queryKey: BRANCHES_QUERY_KEY });
     }
-  }, [isAuthenticated, fetchBranches]);
+  }, [isAuthenticated, queryClient]);
+  useEffect(() => {
+    if (error) {
+      console.error(error);
+    }
+  }, [error]);
+  const refreshBranches = useCallback(async () => {
+    const result = await refetch();
+    return result.data || [];
+  }, [refetch]);
+  const ensureBranches = useCallback(
+    () =>
+      queryClient.ensureQueryData({
+        queryKey: BRANCHES_QUERY_KEY,
+        queryFn: loadBranches,
+        staleTime: 60_000,
+      }),
+    [queryClient],
+  );
   const isMultiBranch = branches.length > 1;
   const singleBranchId = branches.length === 1 ? String(branches[0].id) : "";
   const setPickedBranch = useCallback((branchId) => {
@@ -93,7 +111,8 @@ export function BranchProvider({ children }) {
       onSwitchBranch,
       branchName,
       needsBranchGate,
-      refreshBranches: fetchBranches,
+      refreshBranches,
+      ensureBranches,
     }),
     [
       branches,
@@ -105,7 +124,8 @@ export function BranchProvider({ children }) {
       onSwitchBranch,
       branchName,
       needsBranchGate,
-      fetchBranches,
+      refreshBranches,
+      ensureBranches,
     ],
   );
   return (

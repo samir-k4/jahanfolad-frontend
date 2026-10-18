@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { lazy, Suspense, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Routes,
@@ -8,45 +8,52 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { ChevronDown, LogOut, Bell, User } from "lucide-react";
-import Dashboard from "./pages/Dashboard";
-import ProductionPage from "./pages/ProductionPage";
-import ProductsList from "./pages/ProductsList";
-import AttendanceForm from "./pages/AttendanceForm";
-import OvertimeForm from "./pages/OvertimeForm";
-import Reports from "./pages/Reports";
-import EmployeePage from "./pages/EmployeePage";
-import EmployeeFormPage from "./pages/EmployeeFormPage";
-import EmployeeProfilePage from "./pages/EmployeeProfilePage";
-import SalaryPage from "./pages/SalaryPage";
-import EmployeePaymentPage from "./pages/EmployeePaymentPage";
-import WarehousePage from "./pages/WarehousePage";
-import ExpensesPage from "./pages/ExpensesPage";
-import CustomerReceiptsPage from "./pages/CustomerReceiptsPage";
-import CustomerReceiptCreatePage from "./pages/CustomerReceiptCreatePage";
-import CustomersPage from "./pages/CustomersPage";
-import CustomerCreatePage from "./pages/CustomerCreatePage";
-import CustomerProfilePage from "./pages/CustomerProfilePage";
-import CustomerLoansPage from "./pages/CustomerLoansPage";
-import SalesInvoicesPage from "./pages/SalesInvoicesPage";
-import InvoiceCreatePage from "./pages/InvoiceCreatePage";
-import ScrapSalesPage from "./pages/ScrapSalesPage";
-import TreasuryVaultsPage from "./pages/TreasuryVaultsPage";
-import DepositsWithdrawalsPage from "./pages/DepositsWithdrawalsPage";
-import DepositWithdrawCreatePage from "./pages/DepositWithdrawCreatePage";
-import TransfersPage from "./pages/TransfersPage";
-import TransferCreatePage from "./pages/TransferCreatePage";
-import VaultDetailPage from "./pages/VaultDetailPage";
-import ManagerAdvancesPage from "./pages/ManagerAdvancesPage";
-import ManagerAdvanceDetailPage from "./pages/ManagerAdvanceDetailPage";
-import SettingsPage from "./pages/SettingsPage";
-import Login from "./pages/Login";
-import UserProfilePage from "./pages/UserProfilePage";
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const ProductionPage = lazy(() => import("./pages/ProductionPage"));
+const ProductsList = lazy(() => import("./pages/ProductsList"));
+const AttendanceForm = lazy(() => import("./pages/AttendanceForm"));
+const OvertimeForm = lazy(() => import("./pages/OvertimeForm"));
+const Reports = lazy(() => import("./pages/Reports"));
+const EmployeePage = lazy(() => import("./pages/EmployeePage"));
+const EmployeeFormPage = lazy(() => import("./pages/EmployeeFormPage"));
+const EmployeeProfilePage = lazy(() => import("./pages/EmployeeProfilePage"));
+const SalaryPage = lazy(() => import("./pages/SalaryPage"));
+const EmployeePaymentPage = lazy(() => import("./pages/EmployeePaymentPage"));
+const WarehousePage = lazy(() => import("./pages/WarehousePage"));
+const ExpensesPage = lazy(() => import("./pages/ExpensesPage"));
+const CustomerReceiptsPage = lazy(() => import("./pages/CustomerReceiptsPage"));
+const CustomerReceiptCreatePage = lazy(() => import("./pages/CustomerReceiptCreatePage"));
+const CustomersPage = lazy(() => import("./pages/CustomersPage"));
+const CustomerCreatePage = lazy(() => import("./pages/CustomerCreatePage"));
+const CustomerProfilePage = lazy(() => import("./pages/CustomerProfilePage"));
+const CustomerLoansPage = lazy(() => import("./pages/CustomerLoansPage"));
+const SalesInvoicesPage = lazy(() => import("./pages/SalesInvoicesPage"));
+const InvoiceCreatePage = lazy(() => import("./pages/InvoiceCreatePage"));
+const ScrapSalesPage = lazy(() => import("./pages/ScrapSalesPage"));
+const TreasuryVaultsPage = lazy(() => import("./pages/TreasuryVaultsPage"));
+const DepositsWithdrawalsPage = lazy(() => import("./pages/DepositsWithdrawalsPage"));
+const DepositWithdrawCreatePage = lazy(() => import("./pages/DepositWithdrawCreatePage"));
+const TransfersPage = lazy(() => import("./pages/TransfersPage"));
+const TransferCreatePage = lazy(() => import("./pages/TransferCreatePage"));
+const VaultDetailPage = lazy(() => import("./pages/VaultDetailPage"));
+const ManagerAdvancesPage = lazy(() => import("./pages/ManagerAdvancesPage"));
+const ManagerAdvanceDetailPage = lazy(() => import("./pages/ManagerAdvanceDetailPage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const Login = lazy(() => import("./pages/Login"));
+const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
 import { NavGroup, PageLink, RequirePage, BranchGate, PasswordChangeModal } from "./components/common";
 import { pageForPath } from "./constants/pageRoutes";
 import { useAuth } from "./context/AuthContext";
 import { useBranch } from "./context/BranchContext";
 import useExpenseTypes from "./hooks/useExpenseTypes";
 import { AppToaster } from "./utils/toast";
+
+const PageLoading = () => (
+  <div className="flex min-h-[40vh] items-center justify-center" role="status">
+    <div className="w-8 h-8 border-2 border-slate-800 border-t-transparent rounded-full animate-spin" />
+  </div>
+);
+
 export default function App() {
   const { t, i18n } = useTranslation("common");
   const location = useLocation();
@@ -100,10 +107,10 @@ export default function App() {
   }
   if (!isAuthenticated) {
     return (
-      <>
+      <Suspense fallback={<PageLoading />}>
         <Login />
         <AppToaster />
-      </>
+      </Suspense>
     );
   }
   if (mustChangePassword) {
@@ -467,6 +474,7 @@ export default function App() {
             : "px-[1px] max-w-7xl mx-auto pt-20 md:pt-24 pb-16"
         }`}
       >
+        <Suspense fallback={<PageLoading />}>
         <Routes>
           <Route
             path="/"
@@ -877,6 +885,7 @@ export default function App() {
             }
           />
         </Routes>
+        </Suspense>
       </main>
     </div>
   );

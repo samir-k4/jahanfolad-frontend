@@ -13,6 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import useBodyScrollLock from "../hooks/useBodyScrollLock";
+import useDebounce from "../hooks/useDebounce";
 import useVaults from "../hooks/useVaults";
 import useIncomeCategories from "../hooks/useIncomeCategories";
 import { apiUrl } from "../api";
@@ -43,6 +44,7 @@ export default function CustomerProfilePage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("statement");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -183,31 +185,31 @@ export default function CustomerProfilePage() {
   };
 
   const filteredStatement = statement.filter((s) => {
-    if (!searchQuery) return true;
+    if (!debouncedSearchQuery) return true;
     return (
-      (s.tx_number && s.tx_number.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (s.description && s.description.includes(searchQuery)) ||
-      (s.type && s.type.includes(searchQuery))
+      (s.tx_number && s.tx_number.toLowerCase().includes(debouncedSearchQuery.toLowerCase())) ||
+      (s.description && s.description.includes(debouncedSearchQuery)) ||
+      (s.type && s.type.includes(debouncedSearchQuery))
     );
   });
 
   const filteredInvoices = invoices.filter((inv) => {
-    if (!searchQuery) return true;
+    if (!debouncedSearchQuery) return true;
     return (
-      String(inv.invoice_number).toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (inv.sale_type && inv.sale_type.includes(searchQuery)) ||
-      (inv.target_account && inv.target_account.includes(searchQuery)) ||
-      (inv.created_by && inv.created_by.includes(searchQuery)) ||
-      (inv.notes && inv.notes.includes(searchQuery))
+      String(inv.invoice_number).toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+      (inv.sale_type && inv.sale_type.includes(debouncedSearchQuery)) ||
+      (inv.target_account && inv.target_account.includes(debouncedSearchQuery)) ||
+      (inv.created_by && inv.created_by.includes(debouncedSearchQuery)) ||
+      (inv.notes && inv.notes.includes(debouncedSearchQuery))
     );
   });
 
   const filteredReceipts = receipts.filter((rcp) => {
-    if (!searchQuery) return true;
+    if (!debouncedSearchQuery) return true;
     return (
-      (rcp.doc_number && String(rcp.doc_number).toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (rcp.description && rcp.description.includes(searchQuery)) ||
-      (rcp.receipt_type && rcp.receipt_type.includes(searchQuery))
+      (rcp.doc_number && String(rcp.doc_number).toLowerCase().includes(debouncedSearchQuery.toLowerCase())) ||
+      (rcp.description && rcp.description.includes(debouncedSearchQuery)) ||
+      (rcp.receipt_type && rcp.receipt_type.includes(debouncedSearchQuery))
     );
   });
 

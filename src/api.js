@@ -126,12 +126,13 @@ function handleUnauthorized(path) {
 }
 
 function buildInit({ method = 'GET', body, signal, accept, headers } = {}) {
+  const isWrite = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase());
   return {
     method,
     credentials: 'include',
     headers: {
       Accept: accept || 'application/json',
-      [APP_REQUEST_HEADER]: APP_REQUEST_VALUE,
+      ...(isWrite ? { [APP_REQUEST_HEADER]: APP_REQUEST_VALUE } : {}),
       ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
       ...headers,
     },
@@ -218,9 +219,10 @@ export async function apiFetchBlob(path, options = {}) {
  *
  * 119 call sites across the app still use `fetch(apiUrl(...))` directly. Rather
  * than rewrite each one (high risk, no security benefit over this), we wrap
- * window.fetch once so every request to OUR api sends the session cookie, marks
- * itself as coming from this app, negotiates JSON and reacts to a 401 the same
- * way apiFetch does.
+ * window.fetch once so every request to OUR api sends the session cookie,
+ * negotiates JSON and reacts to a 401 the same way apiFetch does. Write
+ * requests also carry the app marker required by the API; GETs omit it to
+ * avoid unnecessary cross-origin preflights.
  *
  * Only requests whose URL resolves inside API_BASE are touched, so nothing is
  * attached to a third-party host. Converting call sites to apiFetch is still
@@ -258,8 +260,11 @@ export function installAuthInterceptor() {
    * session comes back as a 401 we can act on instead of a redirect or an error
    * page. A caller that asked for html or pdf keeps what it asked for.
    */
-  const applyDefaults = (headers) => {
-    if (!headers.has(APP_REQUEST_HEADER)) {
+  const applyDefaults = (headers, method) => {
+    if (
+      ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase()) &&
+      !headers.has(APP_REQUEST_HEADER)
+    ) {
       headers.set(APP_REQUEST_HEADER, APP_REQUEST_VALUE);
     }
     const accept = (headers.get('Accept') || '').trim();
@@ -281,11 +286,14 @@ export function installAuthInterceptor() {
 
     if (input instanceof Request) {
       // clone so the caller's Request stays usable
-      const headers = applyDefaults(new Headers(input.headers));
+      const method = (init?.method || input.method).toUpperCase();
+      const headers = applyDefaults(new Headers(input.headers), method);
       response = await nativeFetch(new Request(input, { headers, credentials: 'include' }), init);
     } else {
       const nextInit = { ...(init || {}) };
-      nextInit.headers = applyDefaults(new Headers(nextInit.headers || {}));
+      const method = (nextInit.method || 'GET').toUpperCase();
+      nextInit.method = method;
+      nextInit.headers = applyDefaults(new Headers(nextInit.headers || {}), method);
       nextInit.credentials = nextInit.credentials || 'include';
       response = await nativeFetch(input, nextInit);
     }

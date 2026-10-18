@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiUrl } from "../api";
+import { useAuth } from "./AuthContext";
 
 const DEFAULT_COMPANY_SETTINGS = {
   company_name: "شرکت تولیدی جهان فولاد",
@@ -8,6 +10,7 @@ const DEFAULT_COMPANY_SETTINGS = {
   company_phone: "+93 799 000 111 / +93 700 222 333",
   company_email: "info@jahanfolad.af",
   company_address: "افغانستان، هرات، شهرک صنعتی فاز ۲، خیابان صنعت ۵",
+  company_website: "www.jahanfolad.af",
   company_logo: null,
   company_logo_size: 80,
   default_currency: "AFN",
@@ -15,54 +18,105 @@ const DEFAULT_COMPANY_SETTINGS = {
 };
 
 const CompanyContext = createContext(null);
+const COMPANY_SETTINGS_QUERY_KEY = ["company-settings"];
+
+function readCachedSettings() {
+  try {
+    const cached = localStorage.getItem("jfc_company_settings");
+    if (!cached) return undefined;
+
+    const cachedSettings = JSON.parse(cached);
+    if (
+      !cachedSettings ||
+      typeof cachedSettings !== "object" ||
+      Array.isArray(cachedSettings)
+    ) {
+      return undefined;
+    }
+
+    if ("company_logo_base64" in cachedSettings) {
+      delete cachedSettings.company_logo_base64;
+      localStorage.setItem("jfc_company_settings", JSON.stringify(cachedSettings));
+    }
+
+    return cachedSettings;
+  } catch (err) {
+    console.error("Failed to read cached company settings:", err);
+    return undefined;
+  }
+}
 
 export function CompanyProvider({ children }) {
-  const [settings, setSettings] = useState(() => {
-    try {
-      const cached = localStorage.getItem("jfc_company_settings");
-      if (cached) {
-        return { ...DEFAULT_COMPANY_SETTINGS, ...JSON.parse(cached) };
-      }
-    } catch {
-      // ignore
-    }
-    return DEFAULT_COMPANY_SETTINGS;
-  });
-
-  const [loading, setLoading] = useState(false);
-
-  const syncSettingsToStateAndCache = (newSettings) => {
-    setSettings((prev) => {
-      const merged = { ...prev, ...newSettings };
-      try {
-        localStorage.setItem("jfc_company_settings", JSON.stringify(merged));
-      } catch (e) {
-        console.error("Failed to cache company settings:", e);
-      }
-      return merged;
-    });
-  };
-
-  const fetchSettings = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(apiUrl("/settings/general"));
-      if (res.ok) {
-        const data = await res.json();
-        if (data.settings) {
-          syncSettingsToStateAndCache(data.settings);
+  const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+  const [cachedSettings] = useState(readCachedSettings);
+  const settingsQuery = useQuery({
+    queryKey: COMPANY_SETTINGS_QUERY_KEY,
+    queryFn: async () => {
+      const data = await fetch(apiUrl("/settings/general")).then((response) => {
+        if (!response.ok) {
+          throw new Error(`Company settings request failed (${response.status}).`);
         }
+        return response.json();
+      });
+      if (!data?.settings || typeof data.settings !== "object" || Array.isArray(data.settings)) {
+        throw new Error("Company settings response has an invalid format.");
       }
-    } catch (err) {
-      console.error("Error fetching general company settings:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      return data.settings;
+    },
+    enabled: isAuthenticated,
+    initialData: cachedSettings,
+    initialDataUpdatedAt: 0,
+    staleTime: 5 * 60_000,
+  });
+  const settings = {
+    ...DEFAULT_COMPANY_SETTINGS,
+    ...(settingsQuery.data || cachedSettings || {}),
+  };
+  const loading = settingsQuery.isFetching;
+  const settingsLoaded = settingsQuery.isFetched;
 
   useEffect(() => {
-    fetchSettings();
-  }, [fetchSettings]);
+    if (settingsQuery.error) {
+      console.error("Error fetching general company settings:", settingsQuery.error);
+    }
+  }, [settingsQuery.error]);
+  useEffect(() => {
+    if (!settingsQuery.isFetched || !settingsQuery.data) return;
+    try {
+      localStorage.setItem(
+        "jfc_company_settings",
+        JSON.stringify({ ...DEFAULT_COMPANY_SETTINGS, ...settingsQuery.data }),
+      );
+    } catch (err) {
+      console.error("Failed to cache company settings:", err);
+    }
+  }, [settingsQuery.data, settingsQuery.isFetched]);
+
+  const syncSettingsToStateAndCache = useCallback(
+    (newSettings) => {
+      const merged = {
+        ...DEFAULT_COMPANY_SETTINGS,
+        ...(queryClient.getQueryData(COMPANY_SETTINGS_QUERY_KEY) || cachedSettings || {}),
+        ...newSettings,
+      };
+      queryClient.setQueryData(COMPANY_SETTINGS_QUERY_KEY, merged);
+      try {
+        localStorage.setItem("jfc_company_settings", JSON.stringify(merged));
+      } catch (err) {
+        console.error("Failed to cache company settings:", err);
+      }
+      return merged;
+    },
+    [cachedSettings, queryClient],
+  );
+
+  const fetchSettings = useCallback(async () => {
+    const result = await settingsQuery.refetch();
+    if (result.error) {
+      console.error("Error fetching general company settings:", result.error);
+    }
+  }, [settingsQuery.refetch]);
 
   // Upload logo (supports File object or base64 string)
   const updateLogo = async (fileOrBase64) => {
@@ -134,6 +188,7 @@ export function CompanyProvider({ children }) {
       value={{
         settings,
         loading,
+        settingsLoaded,
         fetchSettings,
         updateLogo,
         removeLogo,

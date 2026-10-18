@@ -4,6 +4,7 @@ import { TooltipButton, CustomDropdown, SearchableSelect, TablePagination, usePa
 import useEmployees from "../../hooks/useEmployees";
 import { EMPLOYEE_STATUS, isActiveStatus } from "../../constants/employeeDomain";
 import { useTranslation } from "react-i18next";
+import useDebounce from "../../hooks/useDebounce";
 
 const getEmployeePosition = (emp) => String(emp.job_position?.name || emp.position || "").trim();
 const getEmployeeCategory = (emp) => String(emp.job_category?.name || emp.job_category || "").trim();
@@ -25,6 +26,7 @@ export default function EmployeeTable({
   const { t } = useTranslation("employee");
   const { canEdit, canDelete } = usePagePerms("employees");
   const { categories: dbCategories, positions: dbPositions } = useEmployees();
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [currentPage, setCurrentPage] = useState(1);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("category-default");
@@ -133,7 +135,7 @@ export default function EmployeeTable({
   }, [categoryOrderMap, positionOrderMap]);
 
   const filteredEmployees = useMemo(() => {
-    const term = (searchTerm || "").trim();
+    const term = (debouncedSearchTerm || "").trim();
     const result = employees.filter((emp) => {
       const cat = getEmployeeCategory(emp);
       const pos = getEmployeePosition(emp);
@@ -145,7 +147,7 @@ export default function EmployeeTable({
       );
     });
     return sortEmployees([...result], sortBy);
-  }, [employees, searchTerm, categoryFilter, positionFilter, statusFilter, sortBy, matchesSearch, sortEmployees]);
+  }, [employees, debouncedSearchTerm, categoryFilter, positionFilter, statusFilter, sortBy, matchesSearch, sortEmployees]);
 
   const totalPages = Math.ceil(filteredEmployees.length / recordsPerPage) || 1;
   const indexOfLastRecord = currentPage * recordsPerPage;

@@ -6,6 +6,7 @@ import { useBranch } from "../context/BranchContext";
 import { formatAfghanDateTime } from "../utils/dateHelpers";
 import { matchesDatePreset, todayReference } from "../utils/datePresets";
 import { showToast } from "../utils/toast";
+import useDebounce from "../hooks/useDebounce";
 import {
   WarehouseHeader,
   WarehouseStockTable,
@@ -36,6 +37,7 @@ export default function WarehousePage() {
   const [products, setProducts] = useState([]);
   const [activeTab, setActiveTab] = useState("stock");
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [txTypeFilter, setTxTypeFilter] = useState("all");
@@ -101,7 +103,7 @@ export default function WarehousePage() {
     () =>
       inventoryData.filter((item) => {
         const matchSearch = matchesText(
-          searchTerm,
+          debouncedSearchTerm,
           item.product_name,
           item.category_name,
           item.weight,
@@ -116,7 +118,7 @@ export default function WarehousePage() {
             : item.status === statusFilter);
         return matchSearch && matchCategory && matchStatus;
       }),
-    [inventoryData, searchTerm, selectedCategoryFilter, statusFilter],
+    [inventoryData, debouncedSearchTerm, selectedCategoryFilter, statusFilter],
   );
   const filteredTransactions = useMemo(() => {
     if (!transactionsData.length) return [];
@@ -125,7 +127,7 @@ export default function WarehousePage() {
       if (txTypeFilter !== "all" && tx.type !== txTypeFilter) return false;
       if (
         !matchesText(
-          searchTerm,
+          debouncedSearchTerm,
           tx.product?.name,
           tx.description,
           tx.source,
@@ -140,7 +142,7 @@ export default function WarehousePage() {
         today,
       );
     });
-  }, [transactionsData, txTypeFilter, searchTerm, txPeriodFilter]);
+  }, [transactionsData, txTypeFilter, debouncedSearchTerm, txPeriodFilter]);
   const openMoveModal = (setter) => (productId = null) => {
     setPrefillProductId(productId);
     setter(true);

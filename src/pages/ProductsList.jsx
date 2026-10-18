@@ -7,6 +7,7 @@ import { formatProductName } from "../utils/productFormat";
 import { showToast } from "../utils/toast";
 import { apiFetch, apiList } from "../api";
 import { useAuth } from "../context/AuthContext";
+import useDebounce from "../hooks/useDebounce";
 const includes = (value, term) =>
   String(value ?? "").toLowerCase().includes(term);
 export default function ProductsList() {
@@ -17,6 +18,7 @@ export default function ProductsList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [formMode, setFormMode] = useState(null);
   const [editProduct, setEditProduct] = useState(null);
   const loadData = useCallback(async () => {
@@ -70,7 +72,7 @@ export default function ProductsList() {
     });
   };
   const filteredCategories = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
+    const term = debouncedSearchTerm.trim().toLowerCase();
     return categories
       .map((category) => {
         const categoryProducts = products.filter(
@@ -87,7 +89,7 @@ export default function ProductsList() {
         return { ...category, products: matched };
       })
       .filter((category) => category.products.length > 0);
-  }, [categories, products, searchTerm]);
+  }, [categories, products, debouncedSearchTerm]);
   if (loading) {
     return (
       <div
