@@ -146,7 +146,7 @@ const toastKey = (type, message, description) => {
 
 const spawnCustomToast = (type, message, options = {}) => {
   const isOptionsObject = typeof options === "object" && options !== null;
-  const defaultDuration = isOptionsObject && options.action ? 4000 : 2000;
+  const defaultDuration = isOptionsObject && options.action ? 4000 : 5000;
   const duration =
     typeof options === "number" ? options : (isOptionsObject && options.duration) || defaultDuration;
   const description = isOptionsObject ? options.description : undefined;
