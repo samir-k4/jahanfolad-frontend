@@ -30,6 +30,7 @@ import {
   PAYMENT_METHOD,
   PAYMENT_TYPE_SCOPE,
   PAYMENT_SOURCE,
+  RUN_STATE,
   defaultVaultId,
   isFromPayrollRun,
   roundDownToStep,
@@ -879,6 +880,7 @@ export default function EmployeePaymentPage() {
                 <tbody className="divide-y divide-gray-200 text-table-cell-text text-gray-800">
                   {payments.map((payment, index) => {
                     const fromRun = isFromPayrollRun(payment);
+                    const isReversed = payment.payroll_run?.state === RUN_STATE.REVERSED;
                     return (
                       <tr key={payment.id} className="hover:bg-gray-50/70 transition-colors">
                         <td className={`${CELL} text-center font-mono text-gray-500`} dir="ltr">
@@ -904,8 +906,10 @@ export default function EmployeePaymentPage() {
                         </td>
                         <td className={`${CELL} text-center whitespace-normal break-words`}>
                           <span className={fromRun ? "text-gray-500" : "font-bold"}>
-                            {payment.payment_type?.name ||
-                              t(fromRun ? "payment.history.badge.payroll" : "payment.history.badge.hand")}
+                            {isReversed
+                              ? t("payment.history.badge.reversed")
+                              : payment.payment_type?.name ||
+                                t(fromRun ? "payment.history.badge.payroll" : "payment.history.badge.hand")}
                           </span>
                         </td>
                         <td className={`${CELL} whitespace-normal break-words`}>
@@ -920,16 +924,18 @@ export default function EmployeePaymentPage() {
                         </td>
                         <td className="p-3 rounded-none">
                           <div className="flex items-center justify-center gap-1.5">
-                            <TooltipButton
-                              icon={<Printer size={15} />}
-                              tooltip={t("payment.history.tooltip.reprint")}
-                              onClick={() => {
-                                setSavedPayment(payment);
-                                setSlipAfterSave(false);
-                                setShowReceiptModal(true);
-                              }}
-                              colorClass={`${ACTION_REST} hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-200`}
-                            />
+                            {!isReversed && (
+                              <TooltipButton
+                                icon={<Printer size={15} />}
+                                tooltip={t("payment.history.tooltip.reprint")}
+                                onClick={() => {
+                                  setSavedPayment(payment);
+                                  setSlipAfterSave(false);
+                                  setShowReceiptModal(true);
+                                }}
+                                colorClass={`${ACTION_REST} hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-200`}
+                              />
+                            )}
                             {canDelete && !fromRun && (
                               <TooltipButton
                                 icon={<Trash2 size={15} />}

@@ -265,7 +265,7 @@ export default function SalesInvoicesPage() {
                       </td>
 
                       <td className="p-3 text-center text-gray-700 border-l border-gray-100">
-                        {inv.created_by || "مدیریت فروش"}
+                        {inv.created_by || "—"}
                       </td>
 
                       <td className="p-3 text-center min-w-[120px]">

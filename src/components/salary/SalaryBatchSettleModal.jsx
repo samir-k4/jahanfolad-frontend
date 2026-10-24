@@ -4,10 +4,10 @@ import { useTranslation } from "react-i18next";
 import { AlertCircle, Building2, Calendar, CheckCheck, FileText, Loader2, RotateCcw, Users, X } from "lucide-react";
 import { apiUrl } from "../../api";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
-import useExpenseCategories from "../../hooks/useExpenseCategories";
+import useVaults from "../../hooks/useVaults";
 import { formatToGregorian } from "../../utils/dateHelpers";
 import { getCleanErrorMessage } from "../../utils/errorHandler";
-import { ALL_BRANCHES, RUN_STATE } from "../../constants/salaryDomain";
+import { ALL_BRANCHES, RUN_STATE, defaultVaultId, vaultOption } from "../../constants/salaryDomain";
 import CustomDropdown from "../common/CustomDropdown";
 const TILE = "bg-gray-50 border border-gray-200 rounded-card p-3";
 const money = (value) => Number(value || 0).toLocaleString("en-US");
@@ -28,11 +28,14 @@ export default function SalaryBatchSettleModal({
   const [errorMessage, setErrorMessage] = useState("");
   const [cancelAcknowledged, setCancelAcknowledged] = useState(false);
   const [collectorIds, setCollectorIds] = useState([]);
-  const [expenseCategoryId, setExpenseCategoryId] = useState("");
-  const {
-    categories: expenseCategories,
-    loading: expenseCategoriesLoading,
-  } = useExpenseCategories(isOpen && !run);
+  const [vaultId, setVaultId] = useState("");
+  const { vaults, loading: vaultsLoading, error: vaultsError } = useVaults(isOpen && !run);
+  const cashVaults = useMemo(
+    () =>
+      vaults.filter((vault) => String(vault.currency || "AFN").trim().toUpperCase() === "AFN"),
+    [vaults]
+  );
+  const vaultOptions = useMemo(() => cashVaults.map(vaultOption), [cashVaults]);
   useEffect(() => {
     if (!isOpen) return;
     setErrorMessage("");
@@ -45,16 +48,13 @@ export default function SalaryBatchSettleModal({
     );
   }, [isOpen, payrollList]);
   useEffect(() => {
-    setExpenseCategoryId((current) => {
-      if (current && expenseCategories.some((category) => String(category.id) === current)) {
-        return current;
-      }
-      const defaultCategory = expenseCategories.find(
-        (category) => category.slug === "salary" || category.name === "مصارف معاشات",
-      );
-      return defaultCategory ? String(defaultCategory.id) : "";
-    });
-  }, [expenseCategories]);
+    if (!isOpen) return;
+    setVaultId((current) =>
+      current && cashVaults.some((vault) => String(vault.id) === current)
+        ? current
+        : defaultVaultId(cashVaults)
+    );
+  }, [isOpen, cashVaults]);
   const monthName = afghanMonthInfo?.shamsi_month_name || t("page.currentMonth");
   const yearName = afghanMonthInfo?.shamsi_year || "";
   const pending = useMemo(
@@ -72,6 +72,7 @@ export default function SalaryBatchSettleModal({
   );
   const isClosed = Boolean(run);
   const isPendingRun = run?.state === RUN_STATE.PENDING;
+  const isPaidRun = run?.state === RUN_STATE.PAID;
   const needsBranch = !selectedBranch || selectedBranch === ALL_BRANCHES;
   const send = async (path, body) => {
     const res = await fetch(apiUrl(path), {
@@ -93,8 +94,8 @@ export default function SalaryBatchSettleModal({
       setErrorMessage(t("batch.nothingPayable"));
       return;
     }
-    if (!expenseCategoryId) {
-      setErrorMessage(t("batch.expenseCategoryRequired"));
+    if (!vaultId) {
+      setErrorMessage(t("batch.vaultRequired"));
       return;
     }
     setIsProcessing(true);
@@ -105,7 +106,7 @@ export default function SalaryBatchSettleModal({
         shamsi_month: afghanMonthInfo?.shamsi_month,
         payment_date: formatToGregorian(new Date()),
         employee_ids: chosen.map((row) => row.id),
-        expense_category_id: expenseCategoryId,
+        vault_id: vaultId,
       });
       onDone?.(data?.message);
       onClose();
@@ -115,11 +116,11 @@ export default function SalaryBatchSettleModal({
       setIsProcessing(false);
     }
   };
-  const handleCancel = async () => {
+  const handleCancel = async (confirmPaid = false) => {
     setErrorMessage("");
     setIsProcessing(true);
     try {
-      const data = await send(`/payroll/runs/${run.id}/cancel`);
+      const data = await send(`/payroll/runs/${run.id}/cancel`, confirmPaid ? { confirm_cancel: true } : {});
       onDone?.(data?.message);
       onClose();
     } catch (err) {
@@ -128,10 +129,6 @@ export default function SalaryBatchSettleModal({
       setIsProcessing(false);
     }
   };
-  const expenseCategoryOptions = expenseCategories.map((category) => ({
-    value: String(category.id),
-    label: category.name,
-  }));
   if (!isOpen) return null;
   return createPortal(
     <div
@@ -271,25 +268,33 @@ export default function SalaryBatchSettleModal({
               </div>
             ) : (
               <div className="space-y-3">
-                <p className="text-caption-text font-medium text-gray-600 rounded-card border border-gray-200 bg-gray-50 p-3">
-                  {t("batch.closeHint")}
+                <p className="text-caption-text font-medium text-amber-900 rounded-card border border-amber-300 bg-amber-50 p-3">
+                  {t("batch.closeWarning")}
                 </p>
                 <div>
                   <label className="block text-caption-text text-gray-700 mb-1">
-                    {t("payment.form.expenseCategory")} <span className="text-rose-600">*</span>
+                    {t("batch.vault")} <span className="text-rose-600">*</span>
                   </label>
                   <CustomDropdown
-                    value={expenseCategoryId}
-                    onChange={setExpenseCategoryId}
-                    options={expenseCategoryOptions}
-                    placeholder={t("payment.form.expenseCategoryPlaceholder")}
+                    value={vaultId}
+                    onChange={setVaultId}
+                    options={vaultOptions}
+                    placeholder={t("batch.vaultPlaceholder")}
                     buttonClassName="w-full bg-white border border-gray-300 rounded-input py-2 px-3 text-label-text text-gray-800 outline-none focus:border-slate-700"
                     className="w-full"
                     width="w-full"
                     align="right"
                     usePortal
-                    disabled={expenseCategoriesLoading || expenseCategoryOptions.length === 0}
+                    disabled={vaultsLoading || vaultOptions.length === 0}
                   />
+                  {vaultsError && (
+                    <p role="alert" className="text-caption-text text-rose-700 mt-1">
+                      {t("batch.vaultLoadError")}
+                    </p>
+                  )}
+                  {!vaultsLoading && vaultOptions.length === 0 && !vaultsError && (
+                    <p className="text-caption-text text-rose-700 mt-1">{t("batch.noCashVault")}</p>
+                  )}
                 </div>
               </div>
             )}
@@ -308,6 +313,22 @@ export default function SalaryBatchSettleModal({
                   </span>
                   <span className="text-caption-text font-medium text-rose-900 block mt-1">
                     {t("batch.cancelConfirm")}
+                  </span>
+                </span>
+              </label>
+            )}
+            {isPaidRun && (
+              <label className="flex items-start gap-2 rounded-card border border-rose-200 bg-rose-50 p-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={cancelAcknowledged}
+                  onChange={(event) => setCancelAcknowledged(event.target.checked)}
+                  className="mt-0.5 cursor-pointer"
+                />
+                <span>
+                  <span className="text-body-text font-bold text-rose-900 block">{t("batch.cancelPaidTitle")}</span>
+                  <span className="text-caption-text font-medium text-rose-800 block mt-0.5">
+                    {t("batch.cancelPaidWarning")}
                   </span>
                 </span>
               </label>
@@ -339,6 +360,16 @@ export default function SalaryBatchSettleModal({
               {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
               <span>{isProcessing ? t("batch.processing") : t("batch.confirmCancel")}</span>
             </button>
+          ) : isPaidRun ? (
+            <button
+              type="button"
+              onClick={() => handleCancel(true)}
+              disabled={isProcessing || !cancelAcknowledged}
+              className="inline-flex items-center gap-1.5 rounded-btn bg-rose-600 hover:bg-rose-700 px-4 py-2 text-btn-text font-bold text-white disabled:opacity-70 cursor-pointer"
+            >
+              {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+              <span>{isProcessing ? t("batch.processing") : t("batch.cancelPaid")}</span>
+            </button>
           ) : (
             !isClosed && (
               <button
@@ -348,8 +379,8 @@ export default function SalaryBatchSettleModal({
                   isProcessing ||
                   pending.length === 0 ||
                   payableTotal <= 0 ||
-                  expenseCategoriesLoading ||
-                  !expenseCategoryId
+                  vaultsLoading ||
+                  !vaultId
                 }
                 className="inline-flex items-center gap-1.5 rounded-btn bg-slate-800 hover:bg-slate-900 px-4 py-2 text-btn-text font-bold text-white disabled:opacity-70 cursor-pointer"
               >

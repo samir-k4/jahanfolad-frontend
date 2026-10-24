@@ -44,7 +44,6 @@ export default function CustomerCreatePage() {
   const [address, setAddress] = useState("");
   const [creditLimit, setCreditLimit] = useState("");
   const [status, setStatus] = useState("active");
-  const [createdBy, setCreatedBy] = useState("مدیریت فروش");
   const [notes, setNotes] = useState("");
 
   const [loadingCode, setLoadingCode] = useState(true);
@@ -92,7 +91,6 @@ export default function CustomerCreatePage() {
         address: address.trim() || null,
         credit_limit: creditLimit ? parseFloat(toEnglishDigits(creditLimit)) : 0.00,
         status: status,
-        created_by: createdBy.trim() || "مدیریت فروش",
         notes: notes.trim() || null,
       };
 
@@ -345,17 +343,6 @@ export default function CustomerCreatePage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-1.5">
-                    {t("createPage.createdBy")}
-                  </label>
-                  <input
-                    type="text"
-                    value={createdBy}
-                    onChange={(e) => setCreatedBy(e.target.value)}
-                    className="w-full h-[40px] px-3 bg-gray-50 border border-gray-300 rounded text-xs text-gray-700 focus:outline-none focus:border-emerald-600"
-                  />
-                </div>
               </div>
 
               <div className="pt-3 space-y-2 border-t border-gray-100">

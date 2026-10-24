@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Search, X, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import useAnchoredMenuPosition from "../../hooks/useAnchoredMenuPosition";
 
 export default function SearchableSelect({
   options = [],
@@ -24,7 +25,7 @@ export default function SearchableSelect({
   onSearchChange,
   loading = false,
   renderOption,
-  usePortal = false,
+  usePortal = true,
 }) {
   const { t } = useTranslation("common");
   const [isOpen, setIsOpen] = useState(false);
@@ -33,7 +34,12 @@ export default function SearchableSelect({
   const containerRef = useRef(null);
   const menuRef = useRef(null);
   const searchInputRef = useRef(null);
-  const [coords, setCoords] = useState(null);
+  const { coords, updatePosition } = useAnchoredMenuPosition({
+    anchorRef: containerRef,
+    menuRef,
+    isOpen: isOpen && usePortal,
+    minWidth: 240,
+  });
 
   const handleSearchChange = (val) => {
     if (searchValue === undefined) {
@@ -41,45 +47,6 @@ export default function SearchableSelect({
     }
     onSearchChange?.(val);
   };
-
-  const updatePosition = () => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const openUp = spaceBelow < 260 && rect.top > 260;
-    const viewportPadding = Math.min(8, window.innerWidth / 2);
-    const menuWidth = Math.min(
-      Math.max(rect.width, 240),
-      window.innerWidth - viewportPadding * 2,
-    );
-    const left = Math.min(
-      Math.max(rect.left, viewportPadding),
-      window.innerWidth - menuWidth - viewportPadding,
-    );
-    setCoords({
-      top: openUp ? "auto" : `${rect.bottom + 4}px`,
-      bottom: openUp ? `${window.innerHeight - rect.top + 4}px` : "auto",
-      left: `${left}px`,
-      width: `${menuWidth}px`,
-    });
-  };
-
-  useEffect(() => {
-    if (isOpen && usePortal) {
-      updatePosition();
-      const handleCloseOnScroll = (e) => {
-        if (menuRef.current && menuRef.current.contains(e.target)) return;
-        setIsOpen(false);
-        handleSearchChange("");
-      };
-      window.addEventListener("scroll", handleCloseOnScroll, true);
-      window.addEventListener("resize", handleCloseOnScroll);
-      return () => {
-        window.removeEventListener("scroll", handleCloseOnScroll, true);
-        window.removeEventListener("resize", handleCloseOnScroll);
-      };
-    }
-  }, [isOpen, usePortal]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -142,6 +109,7 @@ export default function SearchableSelect({
               bottom: coords.bottom,
               left: coords.left,
               width: coords.width,
+              maxHeight: `${coords.maxHeight}px`,
               zIndex: 99999,
             }
           : undefined
@@ -170,7 +138,14 @@ export default function SearchableSelect({
           </button>
         )}
       </div>
-      <div className="max-h-60 overflow-y-auto divide-y divide-gray-50">
+      <div
+        className="max-h-60 overflow-y-auto divide-y divide-gray-50"
+        style={
+          usePortal && coords
+            ? { maxHeight: `${Math.max(0, coords.maxHeight - 54)}px` }
+            : undefined
+        }
+      >
         {loading ? (
           <div className="p-3 text-center text-xs text-gray-400">
             {t("search.loading")}

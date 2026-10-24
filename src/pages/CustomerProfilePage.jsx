@@ -690,7 +690,7 @@ export default function CustomerProfilePage() {
                         </td>
 
                         <td className="px-3 py-2.5 text-center text-gray-700 font-medium border-l border-gray-200">
-                          {inv.created_by || "مدیریت فروش"}
+                          {inv.created_by || "—"}
                         </td>
 
                         <td className="px-3 py-2.5 text-center font-mono text-gray-800 font-bold border-l border-gray-200">

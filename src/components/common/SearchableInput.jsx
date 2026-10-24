@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Search, X, Loader2 } from "lucide-react";
 import TooltipButton from "./TooltipButton";
 import { useTranslation } from "react-i18next";
+import useAnchoredMenuPosition from "../../hooks/useAnchoredMenuPosition";
 
 export default function SearchableInput({
   value = null,
@@ -28,37 +29,12 @@ export default function SearchableInput({
   const containerRef = useRef(null);
   const inputRef = useRef(null);
   const menuRef = useRef(null);
-  const [coords, setCoords] = useState(null);
-
-  const updatePosition = () => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const openUp = spaceBelow < 260 && rect.top > 260;
-    setCoords({
-      top: openUp ? "auto" : `${rect.bottom + 4}px`,
-      bottom: openUp ? `${window.innerHeight - rect.top + 4}px` : "auto",
-      left: `${rect.left}px`,
-      right: `${window.innerWidth - rect.right}px`,
-      width: `${rect.width}px`,
-    });
-  };
-
-  useEffect(() => {
-    if (isOpen && usePortal) {
-      updatePosition();
-      const handleCloseOnScroll = (e) => {
-        if (menuRef.current && menuRef.current.contains(e.target)) return;
-        setIsOpen(false);
-      };
-      window.addEventListener("scroll", handleCloseOnScroll, true);
-      window.addEventListener("resize", handleCloseOnScroll);
-      return () => {
-        window.removeEventListener("scroll", handleCloseOnScroll, true);
-        window.removeEventListener("resize", handleCloseOnScroll);
-      };
-    }
-  }, [isOpen, usePortal]);
+  const { coords, updatePosition } = useAnchoredMenuPosition({
+    anchorRef: containerRef,
+    menuRef,
+    isOpen: isOpen && usePortal,
+    preferredHeight: 256,
+  });
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -118,8 +94,9 @@ export default function SearchableInput({
               position: "fixed",
               top: coords.top,
               bottom: coords.bottom,
-              right: coords.right,
+              left: coords.left,
               width: coords.width,
+              maxHeight: `${coords.maxHeight}px`,
               zIndex: 99999,
             }
           : undefined

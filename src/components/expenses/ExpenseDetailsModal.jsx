@@ -32,6 +32,8 @@ export default function ExpenseDetailsModal({ isOpen, expense, onClose }) {
     [t("detailsModal.createdBy"), expense.created_by],
     [t("detailsModal.paidBy"), expense.paid_by],
     [t("detailsModal.paidAt"), expense.paid_at ? new Date(expense.paid_at).toLocaleString("en-GB") : null],
+    [t("detailsModal.reversedBy"), expense.reversed_by],
+    [t("detailsModal.reversedAt"), expense.reversed_at ? new Date(expense.reversed_at).toLocaleString("en-GB") : null],
   ];
   return createPortal(
     <>
@@ -69,6 +71,12 @@ export default function ExpenseDetailsModal({ isOpen, expense, onClose }) {
               <dt className="text-caption-text text-gray-500">{t("table.description")}</dt>
               <dd className="text-body-text text-gray-900 whitespace-pre-line break-words">{orDash(expense.description)}</dd>
             </div>
+            {expense.reversal_reason && (
+              <div className="sm:col-span-2 min-w-0">
+                <dt className="text-caption-text text-gray-500">{t("detailsModal.reversalReason")}</dt>
+                <dd className="text-body-text text-gray-900 whitespace-pre-line break-words">{expense.reversal_reason}</dd>
+              </div>
+            )}
           </div>
           {source && (
             <div className="mx-5 mb-4 flex items-center justify-between gap-3 bg-gray-50 border border-gray-200 rounded-card px-3.5 py-3">

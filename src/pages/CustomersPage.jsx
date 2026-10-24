@@ -74,7 +74,6 @@ export default function CustomersPage() {
     address: "",
     credit_limit: "",
     status: "active",
-    created_by: t("defaults.createdBy"),
     notes: "",
   });
   const [formData, setFormData] = useState(() => createEmptyForm());
@@ -132,7 +131,6 @@ export default function CustomersPage() {
       address: customer.address || "",
       credit_limit: customer.credit_limit ? String(customer.credit_limit) : "",
       status: customer.status || "active",
-      created_by: customer.created_by || t("defaults.createdBy"),
       notes: customer.notes || "",
     });
     setIsFormModalOpen(true);

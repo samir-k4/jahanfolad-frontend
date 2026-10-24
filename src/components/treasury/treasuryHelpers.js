@@ -57,7 +57,7 @@ export const getPartyName = (tx, deposit) =>
 export const getCreatedBy = (tx, deposit) =>
   tx?.created_by ||
   fromNotes(tx?.notes, NOTE_KEY.CREATED_BY) ||
-  t(deposit ? "party.cashier" : "party.finance");
+  i18n.t("placeholder.dash", { ns: "salary" });
 export const getExchangeRate = (tx) => {
   const vaultCurrency = String(tx?.vault?.currency || "").toUpperCase();
   const txCurrency = String(tx?.currency || "").toUpperCase();

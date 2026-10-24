@@ -380,6 +380,7 @@ export default function ExpensesPage() {
                 },
                 { value: "paid", label: tx("states.paid") },
                 { value: "rejected", label: tx("states.rejected") },
+                { value: "reversed", label: tx("states.reversed") },
               ]}
               buttonClassName={`${FILTER_CONTROL} min-w-[150px]`}
               width="w-48"
@@ -533,6 +534,8 @@ export default function ExpensesPage() {
                               ? "bg-amber-50 text-amber-800 border-amber-200"
                               : exp.state === "rejected"
                               ? "bg-rose-50 text-rose-700 border-rose-200"
+                              : exp.state === "reversed"
+                              ? "bg-slate-100 text-slate-800 border-slate-300"
                               : "bg-emerald-50 text-emerald-800 border-emerald-200"
                           }`}
                         >
@@ -541,6 +544,11 @@ export default function ExpensesPage() {
                         {exp.state === "rejected" && exp.rejection_reason && (
                           <span className="block text-[10px] text-content-subtle mt-0.5 max-w-[140px] truncate" title={exp.rejection_reason}>
                             {exp.rejection_reason}
+                          </span>
+                        )}
+                        {exp.state === "reversed" && exp.reversal_reason && (
+                          <span className="block text-[10px] text-content-subtle mt-0.5 max-w-[140px] truncate" title={exp.reversal_reason}>
+                            {exp.reversal_reason}
                           </span>
                         )}
                       </td>
@@ -574,7 +582,7 @@ export default function ExpensesPage() {
                               />
                             </>
                           )}
-                          {canDelete && (
+                          {canDelete && exp.can_delete !== false && (
                             <TooltipButton
                               icon={<Trash2 size={15} />}
                               tooltip={tx("actions.delete")}

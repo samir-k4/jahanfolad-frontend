@@ -472,7 +472,6 @@ export default function DepositWithdrawCreatePage() {
       transaction_time: formatted12Hour,
       paid_by: isDeposit ? beneficiaryPerson : (handlerPerson || selectedVault?.name || t("defaults.financeManagement")),
       received_by: isDeposit ? (handlerPerson || selectedVault?.name || t("defaults.cashier")) : beneficiaryPerson,
-      created_by: handlerPerson || null,
       notes: noteDetails,
     };
     setSubmitting(true);

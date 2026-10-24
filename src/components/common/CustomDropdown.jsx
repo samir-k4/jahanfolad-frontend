@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import useAnchoredMenuPosition from "../../hooks/useAnchoredMenuPosition";
 
 export default function CustomDropdown({
   trigger,
@@ -17,53 +18,20 @@ export default function CustomDropdown({
   className = "",
   buttonClassName = "",
   menuClassName = "",
-  usePortal = false,
+  usePortal = true,
   children,
 }) {
   const { t } = useTranslation("common");
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const menuRef = useRef(null);
-  const [coords, setCoords] = useState(null);
-
-  const updatePosition = () => {
-    if (!dropdownRef.current) return;
-    const rect = dropdownRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const openUp = spaceBelow < 220 && rect.top > 220;
-    const viewportPadding = Math.min(8, window.innerWidth / 2);
-    const menuWidth = Math.min(
-      Math.max(rect.width, 224),
-      window.innerWidth - viewportPadding * 2,
-    );
-    const desiredLeft =
-      align === "left" ? rect.left : rect.right - menuWidth;
-    setCoords({
-      top: openUp ? "auto" : `${rect.bottom + 4}px`,
-      bottom: openUp ? `${window.innerHeight - rect.top + 4}px` : "auto",
-      left: `${Math.min(
-        Math.max(desiredLeft, viewportPadding),
-        window.innerWidth - menuWidth - viewportPadding,
-      )}px`,
-      width: `${menuWidth}px`,
-    });
-  };
-
-  useEffect(() => {
-    if (isOpen && usePortal) {
-      updatePosition();
-      const handleCloseOnScroll = (e) => {
-        if (menuRef.current && menuRef.current.contains(e.target)) return;
-        setIsOpen(false);
-      };
-      window.addEventListener("scroll", handleCloseOnScroll, true);
-      window.addEventListener("resize", handleCloseOnScroll);
-      return () => {
-        window.removeEventListener("scroll", handleCloseOnScroll, true);
-        window.removeEventListener("resize", handleCloseOnScroll);
-      };
-    }
-  }, [isOpen, usePortal]);
+  const { coords } = useAnchoredMenuPosition({
+    anchorRef: dropdownRef,
+    menuRef,
+    isOpen: isOpen && usePortal,
+    align,
+    minWidth: 224,
+  });
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -142,6 +110,7 @@ export default function CustomDropdown({
               bottom: coords.bottom,
               left: coords.left,
               width: coords.width,
+              maxHeight: `${coords.maxHeight}px`,
               maxWidth: `calc(100vw - ${Math.min(16, window.innerWidth)}px)`,
               zIndex: 99999,
             }
@@ -162,7 +131,19 @@ export default function CustomDropdown({
       {children ? (
         children
       ) : (
-        <div className="max-h-64 overflow-y-auto divide-y divide-gray-100">
+        <div
+          className="max-h-64 overflow-y-auto divide-y divide-gray-100"
+          style={
+            usePortal && coords
+              ? {
+                  maxHeight: `${Math.max(
+                    0,
+                    coords.maxHeight - (header ? 42 : 0),
+                  )}px`,
+                }
+              : undefined
+          }
+        >
           {options.map((opt, idx) => {
             if (opt?.divider) {
               return (
