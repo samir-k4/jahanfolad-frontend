@@ -49,11 +49,16 @@ export const getCategoryName = (tx, deposit) =>
     : t(CATEGORY_BY_REFERENCE[tx?.reference_type] || (deposit ? "category.shareIn" : "category.personalOut")));
 export const getSourceTitle = (tx) => t(SOURCE_BY_REFERENCE[tx?.reference_type] || "source.direct");
 export const getPaymentMethod = (tx) => t(`receiptType.${tx?.receipt_type || RECEIPT_TYPE.CASH}`);
-export const getPartyName = (tx, deposit) =>
-  fromNotes(tx?.notes, NOTE_KEY.PARTY) ||
-  tx?.party_name ||
-  (deposit ? tx?.paid_by || tx?.received_by : tx?.received_by || tx?.paid_by) ||
-  i18n.t("placeholder.dash", { ns: "salary" });
+export const getPartyName = (tx, deposit) => {
+  const counterpartVault = tx?.counterpart_vault || tx?.counterpartVault;
+  return (
+    counterpartVault?.name ||
+    fromNotes(tx?.notes, NOTE_KEY.PARTY) ||
+    tx?.party_name ||
+    (deposit ? tx?.paid_by || tx?.received_by : tx?.received_by || tx?.paid_by) ||
+    i18n.t("placeholder.dash", { ns: "salary" })
+  );
+};
 export const getCreatedBy = (tx, deposit) =>
   tx?.creator?.name ||
   tx?.created_by?.name ||

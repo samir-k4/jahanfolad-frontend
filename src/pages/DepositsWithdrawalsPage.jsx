@@ -14,6 +14,7 @@ import DatePicker from "react-multi-date-picker";
 import { DateObject, persian, persian_af } from "../utils/dateHelpers";
 import { toEnglishDigits } from "../utils/dariNumberFormatter";
 import { formatDocNumber } from "../utils/formatDocNumber";
+import { getPartyName, isDeposit as isVaultDeposit } from "../components/treasury/treasuryHelpers";
 import DepositWithdrawModal from "../components/treasury/DepositWithdrawModal";
 import TxDetailModal from "../components/treasury/TxDetailModal";
 import TransactionReportModal from "../components/treasury/TransactionReportModal";
@@ -29,7 +30,7 @@ import {
   usePagePerms,
 } from "../components/common";
 import { useTranslation } from "react-i18next";
-const TYPE_FILTER_VALUES = ["deposit_withdrawal", "deposit", "withdrawal"];
+const TYPE_FILTER_VALUES = ["all", "deposit_withdrawal", "deposit", "withdrawal", "transfer", "exchange", "expense"];
 const DATE_PRESET_KEYS = ["today", "week", "month", "year", "all"];
 const CURRENCY_CODES = ["AFN", "USD", "EUR", "IRR", "PKR"];
 const FILTER_CONTROL = "h-10 px-3 text-xs font-medium text-content-body bg-surface rounded-input";
@@ -82,7 +83,7 @@ export default function DepositsWithdrawalsPage() {
   const currencyOptions = CURRENCY_CODES.map((value) => ({ value, label: t(`currencies.${value}`) }));
   const [vaults, setVaults] = useState([]);
   const [vaultsLoading, setVaultsLoading] = useState(false);
-  const [typeTab, setTypeTab] = useState("deposit_withdrawal");
+  const [typeTab, setTypeTab] = useState("all");
   const [selectedVaultFilter, setSelectedVaultFilter] = useState("all");
   const [selectedCurrencyFilter, setSelectedCurrencyFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -186,8 +187,14 @@ export default function DepositsWithdrawalsPage() {
       setDeleting(false);
     }
   };
-  const renderActionButtons = (tx) => (
-    <div className="inline-flex items-center justify-center gap-1.5">
+  const renderActionButtons = (tx) => {
+    const isTransfer = tx.transaction_type?.startsWith("transfer_");
+    const isDirectCashTransaction =
+      tx.reference_type === "direct" &&
+      ["deposit", "withdrawal"].includes(tx.transaction_type);
+    const canManageTransaction = isTransfer || isDirectCashTransaction;
+    return (
+      <div className="inline-flex items-center justify-center gap-1.5">
       <TooltipButton
         tooltip={t("actions.details")}
         onClick={() => setDetailTx(tx)}
@@ -195,16 +202,21 @@ export default function DepositsWithdrawalsPage() {
       >
         <Info size={15} />
       </TooltipButton>
-      {canEdit && (
+      {canEdit && canManageTransaction && (
         <TooltipButton
           tooltip={t("actions.edit")}
-          onClick={() => navigate(`/deposits-withdrawals/${tx.id}/edit`, { state: { tx } })}
+          onClick={() =>
+            navigate(
+              isTransfer ? `/transfers/${tx.id}/edit` : `/deposits-withdrawals/${tx.id}/edit`,
+              { state: { tx } },
+            )
+          }
           colorClass="p-1.5 bg-surface text-content-subtle border border-line-strong shadow-2xs hover:bg-notice-soft hover:text-notice-text hover:border-notice-line transition-colors"
         >
           <Pencil size={15} />
         </TooltipButton>
       )}
-      {canDelete && (
+      {canDelete && canManageTransaction && (
         <TooltipButton
           tooltip={t("actions.delete")}
           onClick={() => setDeleteTx(tx)}
@@ -213,8 +225,9 @@ export default function DepositsWithdrawalsPage() {
           <Trash2 size={15} />
         </TooltipButton>
       )}
-    </div>
-  );
+      </div>
+    );
+  };
   const openModal = (type) => {
     setActiveModal(type);
   };
@@ -410,7 +423,7 @@ export default function DepositsWithdrawalsPage() {
                 </tr>
               ) : (
                 transactions.map((tx, idx) => {
-                  const isDeposit = tx.transaction_type === "deposit";
+                  const isDeposit = isVaultDeposit(tx);
                   return (
                     <tr key={tx.id} className="hover:bg-surface-muted/70 transition-colors">
                       <td className={`${TABLE_CELL} text-center font-mono text-content-subtle`}>
@@ -437,7 +450,7 @@ export default function DepositsWithdrawalsPage() {
                         {tx.vault?.name || t("emptyValue")}
                       </td>
                       <td className={`${TABLE_CELL} text-content`}>
-                        {isDeposit ? tx.paid_by || t("emptyValue") : tx.received_by || t("emptyValue")}
+                        {getPartyName(tx, isDeposit)}
                       </td>
                       <td className="px-3 py-2.5 border-l border-line min-w-[220px] text-content-muted whitespace-normal break-words">
                         {tx.notes || t("emptyValue")}
@@ -469,7 +482,7 @@ export default function DepositsWithdrawalsPage() {
             </p>
           ) : (
             transactions.map((tx) => {
-              const isDeposit = tx.transaction_type === "deposit";
+              const isDeposit = isVaultDeposit(tx);
               return (
                 <div key={tx.id} className="p-3 space-y-3">
                   <div className="flex items-center justify-between gap-2">
@@ -498,7 +511,7 @@ export default function DepositsWithdrawalsPage() {
                       </span>
                     </MobileField>
                     <MobileField label={t("table.columns.party")}>
-                      {isDeposit ? tx.paid_by || t("emptyValue") : tx.received_by || t("emptyValue")}
+                      {getPartyName(tx, isDeposit)}
                     </MobileField>
                     <MobileField label={t("table.columns.amount")}>
                       <span

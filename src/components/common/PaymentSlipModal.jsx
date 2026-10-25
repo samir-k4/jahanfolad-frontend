@@ -13,6 +13,11 @@ export default function PaymentSlipModal({ isOpen, onClose, payment, basePath = 
   useBodyScrollLock(isOpen);
   const { t } = useTranslation("salary");
   const paymentId = payment?.id;
+  const paymentBranchId = payment?.branch_id ?? payment?.employee?.branch_id;
+  const requestHeaders = useMemo(
+    () => ({ "X-Branch-Id": paymentBranchId ? String(paymentBranchId) : "all" }),
+    [paymentBranchId],
+  );
   const htmlPath = useMemo(
     () => (paymentId ? `${basePath}/${paymentId}/slip-html` : ""),
     [paymentId, basePath],
@@ -35,6 +40,7 @@ export default function PaymentSlipModal({ isOpen, onClose, payment, basePath = 
       fallbackFilename: () => `${payment?.receipt_number || t("slip.fallbackFile")}.pdf`,
       onError,
       method: "GET",
+      headers: requestHeaders,
     });
   const [sheetHeight, setSheetHeight] = useReportFrameHeight(iframeRef, MIN_SHEET_HEIGHT_PX);
   if (!isOpen || !payment) return null;

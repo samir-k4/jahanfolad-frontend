@@ -37,6 +37,7 @@ import {
   CURRENCY_OPTIONS,
   VAULT_TYPE_OPTIONS,
   VAULT_TYPE_LABELS,
+  isDeposit as isVaultDeposit,
 } from "../components/treasury/treasuryHelpers";
 export default function VaultDetailPage() {
   const nextSignal = useAbortController();
@@ -465,11 +466,7 @@ export default function VaultDetailPage() {
               </thead>
               <tbody className="bg-white">
                 {transactions.map((tx, idx) => {
-                  const isDeposit = [
-                    "deposit",
-                    "transfer_in",
-                    "exchange_in",
-                  ].includes(tx.transaction_type);
+                  const isDeposit = isVaultDeposit(tx);
                   const rowIndex =
                     (paginationMeta.current_page - 1) *
                       paginationMeta.per_page +

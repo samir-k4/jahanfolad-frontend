@@ -11,6 +11,11 @@ export const DEPOSIT_TYPES = [
   TRANSACTION_TYPE.DEPOSIT,
   TRANSACTION_TYPE.TRANSFER_IN,
   TRANSACTION_TYPE.EXCHANGE_IN,
+  "manager_advance_settle",
+  "manager_advance_cancel",
+  "income",
+  "expense_reversal",
+  "payroll_reversal",
 ];
 export const VAULT_TYPE = {
   CASH_DRAWER: "cash_drawer",

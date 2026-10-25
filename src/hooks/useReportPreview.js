@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetchBlob, apiFetchText } from "../api";
 import { printReportFrame } from "../utils/reportFrame";
+const EMPTY_HEADERS = Object.freeze({});
 export default function useReportPreview({
   isOpen,
   htmlPath,
@@ -9,6 +10,7 @@ export default function useReportPreview({
   fallbackFilename,
   onError,
   method = "POST",
+  headers = EMPTY_HEADERS,
 }) {
   const [reportHtml, setReportHtml] = useState("");
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
@@ -16,8 +18,8 @@ export default function useReportPreview({
   const iframeRef = useRef(null);
   const requestIdRef = useRef(0);
   const requestInit = useCallback(
-    () => (method === "GET" ? { method } : { method, body: buildPayload() }),
-    [method, buildPayload]
+    () => (method === "GET" ? { method, headers } : { method, body: buildPayload(), headers }),
+    [method, buildPayload, headers]
   );
   const fetchReportHtml = useCallback(async () => {
     if (!isOpen) return;

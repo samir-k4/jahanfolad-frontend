@@ -22,6 +22,7 @@ import {
   getExchangeRate,
   getPartyName,
   getCreatedBy,
+  isDeposit as isVaultDeposit,
 } from "./treasuryHelpers";
 export default function TransactionLedger({
   transactions,
@@ -103,7 +104,7 @@ export default function TransactionLedger({
           </thead>
           <tbody className="bg-white">
             {transactions.map((tx, idx) => {
-              const isDeposit = ["deposit", "transfer_in", "exchange_in"].includes(tx.transaction_type);
+              const isDeposit = isVaultDeposit(tx);
               const rowIndex = ((paginationMeta?.current_page || 1) - 1) * (paginationMeta?.per_page || perPage) + idx + 1;
               const categoryTitle = getCategoryName(tx, isDeposit);
               const party = getPartyName(tx, isDeposit);

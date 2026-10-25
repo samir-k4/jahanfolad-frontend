@@ -13,8 +13,8 @@ import {
   getCreatedBy,
   getExchangeRate,
   formatDocNumber,
+  isDeposit as isVaultDeposit,
 } from "./treasuryHelpers";
-const DEPOSIT_TYPES = ["deposit", "transfer_in", "exchange_in"];
 const getMember = (tx) => {
   if (tx?.member?.name) return tx.member.name;
   if (tx?.notes) {
@@ -27,7 +27,7 @@ export default function TxDetailModal({ tx, onClose, onPrint, namespace = "treas
   const { t } = useTranslation(namespace);
   useBodyScrollLock(Boolean(tx));
   if (!tx) return null;
-  const isDeposit = DEPOSIT_TYPES.includes(tx.transaction_type);
+  const isDeposit = isVaultDeposit(tx);
   const categoryTitle = getCategoryName(tx, isDeposit);
   const sourceTitle = getSourceTitle(tx);
   const paymentTitle = getPaymentMethod(tx);
