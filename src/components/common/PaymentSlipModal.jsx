@@ -9,15 +9,11 @@ import { showToast } from "../../utils";
 import { getCleanErrorMessage } from "../../utils/errorHandler";
 const SHEET_WIDTH_PX = 794;
 const MIN_SHEET_HEIGHT_PX = 520;
+const REQUEST_HEADERS = Object.freeze({ "X-Branch-Id": "all" });
 export default function PaymentSlipModal({ isOpen, onClose, payment, basePath = "/employee-payments" }) {
   useBodyScrollLock(isOpen);
   const { t } = useTranslation("salary");
   const paymentId = payment?.id;
-  const paymentBranchId = payment?.branch_id ?? payment?.employee?.branch_id;
-  const requestHeaders = useMemo(
-    () => ({ "X-Branch-Id": paymentBranchId ? String(paymentBranchId) : "all" }),
-    [paymentBranchId],
-  );
   const htmlPath = useMemo(
     () => (paymentId ? `${basePath}/${paymentId}/slip-html` : ""),
     [paymentId, basePath],
@@ -40,7 +36,7 @@ export default function PaymentSlipModal({ isOpen, onClose, payment, basePath = 
       fallbackFilename: () => `${payment?.receipt_number || t("slip.fallbackFile")}.pdf`,
       onError,
       method: "GET",
-      headers: requestHeaders,
+      headers: REQUEST_HEADERS,
     });
   const [sheetHeight, setSheetHeight] = useReportFrameHeight(iframeRef, MIN_SHEET_HEIGHT_PX);
   if (!isOpen || !payment) return null;
