@@ -167,6 +167,7 @@ export default function CustomerLoansPage() {
                 <th className="px-3.5 py-2.5 text-center w-28 border-l border-gray-200 whitespace-nowrap">{t("loans.columns.lastPaymentAmount")}</th>
                 <th className="px-3.5 py-2.5 text-center w-20 border-l border-gray-200">{t("loans.currency.label")}</th>
                 <th className="px-3.5 py-2.5 text-center w-28 border-l border-gray-200 whitespace-nowrap">{t("loans.columns.balance")}</th>
+                <th className="px-3.5 py-2.5 border-l border-gray-200 whitespace-nowrap">{t("table.createdBy", { ns: "common" })}</th>
                 <th className="px-3.5 py-2.5 text-center w-24 border-l border-gray-200">{t("table.columns.status")}</th>
                 <th className="px-3.5 py-2.5 text-center w-20">{t("table.columns.actions")}</th>
               </tr>
@@ -174,13 +175,13 @@ export default function CustomerLoansPage() {
             <tbody className="divide-y divide-gray-100 bg-white">
               {loading ? (
                 <tr>
-                  <td colSpan={12} className="p-12 text-center text-gray-500 text-sm">
+                  <td colSpan={13} className="p-12 text-center text-gray-500 text-sm">
                     {t("loans.loading")}
                   </td>
                 </tr>
               ) : loans.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="p-12 text-center text-gray-500 text-sm">
+                  <td colSpan={13} className="p-12 text-center text-gray-500 text-sm">
                     {t("loans.empty")}
                   </td>
                 </tr>
@@ -268,6 +269,9 @@ export default function CustomerLoansPage() {
                       {loan.over_credit_limit && (
                         <span className="mr-1 inline-block w-1.5 h-1.5 rounded-full bg-rose-600" title={t("loans.overCreditLimit")} />
                       )}
+                    </td>
+                    <td className="px-3.5 py-2.5 border-l border-gray-200 text-gray-700 whitespace-nowrap">
+                      {loan.created_by || "—"}
                     </td>
                     <td className="px-3.5 py-2.5 text-center border-l border-gray-200">
                       {loan.status === "has_debt" ? (

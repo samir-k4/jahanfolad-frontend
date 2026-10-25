@@ -10,7 +10,7 @@ import {
   formatAfghanDisplay,
 } from "../utils/dateHelpers";
 import { matchesDatePreset, todayReference } from "../utils/datePresets";
-import { getBatchLogs, logWeightKg } from "../utils/batchHelpers";
+import { getBatchLogs } from "../utils/batchHelpers";
 import {
   ProductionEntryForm,
   ProductionBatchesTable,
@@ -140,7 +140,10 @@ export default function ProductionPage() {
       id: makeRowId(),
       category: log.product?.category_id || log.product?.category?.id || "",
       product: log.product,
-      weight: String(logWeightKg(log) || log.product?.weight || ""),
+      weight:
+        log.weight_kg !== null && log.weight_kg !== undefined
+          ? `${Number(log.weight_kg)}KG`
+          : String(log.product?.weight || ""),
       quantity: log.quantity,
     }));
     setProductionRows(rows.length ? rows : [emptyRow(makeRowId())]);

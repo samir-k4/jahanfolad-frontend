@@ -266,26 +266,13 @@ export default function ProductionEntryForm({
                   <label className="block md:hidden text-label-text text-gray-500 mb-1">
                     {t("form.weightLabelColon")}
                   </label>
-                  <SearchableSelect
-                    options={getProductWeights(row.product)}
-                    value={row.weight}
-                    onChange={(val) => updateRow(row.id, "weight", val)}
-                    disabled={!row.product}
-                    placeholder={
-                      !row.product
-                        ? t("form.weightPlaceholderDisabled")
-                        : t("form.weightPlaceholder")
-                    }
-                    searchPlaceholder={
-                      t("table.searchPlaceholder")
-                    }
-                    noResultsText={
-                      t("table.noResults")
-                    }
-                    getOptionLabel={(w) => String(w)}
-                    getOptionValue={(w) => String(w)}
-                    buttonClassName="py-1.5 px-2.5 text-table-cell-text font-mono"
-                  />
+                  <div
+                    className="w-full bg-gray-100 border border-gray-200 rounded-lg py-1.5 px-2.5 text-table-cell-text text-gray-700 text-center font-mono cursor-not-allowed"
+                    aria-readonly="true"
+                    title="وزن بسته از مشخصات محصول گرفته می‌شود و قابل تغییر نیست"
+                  >
+                    {row.weight || "—"}
+                  </div>
                 </div>
                 <div className="col-span-2 md:p-2.5 md:border-l md:border-gray-100 mt-2 md:mt-0">
                   <label className="block md:hidden text-label-text text-gray-500 mb-1">

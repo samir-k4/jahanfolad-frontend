@@ -145,6 +145,7 @@
   "table": {
     "rowIndex": "#",
     "actions": "عملیات",
+    "createdBy": "ثبت‌کننده",
     "date": "تاریخ",
     "status": "وضعیت",
     "description": "توضیحات",

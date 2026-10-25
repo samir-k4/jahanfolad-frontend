@@ -141,6 +141,9 @@ function MoveRowItem({
           getOptionValue={(inv) => inv.product_id}
           buttonClassName="py-2 px-2.5 text-table-cell-text font-medium rounded-input"
         />
+        <div className="mt-1 px-2 text-caption-text text-gray-600 font-mono">
+          {t("stock.colCartonWeight")}: {selectedInvItem?.weight || "—"}
+        </div>
       </div>
       <div className="w-full md:w-48 shrink-0 flex items-center space-x-2 space-x-reverse">
         <input

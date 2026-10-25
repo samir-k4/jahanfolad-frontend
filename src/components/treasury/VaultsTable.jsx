@@ -85,13 +85,14 @@ export default function VaultsTable({
               <th className="py-2 px-3 text-center w-24 border border-gray-200">{t("vaultsTable.type")}</th>
               <th className="py-2 px-3 text-center w-20 border border-gray-200">{t("label.currency")}</th>
               <th className="py-2 px-3 text-left w-36 border border-gray-200" dir="ltr">{t("vaultsTable.balance")}</th>
+              <th className="py-2 px-3 text-right border border-gray-200">{t("label.createdBy")}</th>
               <th className="py-2 px-3 text-center w-20 border border-gray-200">{t("label.actions")}</th>
             </tr>
           </thead>
           <tbody className="bg-white">
             {loading ? (
               <tr>
-                <td colSpan={7} className="py-8 text-center text-gray-500 text-xs border border-gray-200">{t("actions.loading")}</td>
+                <td colSpan={8} className="py-8 text-center text-gray-500 text-xs border border-gray-200">{t("actions.loading")}</td>
               </tr>
             ) : (
               <>
@@ -137,6 +138,9 @@ export default function VaultsTable({
                         {isAfn ? "" : "$"}
                         {Number(vault.current_balance || 0).toLocaleString("en-US")}
                         {isAfn ? " AFN" : " USD"}
+                      </td>
+                      <td className="py-1.5 px-3 text-gray-700 border border-gray-200">
+                        {vault.creator?.name || vault.created_by || "—"}
                       </td>
                       <td className="py-1.5 px-2 text-center border border-gray-200">
                         <div className="flex items-center justify-center gap-1.5">
@@ -187,6 +191,7 @@ export default function VaultsTable({
                     <td className="py-1.5 px-3 text-left border border-gray-200 font-bold font-mono text-xs text-gray-900" dir="ltr">
                       {Number(managerAdvancesSummary?.total_open_afn || 0).toLocaleString("en-US")} AFN
                     </td>
+                    <td className="py-1.5 px-3 text-gray-400 border border-gray-200">—</td>
                     <td className="py-1.5 px-2 text-center border border-gray-200">
                       <div className="flex items-center justify-center gap-1.5">
                         <TooltipButton

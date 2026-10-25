@@ -284,6 +284,7 @@
         "vault": "خزانه پرداخت",
         "amount": "مبلغ",
         "paidBy": "پرداخت‌کننده",
+        "createdBy": "ثبت‌کننده سند",
         "description": "توضیحات"
       },
       "source": {

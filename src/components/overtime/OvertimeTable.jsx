@@ -306,19 +306,20 @@ export default function OvertimeTable({
               <th className="px-4 py-3 text-center w-32 border-l border-line rounded-none">{t("columns.hourlyRate")}</th>
               <th className="px-4 py-3 text-center border-l border-line rounded-none">{t("table.colWeeklyHours")}</th>
               <th className="px-4 py-3 text-center rounded-none">{t("table.colWeeklyPayable")}</th>
+              <th className="px-4 py-3 text-center rounded-none">{t("table.createdBy", { ns: "common" })}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line-soft bg-surface text-table-cell-text text-content">
             {isLoading ? (
               <tr>
-                <td colSpan="9" className="p-12 text-center text-content-subtle rounded-none">
+                <td colSpan="10" className="p-12 text-center text-content-subtle rounded-none">
                   <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                   <span className="text-table-cell-text text-content-muted">{t("table.loading")}</span>
                 </td>
               </tr>
             ) : filteredAndSortedEmployees.length === 0 ? (
               <tr>
-                <td colSpan="9" className="p-10 text-center text-content-subtle rounded-none text-table-cell-text">
+                <td colSpan="10" className="p-10 text-center text-content-subtle rounded-none text-table-cell-text">
                   {t("table.emptySearch")}
                 </td>
               </tr>
@@ -420,6 +421,9 @@ export default function OvertimeTable({
                     <td className="px-4 py-3 text-center font-mono font-bold text-positive-text bg-positive-soft/40 text-table-cell-text rounded-none" dir="ltr">
                       {Number(calculatedWeeklyPay).toLocaleString("en-US")}{" "}
                       <span className="text-caption-text text-positive font-normal font-sans">AFN</span>
+                    </td>
+                    <td className="px-4 py-3 text-center text-content-body whitespace-nowrap">
+                      {emp.created_by || "—"}
                     </td>
                   </tr>
                 );

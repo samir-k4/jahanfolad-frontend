@@ -391,19 +391,20 @@ export default function DepositsWithdrawalsPage() {
                 <th className="px-3 py-2.5 w-full border-l border-line text-table-header-text font-bold text-content-body">{t("table.columns.description")}</th>
                 <th className={`${TABLE_HEADER_CELL} text-center`}>{t("table.columns.amount")}</th>
                 <th className={`${TABLE_HEADER_CELL} text-center`}>{t("table.columns.balance")}</th>
+                <th className={TABLE_HEADER_CELL}>{t("createdBy", { ns: "common" })}</th>
                 <th className="px-3 py-2.5 text-center w-36 whitespace-nowrap text-table-header-text font-bold text-content-body">{t("table.columns.actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line-soft bg-surface">
               {txLoading ? (
                 <tr>
-                  <td colSpan={10} className="p-12 text-center text-content-subtle text-body-text">
+                  <td colSpan={11} className="p-12 text-center text-content-subtle text-body-text">
                     {t("status.loading")}
                   </td>
                 </tr>
               ) : transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="p-12 text-center text-content-subtle text-body-text">
+                  <td colSpan={11} className="p-12 text-center text-content-subtle text-body-text">
                     {t("status.empty")}
                   </td>
                 </tr>
@@ -452,6 +453,7 @@ export default function DepositsWithdrawalsPage() {
                       <td className={`${TABLE_CELL} text-center font-mono text-content`} dir="ltr">
                         {Number(tx.balance_after || 0).toLocaleString("en-US")} {tx.currency}
                       </td>
+                      <td className={`${TABLE_CELL} text-content-body`}>{tx.created_by || t("emptyValue")}</td>
                       <td className="px-3 py-2.5 text-center whitespace-nowrap">{renderActionButtons(tx)}</td>
                     </tr>
                   );
@@ -515,6 +517,9 @@ export default function DepositsWithdrawalsPage() {
                       <span className="whitespace-normal break-words">
                         {tx.notes || t("emptyValue")}
                       </span>
+                    </MobileField>
+                    <MobileField label={t("createdBy", { ns: "common" })}>
+                      {tx.created_by || t("emptyValue")}
                     </MobileField>
                   </div>
                   <div className="flex justify-end">{renderActionButtons(tx)}</div>

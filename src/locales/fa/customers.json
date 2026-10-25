@@ -78,6 +78,18 @@
     "notesPlaceholder": "هرگونه یادداشت اختیاری در مورد سابقه مشتری، نحوه تسویه یا ضمانت...",
     "accountSettingsHeading": "تنظیمات مالی و وضعیت حساب",
     "creditLimitHint": "حداکثر بدهی مجاز مشتری جهت صدور فاکتور قرضه",
+    "openingBalance": {
+      "directionLabel": "وضعیت بیلانس افتتاحیه",
+      "customerOwes": "قرضدار",
+      "companyOwes": "بدهکار",
+      "currencyLabel": "ارز بیلانس افتتاحیه",
+      "afn": "افغانی (AFN)",
+      "usd": "دالر (USD)",
+      "both": "هر دو ارز",
+      "amountAfn": "مبلغ افغانی",
+      "amountUsd": "مبلغ دالر",
+      "hint": "این مانده به حساب مشتری ثبت می‌شود و به خزانه اضافه یا از آن کم نمی‌شود."
+    },
     "activeStatus": "فعال (مجاز به انجام معامله)",
     "inactiveStatus": "غیرفعال (مسدود)",
     "createdBy": "کاربر ثبت‌کننده پرونده",

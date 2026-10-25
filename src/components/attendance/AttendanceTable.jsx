@@ -248,6 +248,7 @@ export default function AttendanceTable({
                 <th className="py-2.5 px-3 text-center w-40 border-l border-gray-200 rounded-none">{t("table.colStatus")}</th>
                 <th className="py-2.5 px-3 text-center border-l border-gray-200 rounded-none">{t("table.colPresentDays")}</th>
                 <th className="py-2.5 px-3 text-center w-28 rounded-none">{t("table.colMonthDays")}</th>
+                <th className="py-2.5 px-3 text-center rounded-none">{t("table.createdBy", { ns: "common" })}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-xs bg-white">
@@ -326,6 +327,9 @@ export default function AttendanceTable({
                     <td className="py-2.5 px-3 text-center font-mono font-bold text-gray-700 text-xs rounded-none" dir="ltr">
                       {totalMonthDays}{" "}
                       <span className="text-[11px] text-gray-500 font-normal font-sans">{t("table.daysUnit")}</span>
+                    </td>
+                    <td className="py-2.5 px-3 text-center text-gray-700 text-xs rounded-none whitespace-nowrap">
+                      {emp.created_by || "—"}
                     </td>
                   </tr>
                 );

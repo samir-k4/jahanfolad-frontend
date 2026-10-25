@@ -226,17 +226,18 @@ export default function CustomerReceiptsPage() {
                 <th className="p-3 text-center border-l border-gray-200">{t("label.amount")}</th>
                 <th className="p-3 text-center border-l border-gray-200">{t("table.usdEquivalent")}</th>
                 <th className="p-3 border-l border-gray-200">{t("table.notes")}</th>
+                <th className="p-3 text-center border-l border-gray-200">{t("table.createdBy", { ns: "common" })}</th>
                 <th className="p-3 text-center">{t("table.actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white">
               {loading ? (
                 <tr>
-                  <td colSpan={10} className="p-12 text-center text-gray-500 text-table-cell-text">{t("table.loading")}</td>
+                  <td colSpan={11} className="p-12 text-center text-gray-500 text-table-cell-text">{t("table.loading")}</td>
                 </tr>
               ) : incomes.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="p-12 text-center text-gray-500 text-table-cell-text">{t("table.empty")}</td>
+                  <td colSpan={11} className="p-12 text-center text-gray-500 text-table-cell-text">{t("table.empty")}</td>
                 </tr>
               ) : (
                 incomes.map((inc, idx) => {
@@ -282,6 +283,9 @@ export default function CustomerReceiptsPage() {
                         ) : (
                           <span className="text-gray-400">—</span>
                         )}
+                      </td>
+                      <td className="p-3 text-center text-gray-700 border-l border-gray-100 whitespace-nowrap">
+                        {inc.created_by?.name || inc.created_by || inc.creator?.name || "—"}
                       </td>
                       <td className="p-3 text-center">
                         <div className="flex items-center justify-center gap-1.5">

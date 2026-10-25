@@ -43,6 +43,10 @@ export default function CustomerCreatePage() {
   const [province, setProvince] = useState("کابل");
   const [address, setAddress] = useState("");
   const [creditLimit, setCreditLimit] = useState("");
+  const [openingBalanceDirection, setOpeningBalanceDirection] = useState("customer_owes");
+  const [openingBalanceCurrency, setOpeningBalanceCurrency] = useState("AFN");
+  const [openingBalanceAfn, setOpeningBalanceAfn] = useState("");
+  const [openingBalanceUsd, setOpeningBalanceUsd] = useState("");
   const [status, setStatus] = useState("active");
   const [notes, setNotes] = useState("");
 
@@ -90,6 +94,14 @@ export default function CustomerCreatePage() {
         province: province,
         address: address.trim() || null,
         credit_limit: creditLimit ? parseFloat(toEnglishDigits(creditLimit)) : 0.00,
+        opening_balance_direction: openingBalanceDirection,
+        opening_balance_currency: openingBalanceCurrency,
+        opening_balance_afn: openingBalanceCurrency !== "USD" && openingBalanceAfn
+          ? parseFloat(toEnglishDigits(openingBalanceAfn))
+          : null,
+        opening_balance_usd: openingBalanceCurrency !== "AFN" && openingBalanceUsd
+          ? parseFloat(toEnglishDigits(openingBalanceUsd))
+          : null,
         status: status,
         notes: notes.trim() || null,
       };
@@ -326,6 +338,113 @@ export default function CustomerCreatePage() {
                     <span className="absolute right-3 top-2.5 text-xs text-gray-400 font-bold">$ USD</span>
                   </div>
                   <p className="text-[10.5px] text-gray-400 mt-1">{t("createPage.creditLimitHint")}</p>
+                </div>
+
+                <div className="border-t border-gray-100 pt-4 space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <fieldset>
+                      <legend className="block text-[10px] font-bold text-gray-700 mb-1.5">
+                        {t("createPage.openingBalance.directionLabel")}
+                      </legend>
+                      <div className="flex flex-wrap gap-1.5">
+                        {[
+                          { value: "customer_owes", label: t("createPage.openingBalance.customerOwes") },
+                          { value: "company_owes", label: t("createPage.openingBalance.companyOwes") },
+                        ].map((option) => (
+                          <label
+                            key={option.value}
+                            className={`inline-flex items-center gap-1.5 rounded border px-2 py-1.5 text-[10px] cursor-pointer transition-colors ${
+                              openingBalanceDirection === option.value
+                                ? "border-emerald-500 bg-emerald-50 text-emerald-800"
+                                : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="openingBalanceDirection"
+                              value={option.value}
+                              checked={openingBalanceDirection === option.value}
+                              onChange={() => setOpeningBalanceDirection(option.value)}
+                              className="h-3 w-3 accent-emerald-600"
+                            />
+                            <span>{option.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+
+                    <fieldset>
+                      <legend className="block text-[10px] font-bold text-gray-700 mb-1.5">
+                        {t("createPage.openingBalance.currencyLabel")}
+                      </legend>
+                      <div className="flex flex-wrap gap-1.5">
+                        {[
+                          { value: "AFN", label: t("createPage.openingBalance.afn") },
+                          { value: "USD", label: t("createPage.openingBalance.usd") },
+                          { value: "both", label: t("createPage.openingBalance.both") },
+                        ].map((option) => (
+                          <label
+                            key={option.value}
+                            className={`inline-flex items-center gap-1.5 rounded border px-2 py-1.5 text-[10px] cursor-pointer transition-colors ${
+                              openingBalanceCurrency === option.value
+                                ? "border-emerald-500 bg-emerald-50 text-emerald-800"
+                                : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="openingBalanceCurrency"
+                              value={option.value}
+                              checked={openingBalanceCurrency === option.value}
+                              onChange={() => setOpeningBalanceCurrency(option.value)}
+                              className="h-3 w-3 accent-emerald-600"
+                            />
+                            <span>{option.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </fieldset>
+                  </div>
+
+                  <div className={`grid gap-3 ${openingBalanceCurrency === "both" ? "grid-cols-2" : "grid-cols-1"}`}>
+                    {openingBalanceCurrency !== "USD" && (
+                      <div>
+                        <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                          {t("createPage.openingBalance.amountAfn")}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          dir="ltr"
+                          value={openingBalanceAfn}
+                          onChange={(e) => setOpeningBalanceAfn(e.target.value)}
+                          placeholder="0.00"
+                          className="w-full h-[40px] px-3 bg-white border border-gray-300 rounded text-xs font-mono font-bold text-gray-900 focus:outline-none focus:border-emerald-600 text-left"
+                        />
+                      </div>
+                    )}
+                    {openingBalanceCurrency !== "AFN" && (
+                      <div>
+                        <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                          {t("createPage.openingBalance.amountUsd")}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          dir="ltr"
+                          value={openingBalanceUsd}
+                          onChange={(e) => setOpeningBalanceUsd(e.target.value)}
+                          placeholder="0.00"
+                          className="w-full h-[40px] px-3 bg-white border border-gray-300 rounded text-xs font-mono font-bold text-gray-900 focus:outline-none focus:border-emerald-600 text-left"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[10.5px] text-gray-400">
+                    {t("createPage.openingBalance.hint")}
+                  </p>
                 </div>
 
                 <div>

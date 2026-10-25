@@ -269,7 +269,7 @@ export default function EmployeeTable({
         </div>
       ) : (
         <div className="overflow-x-auto bg-white">
-          <table className="w-full text-right border-collapse bg-white text-xs">
+          <table className="w-full min-w-[1050px] text-right border-collapse bg-white text-xs">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200 text-gray-700 text-xs font-bold">
                 <th className="py-2.5 px-3 w-12 text-center border-l border-gray-200 rounded-none">{t("table.rowIndex", { ns: "common" })}</th>
@@ -279,6 +279,7 @@ export default function EmployeeTable({
                 <th className="py-2.5 px-3 border-l border-gray-200 rounded-none">{t("list.colPosition")}</th>
                 <th className="py-2.5 px-3 border-l border-gray-200 rounded-none">{t("form.phone")}</th>
                 <th className="py-2.5 px-3 text-center border-l border-gray-200 rounded-none">{t("list.colSalary")}</th>
+                <th className="py-2.5 px-3 text-center border-l border-gray-200 rounded-none">{t("list.colCreator")}</th>
                 <th className="py-2.5 px-3 text-center border-l border-gray-200 rounded-none">{t("table.status", { ns: "common" })}</th>
                 <th className="py-2.5 px-3 text-center w-28 rounded-none">{t("table.actions", { ns: "common" })}</th>
               </tr>
@@ -323,6 +324,10 @@ export default function EmployeeTable({
 
                     <td className="py-2.5 px-3 text-center font-mono font-bold text-emerald-700 text-xs border-l border-gray-100 rounded-none" dir="ltr">
                       {Number(emp.salary || 0).toLocaleString("en-US")} {t("company.currency", { ns: "common" })}
+                    </td>
+
+                    <td className="py-2.5 px-3 text-center text-gray-700 font-medium border-l border-gray-100 rounded-none">
+                      {emp.created_by || "—"}
                     </td>
 
                     <td className="py-2.5 px-3 text-center border-l border-gray-100 rounded-none">

@@ -26,20 +26,10 @@ import { showToast } from "../utils/toast";
 import { apiFetch, apiList, apiUrl } from "../api";
 import TooltipButton from "../components/common/TooltipButton";
 const parseWeightKg = (weightStr) => {
-  if (!weightStr) return 1;
-  const match = String(weightStr).match(/(\d+(?:\.\d+)?)/);
-  return match ? parseFloat(match[1]) : 1;
+  if (!weightStr) return 0;
+  const match = String(toEnglishDigits(weightStr)).match(/(\d+(?:\.\d+)?)/);
+  return match ? parseFloat(match[1]) : 0;
 };
-const FIRST_SCALE_OPTIONS = [
-  "25KG",
-  "12.5KG",
-  "50KG",
-  "5KG",
-  "4.300KG",
-  "3.5KG",
-  "1KG",
-  "بدون بسته (کیلو)",
-];
 const SALES_SCALE_OPTIONS = [
   { value: "تن", label: "تن (Ton)", type: "ton" },
   { value: "کیلوگرم", label: "کیلوگرم (KG)", type: "kg" },
@@ -88,8 +78,8 @@ export default function InvoiceCreatePage() {
       branch_name: "",
       stock: 0,
       quantity: "1",
-      first_scale: "25KG",
-      first_scale_kg: 25,
+      first_scale: "",
+      first_scale_kg: 0,
       sales_scale: "تن",
       billable_quantity: 0.025,
       unit_price: "",
@@ -278,7 +268,7 @@ export default function InvoiceCreatePage() {
             branch_name: item.branch_name || "",
             stock: 0,
             quantity: String(item.quantity),
-            first_scale: item.first_scale || "25KG",
+            first_scale: item.first_scale || "",
             first_scale_kg: parseWeightKg(item.first_scale),
             sales_scale: item.sales_scale || "تن",
             billable_quantity: parseFloat(item.billable_quantity) || 0,
@@ -352,7 +342,7 @@ export default function InvoiceCreatePage() {
       if (prod) {
         const catName = getProductCategoryName(prod);
         const cleanName = formatProductName(prod, catName);
-        const pkgWeight = prod.weight || "25KG";
+        const pkgWeight = prod.weight || "";
         item.product_obj = prod;
         item.product_name = cleanName;
         item.first_scale = pkgWeight;
@@ -363,6 +353,8 @@ export default function InvoiceCreatePage() {
       } else {
         item.product_obj = null;
         item.product_name = "";
+        item.first_scale = "";
+        item.first_scale_kg = 0;
         item.stock = 0;
       }
     }
@@ -378,9 +370,6 @@ export default function InvoiceCreatePage() {
     }
     if (item.branch_id && item.product_id && branchInventories[item.branch_id]) {
       item.stock = branchInventories[item.branch_id][item.product_id] || 0;
-    }
-    if (field === "first_scale") {
-      item.first_scale_kg = parseWeightKg(value);
     }
     item = recalculateItem(item);
     newItems[index] = item;
@@ -399,8 +388,8 @@ export default function InvoiceCreatePage() {
       branch_name: defaultBranchName,
       stock: 0,
       quantity: "1",
-      first_scale: "25KG",
-      first_scale_kg: 25,
+      first_scale: "",
+      first_scale_kg: 0,
       sales_scale: "تن",
       billable_quantity: 0.025,
       unit_price: "",
@@ -437,6 +426,10 @@ export default function InvoiceCreatePage() {
     const invalidItems = items.filter((it) => !it.product_name || !it.quantity || !it.unit_price);
     if (invalidItems.length > 0) {
       showToast.error("لطفاً مشخصات تمام ردیف‌های کالا (محصول، تعداد، قیمت) را تکمیل کنید.");
+      return;
+    }
+    if (items.some((item) => item.product_id && parseWeightKg(item.first_scale) <= 0)) {
+      showToast.error("وزن بسته محصول مشخص نیست؛ لطفاً وزن محصول را در فهرست محصولات تکمیل کنید.");
       return;
     }
     const missingBranch = isMultiBranch && items.find((it) => it.product_id && !it.branch_id);
@@ -671,7 +664,7 @@ export default function InvoiceCreatePage() {
                   <th className="px-2 py-2.5 border-l border-gray-200 min-w-[115px]">گدام</th>
                   <th className="px-2 py-2.5 border-l border-gray-200 text-center w-[65px]">موجودی</th>
                   <th className="px-2 py-2.5 border-l border-gray-200 text-center w-[75px]">تعداد</th>
-                  <th className="px-2 py-2.5 border-l border-gray-200 text-center min-w-[100px]">وزن </th>
+                  <th className="px-2 py-2.5 border-l border-gray-200 text-center min-w-[100px]">وزن بسته</th>
                   <th className="px-2 py-2.5 border-l border-gray-200 text-center min-w-[100px]">واحد فروش</th>
                   <th className="px-2 py-2.5 border-l border-gray-200 text-center min-w-[90px]">مقدار نهایی</th>
                   <th className="px-2 py-2.5 border-l border-gray-200 text-center min-w-[95px]">قیمت واحد</th>
@@ -773,15 +766,14 @@ export default function InvoiceCreatePage() {
                         )}
                       </td>
                       <td className="px-2 py-1.5 border-l border-gray-200">
-                        <CustomDropdown
-                          usePortal={true}
-                          options={FIRST_SCALE_OPTIONS.map((w) => ({ value: w, label: w }))}
-                          value={it.first_scale}
-                          onChange={(val) => handleItemChange(idx, "first_scale", val)}
-                          buttonClassName="w-full h-[36px] px-2 text-xs font-mono font-bold text-center"
-                          width="w-32"
-                          align="right"
-                          className="w-full min-w-[95px]"
+                        <input
+                          type="text"
+                          value={it.first_scale || ""}
+                          placeholder={it.product_id ? "وزن ثبت نشده" : "—"}
+                          readOnly
+                          aria-label="وزن بسته محصول"
+                          title="وزن بسته از مشخصات محصول گرفته می‌شود و قابل تغییر نیست"
+                          className="w-full h-[36px] bg-gray-100 border border-gray-200 rounded-lg px-2 text-xs font-mono font-bold text-center text-gray-600 cursor-not-allowed"
                         />
                       </td>
                       <td className="px-2 py-1.5 border-l border-gray-200">

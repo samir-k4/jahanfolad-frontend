@@ -871,6 +871,7 @@ export default function EmployeePaymentPage() {
                     <th className={HEAD}>{t("payment.history.columns.vault")}</th>
                     <th className={`${HEAD} text-center`}>{t("payment.history.columns.amount")}</th>
                     <th className={HEAD}>{t("payment.history.columns.paidBy")}</th>
+                    <th className={HEAD}>{t("payment.history.columns.createdBy")}</th>
                     <th className={HEAD}>{t("payment.history.columns.description")}</th>
                     <th className="p-3 rounded-none text-center text-table-header-text font-bold text-gray-700 w-36">
                       {t("table.actions", { ns: "common" })}
@@ -919,6 +920,7 @@ export default function EmployeePaymentPage() {
                           {money(payment.amount)}
                         </td>
                         <td className={`${CELL} whitespace-nowrap`}>{dash(payment.paid_by?.name, emDash)}</td>
+                        <td className={`${CELL} whitespace-nowrap`}>{dash(payment.created_by, emDash)}</td>
                         <td className={`${CELL} text-gray-600 whitespace-normal break-words`}>
                           {dash(payment.notes, emDash)}
                         </td>

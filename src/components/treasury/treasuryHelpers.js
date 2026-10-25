@@ -55,6 +55,9 @@ export const getPartyName = (tx, deposit) =>
   (deposit ? tx?.paid_by || tx?.received_by : tx?.received_by || tx?.paid_by) ||
   i18n.t("placeholder.dash", { ns: "salary" });
 export const getCreatedBy = (tx, deposit) =>
+  tx?.creator?.name ||
+  tx?.created_by?.name ||
+  tx?.created_by?.username ||
   tx?.created_by ||
   fromNotes(tx?.notes, NOTE_KEY.CREATED_BY) ||
   i18n.t("placeholder.dash", { ns: "salary" });

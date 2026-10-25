@@ -111,6 +111,7 @@ export default function OvertimePayoutHistoryModal({ isOpen, onClose, branchId, 
                   <th className={`${HEAD} text-center`}>{t("table.status", { ns: "common" })}</th>
                   <th className={`${HEAD} text-center`}>{t("payout.colSource")}</th>
                   <th className={HEAD}>{t("payout.colReceiver")}</th>
+                  <th className={HEAD}>{t("createdBy", { ns: "common" })}</th>
                   <th className={`${HEAD} w-28 text-center border-l-0`}>
                     {t("table.actions", { ns: "common" })}
                   </th>
@@ -159,6 +160,7 @@ export default function OvertimePayoutHistoryModal({ isOpen, onClose, branchId, 
                     <td className={`${CELL} whitespace-normal break-words min-w-[100px] leading-snug`}>
                       {dash(payout.receiver_name)}
                     </td>
+                    <td className={`${CELL} whitespace-nowrap`}>{dash(payout.created_by)}</td>
                     <td className={`${CELL} text-center border-l-0`}>
                       <div className="flex items-center justify-center gap-1.5">
                         <TooltipButton

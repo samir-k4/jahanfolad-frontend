@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { escapeHtml as esc } from "../utils/escapeHtml";
 import { showToast as appToast } from "../utils/toast";
 import { useParams, Link, useNavigate } from "react-router-dom";
@@ -11,16 +12,18 @@ import {
   AlertCircle,
   X,
   Trash2,
+  Wallet,
 } from "lucide-react";
 import useBodyScrollLock from "../hooks/useBodyScrollLock";
 import useDebounce from "../hooks/useDebounce";
 import useVaults from "../hooks/useVaults";
 import useIncomeCategories from "../hooks/useIncomeCategories";
 import { apiUrl } from "../api";
-import { TooltipButton, SearchableSelect, DeleteConfirmationModal, DocumentPreviewModal } from "../components/common";
+import { TooltipButton, SearchableSelect, DeleteConfirmationModal, DocumentPreviewModal, usePagePerms } from "../components/common";
 import SalesInvoicePreviewModal from "../components/sales/SalesInvoicePreviewModal";
 import CustomerIncomeDetailModal from "../components/incomes/CustomerIncomeDetailModal";
 import CustomerIncomeEditModal from "../components/incomes/CustomerIncomeEditModal";
+import CustomerOpeningBalanceModal from "../components/customers/CustomerOpeningBalanceModal";
 import { toEnglishDigits, formatProductName } from "../utils";
 
 const AFGHAN_PROVINCES = [
@@ -31,9 +34,13 @@ const AFGHAN_PROVINCES = [
   "دایکندی", "بامیان", "کنر", "لغمان", "نورستان"
 ];
 
+const creatorName = (creator) =>
+  typeof creator === "string" ? creator : creator?.name || creator?.username || "—";
+
 export default function CustomerProfilePage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [customer, setCustomer] = useState(null);
   const [invoices, setInvoices] = useState([]);
@@ -66,17 +73,26 @@ export default function CustomerProfilePage() {
   const [selectedIncomeForVoucher, setSelectedIncomeForVoucher] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [showStatementPdf, setShowStatementPdf] = useState(false);
+  const [showOpeningBalanceModal, setShowOpeningBalanceModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { vaults } = useVaults();
   const { categories } = useIncomeCategories();
+  const { canEdit } = usePagePerms("customers");
+  const openingBalanceEntries = useMemo(
+    () => statement.filter((item) => item.reference_type === "opening_balance"),
+    [statement],
+  );
+  const hasOpeningBalance = openingBalanceEntries.some(
+    (item) => Number(item.debit || 0) > 0 || Number(item.credit || 0) > 0,
+  );
 
   const showToast = (message, type = "success") => {
     // delegates to the shared toast in utils/toast so every page looks the same
     (appToast[type] || appToast.info)(message);
   };
 
-  useBodyScrollLock(editing || !!viewingInvoice);
+  useBodyScrollLock(editing || !!viewingInvoice || showOpeningBalanceModal);
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
@@ -317,6 +333,17 @@ export default function CustomerProfilePage() {
               <span>راپور جزییات</span>
             </button>
 
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => setShowOpeningBalanceModal(true)}
+                className="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-btn text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+              >
+                <Wallet size={14} />
+                <span>{hasOpeningBalance ? "ویرایش بیلانس افتتاحیه" : "ثبت بیلانس افتتاحیه"}</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={() => setEditing(true)}
@@ -494,13 +521,14 @@ export default function CustomerProfilePage() {
                   <th className="px-3 py-2 border-l border-slate-200 text-center w-32">نوعیت</th>
                   <th className="px-3.5 py-2 border-l border-slate-200 text-center w-32" dir="ltr">مبلغ</th>
                   <th className="px-3 py-2 border-l border-slate-200 text-center w-22">تاریخ</th>
+                  <th className="px-3 py-2 border-l border-slate-200 text-center">{t("table.createdBy", { ns: "common" })}</th>
                   <th className="px-3 py-2 text-center w-36">عملیات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredStatement.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="text-center py-10 text-gray-500">
+                    <td colSpan={11} className="text-center py-10 text-gray-500">
                       گردش حسابی برای این مشتری ثبت نشده است.
                     </td>
                   </tr>
@@ -567,6 +595,15 @@ export default function CustomerProfilePage() {
 
                         <td className="px-3 py-2.5 text-center font-mono text-gray-600 border-l border-gray-200">
                           {item.date || "—"}
+                        </td>
+
+                        <td className="px-3 py-2.5 text-center text-gray-700 border-l border-gray-200 whitespace-nowrap">
+                          {creatorName(
+                            item.created_by ||
+                              linkedInvoice?.created_by ||
+                              linkedIncome?.created_by ||
+                              linkedIncome?.creator
+                          )}
                         </td>
 
                         <td className="px-3 py-2.5 text-center min-w-[150px]">
@@ -761,13 +798,14 @@ export default function CustomerProfilePage() {
                   <th className="px-3.5 py-2 border-l border-slate-200">شرح و بابت</th>
                   <th className="px-3 py-2 border-l border-slate-200 text-center w-28">نوعیت دریافت</th>
                   <th className="px-3.5 py-2 border-l border-slate-200 text-left" dir="ltr">مبلغ دریافتی</th>
+                  <th className="px-3 py-2 border-l border-slate-200 text-center">{t("table.createdBy", { ns: "common" })}</th>
                   <th className="px-3 py-2 text-center w-36">عملیات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredReceipts.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-10 text-gray-500">
+                    <td colSpan={8} className="text-center py-10 text-gray-500">
                       هیچ رسیدی برای این مشتری ثبت نشده است.
                     </td>
                   </tr>
@@ -791,6 +829,9 @@ export default function CustomerProfilePage() {
                       </td>
                       <td className="px-3.5 py-2.5 text-left font-mono font-bold text-emerald-700 text-sm border-l border-gray-200" dir="ltr">
                         {Number(rcp.amount).toLocaleString()} {rcp.currency}
+                      </td>
+                      <td className="px-3 py-2.5 text-center text-gray-700 border-l border-gray-200 whitespace-nowrap">
+                        {creatorName(rcp.created_by || rcp.creator)}
                       </td>
                       <td className="px-3 py-2.5 text-center min-w-[150px]">
                         <div className="flex items-center justify-center gap-1.5">
@@ -948,6 +989,17 @@ export default function CustomerProfilePage() {
         }}
       />
 
+      <CustomerOpeningBalanceModal
+        isOpen={showOpeningBalanceModal}
+        onClose={() => setShowOpeningBalanceModal(false)}
+        customerId={id}
+        openingBalances={openingBalanceEntries}
+        onSuccess={() => {
+          setShowOpeningBalanceModal(false);
+          fetchCustomerData();
+        }}
+      />
+
       <DocumentPreviewModal
         isOpen={!!selectedIncomeForVoucher}
         onClose={() => setSelectedIncomeForVoucher(null)}
@@ -967,6 +1019,8 @@ export default function CustomerProfilePage() {
         title="صورت حساب تفصیلی مشتری"
         subtitle={customer?.name || ""}
         icon={<Printer size={18} />}
+        sheetWidth={794}
+        fitToWidth
       />
 
       <DeleteConfirmationModal

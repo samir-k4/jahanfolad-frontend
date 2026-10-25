@@ -359,13 +359,14 @@ export default function ManagerAdvanceDetailPage() {
                 <th className="py-1.5 px-2.5 text-right border border-gray-200">{t("detail.expenseDescription")}</th>
                 <th className="py-1.5 px-2 text-center border border-gray-200 min-w-[90px]">{t("detail.expenseDate")}</th>
                 <th className="py-1.5 px-2.5 text-center border border-gray-200 min-w-[100px]">{t("detail.expenseAmount")}</th>
+                <th className="py-1.5 px-2.5 text-right border border-gray-200">{t("table.createdBy", { ns: "common" })}</th>
                 {canDelete && isOpen && <th className="py-1.5 px-2 text-center w-16 border border-gray-200">{t("table.actions")}</th>}
               </tr>
             </thead>
             <tbody className="bg-white">
               {(advance.expenses?.length || 0) === 0 ? (
                 <tr>
-                  <td colSpan={canDelete && isOpen ? 6 : 5} className="p-10 text-center text-gray-400 text-xs">{t("detail.noExpenses")}</td>
+                  <td colSpan={canDelete && isOpen ? 7 : 6} className="p-10 text-center text-gray-400 text-xs">{t("detail.noExpenses")}</td>
                 </tr>
               ) : (
                 advance.expenses.map((exp, idx) => (
@@ -384,6 +385,9 @@ export default function ManagerAdvanceDetailPage() {
                     </td>
                     <td className="py-1.5 px-2.5 text-center font-mono font-medium text-xs text-rose-700 border border-gray-200 text-nowrap" dir="ltr">
                       −{fmt(exp.amount)} {advance.currency}
+                    </td>
+                    <td className="py-1.5 px-2.5 text-gray-700 border border-gray-200 whitespace-nowrap">
+                      {exp.created_by || "—"}
                     </td>
                     {canDelete && isOpen && (
                       <td className="py-1.5 px-2 text-center border border-gray-200">
@@ -405,7 +409,7 @@ export default function ManagerAdvanceDetailPage() {
             {(advance.expenses?.length || 0) > 0 && (
               <tfoot>
                 <tr className="bg-slate-50 border-t border-gray-200 font-bold text-xs">
-                  <td colSpan={4} className="py-2 px-3 text-gray-800 border border-gray-200">{t("detail.expensesTotal")}</td>
+                  <td colSpan={5} className="py-2 px-3 text-gray-800 border border-gray-200">{t("detail.expensesTotal")}</td>
                   <td className="py-2 px-3 text-center font-mono font-bold text-rose-700 text-xs border border-gray-200" dir="ltr">
                     −{fmt(advance.total_spent)} {advance.currency}
                   </td>

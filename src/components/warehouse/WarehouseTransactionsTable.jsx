@@ -240,7 +240,7 @@ export default function WarehouseTransactionsTable({
                       {tx.description || "—"}
                     </td>
                     <td className="p-3.5 text-center text-gray-700 text-caption-text font-medium border-l border-gray-100">
-                      {tx.user?.name || t("table.emptyValue", { ns: "common" })}
+                      {tx.created_by || tx.user?.name || t("table.emptyValue", { ns: "common" })}
                     </td>
                     <td
                       className="p-3.5 text-center font-mono text-caption-text text-gray-600"

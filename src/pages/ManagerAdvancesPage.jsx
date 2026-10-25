@@ -322,6 +322,7 @@ export default function ManagerAdvancesPage() {
                 <th className="py-2.5 px-3 text-center border border-gray-200 whitespace-nowrap">{t("table.spent")}</th>
                 <th className="py-2.5 px-3 text-center border border-gray-200 whitespace-nowrap">{t("table.remaining")}</th>
                 <th className="py-2.5 px-2.5 text-center border border-gray-200 whitespace-nowrap">{t("label.currency")}</th>
+                <th className="py-2.5 px-3 text-right border border-gray-200 whitespace-nowrap">{t("table.createdBy", { ns: "common" })}</th>
                 <th className="py-2.5 px-3 text-center border border-gray-200 whitespace-nowrap">{t("table.status")}</th>
                 <th className="py-2.5 px-2.5 text-center w-[96px] border border-gray-200 whitespace-nowrap">{t("table.actions")}</th>
               </tr>
@@ -329,11 +330,11 @@ export default function ManagerAdvancesPage() {
             <tbody className="bg-white text-table-cell-text">
               {loading ? (
                 <tr>
-                  <td colSpan={13} className="p-12 text-center text-gray-500 text-table-cell-text">{t("table.loading")}</td>
+                  <td colSpan={14} className="p-12 text-center text-gray-500 text-table-cell-text">{t("table.loading")}</td>
                 </tr>
               ) : advances.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="p-12 text-center text-gray-500 text-table-cell-text">{t("table.empty")}</td>
+                  <td colSpan={14} className="p-12 text-center text-gray-500 text-table-cell-text">{t("table.empty")}</td>
                 </tr>
               ) : (
                 advances.map((adv, index) => {
@@ -379,6 +380,9 @@ export default function ManagerAdvancesPage() {
                         <span className="font-mono text-gray-700 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-badge text-table-cell-text font-medium" dir="ltr">
                           {adv.currency}
                         </span>
+                      </td>
+                      <td className="py-2 px-3 border border-gray-200 text-gray-700 whitespace-nowrap">
+                        {adv.created_by || "—"}
                       </td>
                       <td className="py-2 px-3 text-center border border-gray-200 whitespace-nowrap">
                         {isOpen ? (

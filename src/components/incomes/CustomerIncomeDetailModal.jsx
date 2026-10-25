@@ -160,7 +160,11 @@ export default function CustomerIncomeDetailModal({
               label={t("label.receiver")}
               value={income.received_by || t("detail.cashier")}
               subValue={`ثبت‌کننده: ${
-                income.createdBy?.name || income.created_by_user_id || t("detail.system")
+                income.created_by?.name ||
+                income.created_by ||
+                income.creator?.name ||
+                income.createdBy?.name ||
+                t("detail.system")
               }`}
             />
             <DetailCard

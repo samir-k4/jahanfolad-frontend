@@ -153,7 +153,7 @@ export default function ProductionBatchesTable({
                     )}
                     <td className="p-3 border-l border-gray-200 whitespace-normal break-words">
                       <span className="text-gray-700 font-medium">
-                        {batch.user?.name || "—"}
+                        {batch.created_by || batch.user?.name || "—"}
                       </span>
                     </td>
                     <td className="p-3 border-l border-gray-200 text-center">

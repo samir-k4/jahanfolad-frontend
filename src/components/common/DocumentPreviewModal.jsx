@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { printReportFrame, useReportFrameHeight } from "../../utils/reportFrame";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
@@ -8,6 +8,7 @@ import useReportPreview from "../../hooks/useReportPreview";
 import { showToast } from "../../utils";
 import { getCleanErrorMessage } from "../../utils/errorHandler";
 const MIN_SHEET_HEIGHT_PX = 560;
+const A4_PORTRAIT_HEIGHT_PX = 1123;
 export default function DocumentPreviewModal({
   isOpen,
   onClose,
@@ -19,11 +20,14 @@ export default function DocumentPreviewModal({
   subtitle,
   icon,
   sheetWidth = 794,
+  fitToWidth = false,
   maxWidth = "max-w-4xl",
   fileName,
 }) {
   useBodyScrollLock(isOpen);
   const { t } = useTranslation("common");
+  const previewAreaRef = useRef(null);
+  const [fitScale, setFitScale] = useState(1);
   const onError = useCallback(
     (err) => showToast.error(getCleanErrorMessage(err, t("voucher.loadError"))),
     [t]
@@ -38,7 +42,36 @@ export default function DocumentPreviewModal({
       fallbackFilename: () => fileName || t("voucher.fallbackFile"),
       onError,
     });
-  const [sheetHeight, setSheetHeight] = useReportFrameHeight(iframeRef, MIN_SHEET_HEIGHT_PX);
+  const [sheetHeight] = useReportFrameHeight(
+    iframeRef,
+    fitToWidth ? A4_PORTRAIT_HEIGHT_PX : MIN_SHEET_HEIGHT_PX,
+  );
+  useEffect(() => {
+    if (!isOpen || !fitToWidth) {
+      setFitScale(1);
+      return undefined;
+    }
+
+    const updateScale = () => {
+      const area = previewAreaRef.current;
+      if (!area) return;
+      const availableWidth = Math.max(0, area.clientWidth - 32);
+      const scale = Math.min(1, availableWidth / sheetWidth);
+      setFitScale(scale > 0 ? scale : 1);
+    };
+
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    const observer = typeof ResizeObserver === "undefined"
+      ? null
+      : new ResizeObserver(updateScale);
+    if (previewAreaRef.current) observer?.observe(previewAreaRef.current);
+
+    return () => {
+      window.removeEventListener("resize", updateScale);
+      observer?.disconnect();
+    };
+  }, [fitToWidth, isOpen, sheetWidth]);
   if (!isOpen) return null;
   const busy = isLoadingPreview || isDownloading;
   return createPortal(
@@ -68,21 +101,51 @@ export default function DocumentPreviewModal({
             <X className="w-5 h-5" />
           </button>
         </div>
-        <div className="flex-1 overflow-auto bg-gray-100 p-4 flex justify-center">
+        <div ref={previewAreaRef} className="flex-1 overflow-auto bg-gray-100 p-4 flex justify-center">
           {isLoadingPreview ? (
             <div className="flex flex-col items-center justify-center gap-3 py-24 text-gray-600">
               <Loader2 className="w-7 h-7 animate-spin text-slate-800" />
               <span className="text-label-text">{t("voucher.loading")}</span>
             </div>
           ) : (
-            <iframe
-              ref={iframeRef}
-              srcDoc={reportHtml}
-              title={t("voucher.iframeTitle")}
-              sandbox="allow-scripts allow-modals"
-              className="bg-white shadow-lg border border-gray-300 rounded-card"
-              style={{ width: `${sheetWidth}px`, height: `${sheetHeight}px`, border: "none" }}
-            />
+            fitToWidth ? (
+              <div
+                className="shrink-0"
+                dir="ltr"
+                style={{
+                  width: `${sheetWidth * fitScale}px`,
+                  height: `${sheetHeight * fitScale}px`,
+                  position: "relative",
+                }}
+              >
+                <iframe
+                  ref={iframeRef}
+                  srcDoc={reportHtml}
+                  title={t("voucher.iframeTitle")}
+                  sandbox="allow-scripts allow-modals"
+                  className="bg-white shadow-lg border border-gray-300 rounded-card"
+                  style={{
+                    width: `${sheetWidth}px`,
+                    height: `${sheetHeight}px`,
+                    border: "none",
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    transform: `scale(${fitScale})`,
+                    transformOrigin: "top left",
+                  }}
+                />
+              </div>
+            ) : (
+              <iframe
+                ref={iframeRef}
+                srcDoc={reportHtml}
+                title={t("voucher.iframeTitle")}
+                sandbox="allow-scripts allow-modals"
+                className="bg-white shadow-lg border border-gray-300 rounded-card"
+                style={{ width: `${sheetWidth}px`, height: `${sheetHeight}px`, border: "none" }}
+              />
+            )
           )}
         </div>
         <div className="px-6 py-3.5 bg-gray-50 border-t border-gray-200 flex justify-between items-center gap-3 shrink-0">
