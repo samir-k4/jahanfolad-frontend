@@ -48,6 +48,9 @@ export default function WarehousePage() {
   const [prefillProductId, setPrefillProductId] = useState(null);
   const requestIdRef = useRef(0);
   useEffect(() => {
+    setSelectedBranch(contextBranch || "all");
+  }, [contextBranch]);
+  useEffect(() => {
     (async () => {
       try {
         const [cData, pData] = await Promise.all([
@@ -96,7 +99,7 @@ export default function WarehousePage() {
   }, [effectiveBranch, fetchBranchData]);
   const handleSelectBranch = (branchId) => {
     setSelectedBranch(branchId);
-    if (branchId !== "all") setContextBranch(branchId);
+    setContextBranch(branchId);
   };
   const isGlobal = !effectiveBranch || effectiveBranch === "all";
   const filteredInventory = useMemo(

@@ -62,6 +62,8 @@
     "updateError": "به‌روزرسانی با مشکل مواجه شد.",
     "deleteSuccess": "محصول با موفقیت حذف شد.",
     "deleteError": "حذف محصول انجام نشد.",
+    "deleteBlockedStockLocation": "شعبه {{branch}}: {{quantity}}",
+    "deleteBlockedUnlistedStock": "در شعبه‌ای که دسترسی آن را ندارید نیز مانده موجودی ثبت شده است؛ با مدیر سیستم هماهنگ کنید.",
     "deleteUndo": "محصول «{{name}}» حذف گردید.",
     "deleteCancelled": "عملیات حذف محصول «{{name}}» لغو شد.",
     "genericError": "خطایی رخ داد.",

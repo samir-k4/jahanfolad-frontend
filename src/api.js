@@ -127,12 +127,19 @@ function handleUnauthorized(path) {
 
 function buildInit({ method = 'GET', body, signal, accept, headers } = {}) {
   const isWrite = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase());
+  let selectedBranch = "";
+  try {
+    selectedBranch = localStorage.getItem("jfc_selected_branch") || "";
+  } catch {
+    selectedBranch = "";
+  }
   return {
     method,
     credentials: 'include',
     headers: {
       Accept: accept || 'application/json',
       ...(isWrite ? { [APP_REQUEST_HEADER]: APP_REQUEST_VALUE } : {}),
+      ...(selectedBranch ? { "X-Branch-Id": selectedBranch } : {}),
       ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
       ...headers,
     },

@@ -22,6 +22,27 @@ export default function BranchGate() {
           {t("branch.gateSubtitle")}
         </p>
         <div className="space-y-3">
+          {branches.length > 1 && (
+            <button
+              type="button"
+              onClick={() => setSelectedBranch("all")}
+              className="w-full group flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 border border-slate-300 hover:border-slate-500 rounded-btn transition-colors cursor-pointer"
+            >
+              <div className="flex items-center space-x-3.5 space-x-reverse">
+                <div className="w-10 h-10 rounded-btn bg-white border border-slate-200 text-slate-700 flex items-center justify-center">
+                  <Building2 size={18} />
+                </div>
+                <div className="text-right">
+                  <div className="text-base font-bold text-gray-900">
+                    {t("branch.gateAll")}
+                  </div>
+                </div>
+              </div>
+              <div className="w-8 h-8 rounded-btn bg-gray-100 group-hover:bg-slate-800 text-gray-500 group-hover:text-white flex items-center justify-center transition-colors">
+                <ArrowLeft size={16} />
+              </div>
+            </button>
+          )}
           {branches.map((branch) => (
             <button
               key={branch.id}

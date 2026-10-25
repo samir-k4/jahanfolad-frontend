@@ -337,6 +337,11 @@ export default function SettingsPage() {
       ? t("navigation.pages.expenseTypes", { ns: "common" })
       : t(`domain.${domain}`, { defaultValue: domain });
   const roleLabel = (roleKey) => t(`role.${roleKey}`, { defaultValue: roleKey });
+  const userBranchAccessLabel = (user) =>
+    user.all_branches
+      ? t("branch.all", { ns: "common" })
+      : user.accessible_branches?.map((branch) => branch.name).join("، ") ||
+        t("company.headOffice", { ns: "common" });
   const handleToggleUserStatus = async (user) => {
     try {
       const data = await apiFetch(`/users/${user.id}/toggle-status`, {
@@ -700,7 +705,7 @@ export default function SettingsPage() {
                               </span>
                             </td>
                             <td className={`${TD_CLASS} text-gray-600`}>
-                              {u.branch ? u.branch.name : t("company.headOffice", { ns: "common" })}
+                              {userBranchAccessLabel(u)}
                             </td>
                             <td className={TD_CLASS}>
                               <div className="flex items-center gap-2">
@@ -755,7 +760,7 @@ export default function SettingsPage() {
                               {t("users.col.branch")}
                             </span>
                             <span className="text-table-cell-text text-gray-800">
-                              {u.branch ? u.branch.name : t("company.headOffice", { ns: "common" })}
+                              {userBranchAccessLabel(u)}
                             </span>
                           </div>
                           <div>

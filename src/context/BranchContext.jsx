@@ -13,7 +13,7 @@ const BranchContext = createContext();
 const BRANCHES_QUERY_KEY = ["branches"];
 const loadBranches = () => apiList("/branches");
 export function BranchProvider({ children }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, loginRevision } = useAuth();
   const queryClient = useQueryClient();
   const {
     data: cachedBranches = [],
@@ -21,7 +21,7 @@ export function BranchProvider({ children }) {
     error,
     refetch,
   } = useQuery({
-    queryKey: BRANCHES_QUERY_KEY,
+    queryKey: [...BRANCHES_QUERY_KEY, user?.id],
     queryFn: loadBranches,
     enabled: isAuthenticated,
   });
@@ -39,6 +39,14 @@ export function BranchProvider({ children }) {
     }
   }, [isAuthenticated, queryClient]);
   useEffect(() => {
+    if (loginRevision > 0) {
+      setPickedBranch("");
+      queryClient.invalidateQueries({
+        queryKey: [...BRANCHES_QUERY_KEY, user?.id],
+      });
+    }
+  }, [loginRevision, queryClient, user?.id]);
+  useEffect(() => {
     if (error) {
       console.error(error);
     }
@@ -50,11 +58,11 @@ export function BranchProvider({ children }) {
   const ensureBranches = useCallback(
     () =>
       queryClient.ensureQueryData({
-        queryKey: BRANCHES_QUERY_KEY,
+        queryKey: [...BRANCHES_QUERY_KEY, user?.id],
         queryFn: loadBranches,
         staleTime: 60_000,
       }),
-    [queryClient],
+    [queryClient, user?.id],
   );
   const isMultiBranch = branches.length > 1;
   const singleBranchId = branches.length === 1 ? String(branches[0].id) : "";
@@ -74,6 +82,7 @@ export function BranchProvider({ children }) {
   useEffect(() => {
     if (
       pickedBranch &&
+      pickedBranch !== "all" &&
       branches.length > 0 &&
       !branches.some((branch) => String(branch.id) === pickedBranch)
     ) {
@@ -99,7 +108,8 @@ export function BranchProvider({ children }) {
     },
     [branches],
   );
-  const needsBranchGate = isMultiBranch && !pickedBranch;
+  const needsBranchGate =
+    isAuthenticated && !isLoadingBranches && isMultiBranch && !pickedBranch;
   const value = useMemo(
     () => ({
       branches,

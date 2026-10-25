@@ -65,7 +65,26 @@ export default function ProductsList() {
         try {
           await apiFetch(`/products/${target.id}`, { method: "DELETE" });
         } catch (err) {
-          showToast.error(getCleanErrorMessage(err, t("messages.deleteError")));
+          const stockLocations = err?.data?.stock_by_branch;
+          const stockDetails = Array.isArray(stockLocations)
+            ? stockLocations
+                .map(({ branch_name, quantity }) =>
+                  t("messages.deleteBlockedStockLocation", {
+                    branch: branch_name,
+                    quantity,
+                  }),
+                )
+                .join("، ")
+            : "";
+          const hiddenStockDetails = err?.data?.has_unlisted_stock
+            ? t("messages.deleteBlockedUnlistedStock")
+            : "";
+          const errorMessage = getCleanErrorMessage(err, t("messages.deleteError"));
+          showToast.error(
+            [errorMessage, stockDetails, hiddenStockDetails]
+              .filter(Boolean)
+              .join(" "),
+          );
         } finally {
           loadData();
         }

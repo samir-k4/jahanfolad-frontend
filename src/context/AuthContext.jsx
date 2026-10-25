@@ -22,6 +22,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   // idle window, warning lead time and hard deadline, all decided by the server
   const [session, setSession] = useState(null);
+  const [loginRevision, setLoginRevision] = useState(0);
   // The token lives in an httpOnly cookie now, so the app cannot look at it:
   // it always asks the server once who it is before deciding what to show.
   const [isRestoring, setIsRestoring] = useState(true);
@@ -79,8 +80,14 @@ export function AuthProvider({ children }) {
     });
 
     markActivity();
+    try {
+      localStorage.removeItem("jfc_selected_branch");
+    } catch {
+      // Branch selection is reset by the provider when this login completes.
+    }
     setUser(result.user);
     setSession(result.session ?? null);
+    setLoginRevision((revision) => revision + 1);
     return result.user;
   }, []);
 
@@ -149,8 +156,9 @@ export function AuthProvider({ children }) {
       logout,
       refreshUser,
       can,
+      loginRevision,
     }),
-    [user, isRestoring, login, logout, refreshUser, can],
+    [user, isRestoring, login, logout, refreshUser, can, loginRevision],
   );
 
   return (

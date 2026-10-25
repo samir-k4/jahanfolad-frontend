@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { apiFetch } from "../../api";
 import { useBranch } from "../../context/BranchContext";
+import { useAuth } from "../../context/AuthContext";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import SearchableSelect from "../common/SearchableSelect";
 import CustomDropdown from "../common/CustomDropdown";
@@ -37,7 +38,11 @@ export default function UserFormModal({
   branches,
   onSaved,
 }) {
-  const { isMultiBranch } = useBranch();
+  const { isMultiBranch, selectedBranch } = useBranch();
+  const { user: currentUser } = useAuth();
+  const canGrantAllBranches = Boolean(
+    currentUser?.all_branches || currentUser?.is_super_admin,
+  );
   useBodyScrollLock(isOpen);
   const [formData, setFormData] = useState({
     name: "",
@@ -48,6 +53,8 @@ export default function UserFormModal({
     role: "finance_manager",
     roles: ["finance_manager"],
     branch_id: "",
+    branch_ids: [],
+    all_branches: false,
     status: "active",
   });
   const [permissions, setPermissions] = useState({});
@@ -55,6 +62,11 @@ export default function UserFormModal({
   const [error, setError] = useState(null);
   useEffect(() => {
     if (!isOpen) return;
+    const preferredBranch = branches.some((branch) => String(branch.id) === selectedBranch)
+      ? selectedBranch
+      : branches[0]
+        ? String(branches[0].id)
+        : "";
     if (user) {
       setFormData({
         name: user.name || "",
@@ -68,6 +80,14 @@ export default function UserFormModal({
             ? user.roles
             : [user.role || "finance_manager"],
         branch_id: user.branch_id ? String(user.branch_id) : "",
+        branch_ids: user.all_branches
+          ? []
+          : Array.isArray(user.branch_ids)
+            ? user.branch_ids.map(String)
+            : user.branch_id
+              ? [String(user.branch_id)]
+              : [],
+        all_branches: user.all_branches ?? !user.branch_id,
         status: user.status || "active",
       });
       const initialPerms = emptyMatrix();
@@ -90,13 +110,15 @@ export default function UserFormModal({
         password: "",
         role: "finance_manager",
         roles: ["finance_manager"],
-        branch_id: "",
+        branch_id: preferredBranch,
+        branch_ids: preferredBranch ? [preferredBranch] : [],
+        all_branches: false,
         status: "active",
       });
       applyRoleDefaults(["finance_manager"]);
     }
     setError(null);
-  }, [isOpen, user]);
+  }, [isOpen, user, branches, selectedBranch]);
   const applyRoleDefaults = (roleIds) => {
     const newPerms = emptyMatrix();
     roleIds.forEach((roleId) => {
@@ -177,6 +199,10 @@ export default function UserFormModal({
       setError("لطفاً حداقل یک نقش برای کاربر انتخاب نمایید.");
       return;
     }
+    if (branches.length > 0 && !formData.all_branches && formData.branch_ids.length === 0) {
+      setError("برای کاربر دست‌کم یک شعبه مجاز انتخاب کنید.");
+      return;
+    }
     if (!user && !formData.password) {
       setError("برای کاربر جدید، درج کلمه عبور الزامی می‌باشد.");
       return;
@@ -191,6 +217,10 @@ export default function UserFormModal({
         role: formData.roles?.[0] || formData.role,
         roles: formData.roles || [formData.role],
         branch_id: formData.branch_id ? Number(formData.branch_id) : null,
+        all_branches: formData.all_branches,
+        branch_ids: formData.all_branches
+          ? []
+          : formData.branch_ids.map(Number),
         status: formData.status,
         permissions: permissions,
       };
@@ -232,6 +262,21 @@ export default function UserFormModal({
       label: `${b.name} (${b.location || "شعبه"})`,
     })),
   ];
+  const toggleAllowedBranch = (branchId) => {
+    setFormData((current) => {
+      const selected = current.branch_ids.includes(branchId)
+        ? current.branch_ids.filter((id) => id !== branchId)
+        : [...current.branch_ids, branchId];
+      const primaryBranch = selected.includes(current.branch_id)
+        ? current.branch_id
+        : selected[0] || "";
+      return {
+        ...current,
+        branch_ids: selected,
+        branch_id: primaryBranch,
+      };
+    });
+  };
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs font-sans overflow-y-auto">
       <div className="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-3xl overflow-hidden my-4 sm:my-8 animate-in fade-in zoom-in-95 duration-150">
@@ -400,6 +445,56 @@ export default function UserFormModal({
               )}
             </div>
           </div>
+          {branches.length > 0 && (
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                دسترسی به شعبه‌ها
+              </h4>
+              {canGrantAllBranches && (
+                <label className="flex items-center gap-2 p-3 border border-slate-200 rounded-lg bg-slate-50 text-sm font-semibold text-slate-800 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.all_branches}
+                    onChange={(event) =>
+                      setFormData((current) => ({
+                        ...current,
+                        all_branches: event.target.checked,
+                        branch_ids: event.target.checked
+                          ? []
+                          : current.branch_ids.length
+                            ? current.branch_ids
+                            : branches[0]
+                              ? [String(branches[0].id)]
+                              : [],
+                      }))
+                    }
+                  />
+                  دسترسی به همه شعبه‌ها
+                </label>
+              )}
+              {!formData.all_branches && (
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {branches.map((branch) => {
+                    const branchId = String(branch.id);
+                    return (
+                      <label
+                        key={branch.id}
+                        className="flex items-center gap-2 p-2.5 border border-slate-200 rounded-lg text-sm text-slate-700 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={formData.branch_ids.includes(branchId)}
+                          onChange={() => toggleAllowedBranch(branchId)}
+                        />
+                        {branch.name}
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
           <div>
             <h4 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-blue-500"></span>
