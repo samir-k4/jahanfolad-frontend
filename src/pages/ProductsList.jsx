@@ -5,6 +5,7 @@ import { ProductFormModal } from "../components/products";
 import TooltipButton from "../components/common/TooltipButton";
 import { formatProductName } from "../utils/productFormat";
 import { showToast } from "../utils/toast";
+import { getCleanErrorMessage } from "../utils/errorHandler";
 import { apiFetch, apiList } from "../api";
 import { useAuth } from "../context/AuthContext";
 import useDebounce from "../hooks/useDebounce";
@@ -64,7 +65,7 @@ export default function ProductsList() {
         try {
           await apiFetch(`/products/${target.id}`, { method: "DELETE" });
         } catch (err) {
-          showToast.error(t("messages.deleteError"));
+          showToast.error(getCleanErrorMessage(err, t("messages.deleteError")));
         } finally {
           loadData();
         }
