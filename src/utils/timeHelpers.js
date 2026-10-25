@@ -1,31 +1,74 @@
-import { toDariDigits } from "./dariNumberFormatter";
+import { toDariDigits, toEnglishDigits } from "./dariNumberFormatter";
 
-export const formatTimeDari = (dateString) => {
-  if (!dateString) return "—";
-  try {
-    const d = new Date(dateString);
-    let hours;
-    let minutes;
-    if (isNaN(d.getTime())) {
-      const timePart = dateString.includes("T")
-        ? dateString.split("T")[1]
-        : dateString.split(" ")[1];
-      if (timePart) {
-        const [hh, mm] = timePart.split(":");
-        hours = parseInt(hh, 10);
-        minutes = String(mm || "00").slice(0, 2).padStart(2, "0");
-      } else {
-        return "—";
-      }
-    } else {
-      hours = d.getHours();
-      minutes = String(d.getMinutes()).padStart(2, "0");
-    }
-
-    const period = hours >= 12 ? "ب.ظ" : "ق.ظ";
-    const hour12 = hours % 12 || 12;
-    return `${toDariDigits(hour12)}:${toDariDigits(minutes)} ${period}`;
-  } catch {
-    return "—";
+const parseClock = (value) => {
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return null;
+    return {
+      hour: value.getHours(),
+      minute: value.getMinutes(),
+      period: value.getHours() >= 12 ? "PM" : "AM",
+    };
   }
+
+  const input = toEnglishDigits(String(value ?? "")).trim();
+  if (!input) return null;
+
+  const date = new Date(input);
+  if (!/^\d{1,2}:\d{2}/.test(input) && !Number.isNaN(date.getTime())) {
+    return {
+      hour: date.getHours(),
+      minute: date.getMinutes(),
+      period: date.getHours() >= 12 ? "PM" : "AM",
+    };
+  }
+
+  const match = input.match(
+    /(?:^|[T\s])(\d{1,2}):(\d{2})(?::\d{2})?(?:\.\d+)?\s*(AM|PM|ق\.ظ|ب\.ظ)?\s*$/i
+  );
+  if (!match) return null;
+
+  let hour = Number(match[1]);
+  const minute = Number(match[2]);
+  const marker = match[3]?.toUpperCase();
+  const period = marker === "PM" || marker === "ب.ظ"
+    ? "PM"
+    : marker === "AM" || marker === "ق.ظ"
+      ? "AM"
+      : hour >= 12
+        ? "PM"
+        : "AM";
+
+  if (minute > 59) return null;
+  if (marker) {
+    if (hour < 1 || hour > 12) return null;
+    hour = (hour % 12) + (period === "PM" ? 12 : 0);
+  } else if (hour > 23) {
+    return null;
+  }
+
+  return { hour, minute, period };
+};
+
+export const parseTimeParts = (value) => {
+  const parsed = parseClock(value);
+  if (!parsed) return null;
+
+  return {
+    hour: parsed.hour % 12 || 12,
+    minute: String(parsed.minute).padStart(2, "0"),
+    period: parsed.period,
+  };
+};
+
+export const formatTime12 = (value) => {
+  const parsed = parseTimeParts(value);
+  if (!parsed) return "—";
+
+  const marker = parsed.period === "PM" ? "ب.ظ" : "ق.ظ";
+  return `${String(parsed.hour).padStart(2, "0")}:${parsed.minute} ${marker}`;
+};
+
+export const formatTimeDari = (value) => {
+  const formatted = formatTime12(value);
+  return formatted === "—" ? formatted : toDariDigits(formatted);
 };

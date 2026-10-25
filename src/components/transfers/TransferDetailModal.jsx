@@ -2,6 +2,8 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import { formatDocNumber } from "../../utils/formatDocNumber";
+import { formatTimeDari } from "../../utils/timeHelpers";
+import { formatShamsiDate } from "../../utils";
 
 export default function TransferDetailModal({ transfer, onClose }) {
   const { t } = useTranslation("transfers");
@@ -11,8 +13,8 @@ export default function TransferDetailModal({ transfer, onClose }) {
 
   const rows = [
     [t("detail.docNumber"), formatDocNumber(transfer.receipt_number, transfer.id)],
-    [t("detail.date"), transfer.shamsi_date || t("emptyValue")],
-    [t("detail.time"), transfer.transaction_time || t("emptyValue")],
+    [t("detail.date"), formatShamsiDate(transfer.shamsi_date) || t("emptyValue")],
+    [t("detail.time"), formatTimeDari(transfer.transaction_time)],
     [t("detail.from"), transfer.from_vault?.name || t("emptyValue")],
     [t("detail.to"), transfer.to_vault?.name || t("emptyValue")],
     [t("detail.amount"), `${Number(transfer.amount || 0).toLocaleString("en-US")} ${transfer.currency}`],

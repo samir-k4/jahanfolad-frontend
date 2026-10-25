@@ -38,6 +38,10 @@ export default function ExpenseEditModal({ isOpen, expense, onClose, onDone }) {
       setError(t("payModal.errorAmount"));
       return;
     }
+    if (!paidTo.trim()) {
+      setError(t("editModal.errorPaidTo"));
+      return;
+    }
     if (!description.trim()) {
       setError(t("editModal.errorDescription"));
       return;
@@ -51,7 +55,7 @@ export default function ExpenseEditModal({ isOpen, expense, onClose, onDone }) {
         body: JSON.stringify({
           expense_category_id: Number(categoryId),
           amount: amountValue,
-          paid_to: paidTo.trim() || null,
+          paid_to: paidTo.trim(),
           description: description.trim(),
         }),
       });
@@ -114,7 +118,9 @@ export default function ExpenseEditModal({ isOpen, expense, onClose, onDone }) {
               />
             </div>
             <div>
-              <label className="block text-label-text font-bold text-gray-700 mb-1.5">{t("editModal.paidTo")}</label>
+              <label className="block text-label-text font-bold text-gray-700 mb-1.5">
+                {t("editModal.paidTo")} <span className="text-rose-600">*</span>
+              </label>
               <input
                 type="text"
                 value={paidTo}

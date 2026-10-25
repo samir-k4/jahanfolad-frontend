@@ -5,7 +5,7 @@ import { Check, Loader2, Send, X } from "lucide-react";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import { apiFetch } from "../../api";
 import { SearchableSelect } from "../common";
-import { showToast, numberToWordsDari } from "../../utils";
+import { showToast, numberToWordsDari, toEnglishDigits } from "../../utils";
 import { getCleanErrorMessage } from "../../utils/errorHandler";
 const NOTES_MAX_LENGTH = 1000;
 const NAME_MAX_LENGTH = 150;
@@ -25,6 +25,10 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
   const { t } = useTranslation("overtime");
   const [periods, setPeriods] = useState(null);
   const [receivers, setReceivers] = useState([]);
+  const [vaults, setVaults] = useState([]);
+  const [usdRate, setUsdRate] = useState(70);
+  const [vaultId, setVaultId] = useState("");
+  const [exchangeRate, setExchangeRate] = useState("1");
   const [kind, setKind] = useState(KINDS[0]);
   const [loading, setLoading] = useState(false);
   const [receiverId, setReceiverId] = useState("");
@@ -45,9 +49,14 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
     try {
       const params = new URLSearchParams({ date });
       if (branchId && branchId !== "all") params.set("branch_id", String(branchId));
-      const body = await apiFetch(`/overtime-payouts/preview?${params.toString()}`);
+      const [body, vaultResponse] = await Promise.all([
+        apiFetch(`/overtime-payouts/preview?${params.toString()}`),
+        apiFetch("/vaults"),
+      ]);
       setPeriods(body?.periods || null);
       setReceivers(Array.isArray(body?.receivers) ? body.receivers : []);
+      setUsdRate(Number(body?.usd_rate) > 0 ? Number(body.usd_rate) : 70);
+      setVaults(Array.isArray(vaultResponse?.data) ? vaultResponse.data : []);
     } catch (err) {
       showToast.error(getCleanErrorMessage(err, t("payout.previewError")));
     } finally {
@@ -59,10 +68,26 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
   }, [load]);
   const active = periods?.[kind] || null;
   const total = Number(active?.total_amount || 0);
+  const selectedVault = vaults.find((vault) => String(vault.id) === String(vaultId)) || null;
+  const vaultCurrency = String(selectedVault?.currency || "AFN").toUpperCase();
+  const needsRate = Boolean(selectedVault) && vaultCurrency !== "AFN";
+  const enteredRate = Number(toEnglishDigits(exchangeRate));
+  const appliedRate = needsRate ? enteredRate : 1;
+  const vaultDeduction = Math.round(total * (appliedRate > 0 ? appliedRate : 0) * 100) / 100;
+  const insufficientBalance =
+    Boolean(selectedVault) && vaultDeduction > Number(selectedVault.current_balance || 0);
   const amountInWords = useMemo(() => numberToWordsDari(total), [total]);
   const alreadyDone = !!active?.payout;
   const canSend =
-    !!active && !alreadyDone && active.is_closed && total > 0 && (!!receiverId || receiverName.trim() !== "");
+    !loading &&
+    !!active &&
+    !alreadyDone &&
+    active.is_closed &&
+    total > 0 &&
+    (!!receiverId || receiverName.trim() !== "") &&
+    Boolean(selectedVault) &&
+    (!needsRate || enteredRate > 0) &&
+    !insufficientBalance;
   const submit = async (event) => {
     event.preventDefault();
     if (!canSend) return;
@@ -74,6 +99,8 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
           date,
           kind,
           branch_id: branchId && branchId !== "all" ? Number(branchId) : undefined,
+          vault_id: Number(vaultId),
+          exchange_rate: appliedRate,
           receiver_employee_id: receiverId ? Number(receiverId) : undefined,
           receiver_name: receiverId ? undefined : receiverName.trim(),
           notes: notes.trim() || undefined,
@@ -101,6 +128,17 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
     if (!period || Number(period.total_amount || 0) <= 0 || !period.is_closed) return "text-content-subtle";
     return "text-accent-strong";
   };
+  const vaultOptions = vaults.map((vault) => ({
+    value: String(vault.id),
+    label: `${vault.name} — ${money(vault.current_balance)} ${String(vault.currency || "AFN").toUpperCase()}`,
+  }));
+  const defaultRateForVault = (currency) => {
+    if (currency === "USD" && usdRate > 0) return (1 / usdRate).toFixed(6);
+    return currency === "AFN" ? "1" : "";
+  };
+  useEffect(() => {
+    if (selectedVault) setExchangeRate(defaultRateForVault(vaultCurrency));
+  }, [vaultId, usdRate, selectedVault?.currency]);
   if (!isOpen) return null;
   return createPortal(
     <div
@@ -304,6 +342,65 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
               className={`${FIELD} text-right leading-6 resize-none`}
             />
           </div>
+          <div className="space-y-1.5">
+            <p className={STEP}>{t("payout.step4")}</p>
+            <label className={LABEL}>
+              {t("payout.vault")} <span className="text-danger-text">*</span>
+            </label>
+            <SearchableSelect
+              value={vaultId}
+              onChange={setVaultId}
+              options={vaultOptions}
+              placeholder={t("payout.vaultPlaceholder")}
+              searchPlaceholder={t("payout.vaultSearch")}
+              buttonClassName={FIELD}
+            />
+            {selectedVault && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="rounded-card border border-line bg-surface-muted px-3 py-2">
+                  <span className="block text-caption-text text-content-subtle">{t("payout.vaultBalance")}</span>
+                  <span className="font-mono font-bold text-content-strong" dir="ltr">
+                    {money(selectedVault.current_balance)} {vaultCurrency}
+                  </span>
+                </div>
+                {needsRate ? (
+                  <div>
+                    <label className={LABEL}>{t("payout.exchangeRate")}</label>
+                    <input
+                      type="number"
+                      min="0.0001"
+                      step="any"
+                      dir="ltr"
+                      value={exchangeRate}
+                      onChange={(event) => setExchangeRate(event.target.value)}
+                      className={FIELD}
+                    />
+                  </div>
+                ) : (
+                  <div className="rounded-card border border-line bg-surface-muted px-3 py-2">
+                    <span className="block text-caption-text text-content-subtle">{t("payout.deduction")}</span>
+                    <span className="font-mono font-bold text-content-strong" dir="ltr">
+                      {money(vaultDeduction)} {vaultCurrency}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+            {needsRate && selectedVault && (
+              <div className="flex items-center justify-between rounded-card border border-line bg-surface-muted px-3 py-2 text-caption-text">
+                <span className="text-content-subtle">{t("payout.deduction")}</span>
+                <span className={`font-mono font-bold ${insufficientBalance ? "text-danger-text" : "text-content-strong"}`} dir="ltr">
+                  {money(vaultDeduction)} {vaultCurrency}
+                </span>
+              </div>
+            )}
+            {insufficientBalance && (
+              <p className="text-caption-text font-bold text-danger-text">{t("payout.insufficientBalance")}</p>
+            )}
+            <p className="rounded-card bg-notice-soft border border-notice-line px-3 py-2 text-caption-text text-notice-text">
+              {t("payout.immediateDeduction")}
+            </p>
+          </div>
         </div>
         <div className="px-5 py-3 bg-surface-muted border-t border-line flex justify-between items-center gap-3 shrink-0">
           <button
@@ -314,7 +411,11 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
             {t("actions.cancel", { ns: "common" })}
           </button>
           <div className="flex items-center gap-3 min-w-0">
-            <span className="text-caption-text text-content-subtle truncate">{periodState(active)}</span>
+            <span className="text-caption-text text-content-subtle truncate">
+              {selectedVault
+                ? `${t("payout.deduction")}: ${money(vaultDeduction)} ${vaultCurrency}`
+                : periodState(active)}
+            </span>
             <button
               type="submit"
               disabled={submitting || !canSend}

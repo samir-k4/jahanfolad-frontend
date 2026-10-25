@@ -353,7 +353,7 @@ export default function TransfersPage() {
                       {formatDocNumber(row.receipt_number, row.id)}
                     </td>
                     <td className={`${TABLE_CELL} font-mono text-content-muted`} dir="ltr">
-                      {row.shamsi_date || t("emptyValue")}
+                      {toEnglishDigits(row.shamsi_date) || t("emptyValue")}
                     </td>
                     <td className={`${TABLE_CELL} font-bold text-content-strong`}>{row.from_vault?.name || t("emptyValue")}</td>
                     <td className={`${TABLE_CELL} font-bold text-content-strong`}>{row.to_vault?.name || t("emptyValue")}</td>
@@ -388,7 +388,7 @@ export default function TransfersPage() {
                   <MobileField label={t("table.columns.from")}>{row.from_vault?.name || t("emptyValue")}</MobileField>
                   <MobileField label={t("table.columns.to")}>{row.to_vault?.name || t("emptyValue")}</MobileField>
                   <MobileField label={t("table.columns.date")}>
-                    <span className="font-mono text-content-muted" dir="ltr">{row.shamsi_date || t("emptyValue")}</span>
+                    <span className="font-mono text-content-muted" dir="ltr">{toEnglishDigits(row.shamsi_date) || t("emptyValue")}</span>
                   </MobileField>
                   <MobileField label={t("table.columns.createdBy")}>{row.created_by || t("emptyValue")}</MobileField>
                   <div className="col-span-2">

@@ -27,6 +27,7 @@ export default function ManagerExpenseAddModal({
   const [selectedAdvanceId, setSelectedAdvanceId] = useState(initialAdvanceId ? String(initialAdvanceId) : "");
   const [selectedCatId, setSelectedCatId] = useState("");
   const [amount, setAmount] = useState("");
+  const [paidTo, setPaidTo] = useState("");
   const [description, setDescription] = useState("");
   const [dateObj, setDateObj] = useState(
     () => new DateObject({ calendar: persian, locale: persian_af })
@@ -44,6 +45,7 @@ export default function ManagerExpenseAddModal({
     setErrorMessage("");
     setFieldErrors({});
     setAmount("");
+    setPaidTo("");
     setDescription("");
     setDateObj(new DateObject({ calendar: persian, locale: persian_af }));
     const loadData = async () => {
@@ -89,6 +91,9 @@ export default function ManagerExpenseAddModal({
         errors.amount = `مبلغ مصرف (${fmt(numAmount)} ${selectedAdvance.currency}) از مانده امانت (${fmt(remaining)} ${selectedAdvance.currency}) بیشتر است.`;
       }
     }
+    if (!paidTo.trim()) {
+      errors.paid_to = t("expenseModal.paidToRequired");
+    }
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       setErrorMessage(Object.values(errors)[0]);
@@ -104,6 +109,7 @@ export default function ManagerExpenseAddModal({
       const payload = {
         expense_category_id: selectedCatId ? parseInt(selectedCatId) : null,
         amount: parseFloat(toEnglishDigits(amount)),
+        paid_to: paidTo.trim(),
         shamsi_date: shamsiDate,
         expense_date: gregDate,
         description: description.trim() || null,
@@ -276,6 +282,27 @@ export default function ManagerExpenseAddModal({
                     containerStyle={{ width: "100%" }}
                   />
                 </div>
+              </div>
+              <div>
+                <label className="block text-label-text font-bold text-gray-700 mb-1.5">
+                  {t("expenseModal.paidTo")} <span className="text-rose-600">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={paidTo}
+                  maxLength={150}
+                  onChange={(event) => {
+                    setPaidTo(event.target.value);
+                    setFieldErrors((prev) => ({ ...prev, paid_to: null }));
+                  }}
+                  placeholder={t("expenseModal.paidToPlaceholder")}
+                  className={`w-full border rounded-input px-3 py-2 text-body-text focus:outline-none focus:border-slate-800 bg-white ${
+                    fieldErrors.paid_to ? "border-rose-500" : "border-gray-300"
+                  }`}
+                />
+                {fieldErrors.paid_to && (
+                  <p className="text-caption-text font-bold text-rose-600 mt-1">{fieldErrors.paid_to}</p>
+                )}
               </div>
               <div>
                 <label className="block text-label-text font-bold text-gray-700 mb-1.5">{t("expenseModal.description")}</label>

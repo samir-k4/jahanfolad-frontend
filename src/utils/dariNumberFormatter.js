@@ -13,6 +13,8 @@ export const toEnglishDigits = (value) => {
     .replace(/٫/g, ".");
 };
 
+export const formatShamsiDate = (value) => toEnglishDigits(value);
+
 export const formatNumber = (value, options = {}) => {
   const {
     minimumFractionDigits = 0,

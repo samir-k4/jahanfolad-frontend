@@ -233,7 +233,7 @@ export default function InvoiceCreatePage() {
             setDateObj(new DateObject({
               calendar: persian,
               locale: persian_af,
-              date: inv.shamsi_date,
+              date: toEnglishDigits(inv.shamsi_date),
               format: "YYYY/MM/DD",
             }));
           } catch (e) {
@@ -442,7 +442,7 @@ export default function InvoiceCreatePage() {
     }
     setSubmitting(true);
     try {
-      const shamsiDateStr = dateObj ? dateObj.format("YYYY/MM/DD") : "";
+      const shamsiDateStr = dateObj ? toEnglishDigits(dateObj.format("YYYY/MM/DD")) : "";
       const payload = {
         invoice_number: invoiceNumber.trim(),
         customer_id: parseInt(selectedCustomer.id, 10),

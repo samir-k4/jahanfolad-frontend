@@ -21,6 +21,7 @@ import { apiUrl, apiFetch } from "../../api";
 import { showToast } from "../../utils/toast";
 import { getCleanErrorMessage } from "../../utils/errorHandler";
 import { formatProductName } from "../../utils/productFormat";
+import { formatShamsiDate } from "../../utils";
 
 const fmt = (n) => Number(n || 0).toLocaleString("en-US");
 
@@ -152,7 +153,7 @@ export default function SalesInvoicePreviewModal({
       link.href = downloadUrl;
 
       const customer = (invoice.customer_name || t("invoicePreviewModal.defaultCustomer")).replace(/\s+/g, "_");
-      const dateStr = (invoice.shamsi_date || "date").replace(/\//g, "-");
+      const dateStr = (formatShamsiDate(invoice.shamsi_date) || "date").replace(/\//g, "-");
       const filenamePrefix = t(isDispatch ? "invoicePreviewModal.dispatchExitFilenamePrefix" : isExit ? "invoicePreviewModal.warehouseExitFilenamePrefix" : "invoicePreviewModal.filenamePrefix");
       link.download = `${filenamePrefix}_${customer}_${invoiceNumber}_${dateStr}.pdf`;
 

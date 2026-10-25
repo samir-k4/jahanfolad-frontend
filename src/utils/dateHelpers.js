@@ -1,6 +1,8 @@
 import DateObject from "react-date-object";
 import persian from "react-date-object/calendars/persian";
 import persian_af from "./persian_af";
+import { formatTimeDari } from "./timeHelpers";
+import { formatShamsiDate } from "./dariNumberFormatter";
 export { persian, persian_af, DateObject };
 export { toEnglishDigits } from "./dariNumberFormatter";
 export const formatToGregorian = (date) => {
@@ -68,22 +70,17 @@ export const toAfghanDate = (gregorianDate) => {
 export const formatAfghanDisplay = (dateObj) => {
   if (!dateObj) return "";
   const monthNum = dateObj.month?.number ?? dateObj.month;
-  return `${dateObj.year}/${monthNum}/${dateObj.day}`;
+  return formatShamsiDate(`${dateObj.year}/${monthNum}/${dateObj.day}`);
 };
 export const formatAfghanDateTime = (dateInput) => {
   if (!dateInput) return "—";
-  try {
-    const afDate = toAfghanDate(dateInput);
-    if (!afDate) return "—";
-    const jsDate = dateInput instanceof Date ? dateInput : new Date(dateInput);
-    const hh = String(jsDate.getHours()).padStart(2, "0");
-    const mm = String(jsDate.getMinutes()).padStart(2, "0");
-    const monthNum = String(afDate.month?.number ?? afDate.month).padStart(2, "0");
-    const day = String(afDate.day).padStart(2, "0");
-    return `${afDate.year}/${monthNum}/${day} - ${hh}:${mm}`;
-  } catch {
-    return String(dateInput).substring(0, 16);
-  }
+  const jsDate = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  if (Number.isNaN(jsDate.getTime())) return "—";
+  const afDate = toAfghanDate(jsDate);
+  if (!afDate) return "—";
+  const monthNum = String(afDate.month?.number ?? afDate.month).padStart(2, "0");
+  const day = String(afDate.day).padStart(2, "0");
+  return `${formatShamsiDate(`${afDate.year}/${monthNum}/${day}`)} - ${formatTimeDari(jsDate)}`;
 };
 
 export const getWeekDayName = (dateObj, dayNames = [], fallback = "") => {

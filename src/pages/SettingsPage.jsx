@@ -35,6 +35,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import UserFormModal from "../components/settings/UserFormModal";
 import PasswordResetResultModal from "../components/settings/PasswordResetResultModal";
 import CategoryFormModal from "../components/settings/CategoryFormModal";
+import VaultTransactionCategoriesManager from "../components/settings/VaultTransactionCategoriesManager";
 import PayRulesTable from "../components/settings/PayRulesTable";
 import SalaryPaymentTypesTable from "../components/settings/SalaryPaymentTypesTable";
 import { useCompany } from "../context/CompanyContext";
@@ -61,6 +62,7 @@ const CATEGORY_DOMAIN_IDS = [
   "job_position",
   "warehouse_category",
   "vault_type",
+  "vault_transaction_category",
 ];
 const LOGO_PRESETS = [
   { key: "small", size: 60 },
@@ -262,6 +264,10 @@ export default function SettingsPage() {
   const [expenseTypes, setExpenseTypes] = useState([]);
   const fetchCategories = useCallback(async () => {
     const requestId = ++categoriesRequestId.current;
+    if (catDomainFilter === "vault_transaction_category") {
+      setLoadingCategories(false);
+      return;
+    }
     setLoadingCategories(true);
     try {
       if (catDomainFilter === "all") {
@@ -800,7 +806,7 @@ export default function SettingsPage() {
           {activeTab === "categories" && (
             <div className={PANEL_CLASS}>
               <PanelHeader icon={Tag} title={t("categories.title")} subtitle={t("categories.subtitle")}>
-                {!["warehouse_category", "vault_type"].includes(catDomainFilter) && (
+                {!["warehouse_category", "vault_type", "vault_transaction_category"].includes(catDomainFilter) && (
                   <button
                     type="button"
                     onClick={() => {
@@ -845,6 +851,9 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
+              {catDomainFilter === "vault_transaction_category" ? (
+                <VaultTransactionCategoriesManager canEdit={canEditSettings} searchTerm={catSearch} />
+              ) : (
               <div className="p-4">
                 {loadingCategories ? (
                   <div className="py-16 text-center text-gray-400">
@@ -980,6 +989,7 @@ export default function SettingsPage() {
                   </div>
                 )}
               </div>
+              )}
             </div>
           )}
           {activeTab === "company" && (

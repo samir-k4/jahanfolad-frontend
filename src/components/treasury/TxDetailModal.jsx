@@ -1,5 +1,7 @@
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import { formatTimeDari } from "../../utils/timeHelpers";
+import { formatShamsiDate } from "../../utils";
 import { NOTE_KEY } from "../../constants/treasuryDomain";
 import { X, Printer, FileText, TrendingUp, TrendingDown } from "lucide-react";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
@@ -123,8 +125,8 @@ export default function TxDetailModal({ tx, onClose, onPrint, namespace = "treas
                   <td className="py-2 px-3 font-mono font-bold text-gray-800" dir="ltr">{docCode}</td>
                   <th className="w-28 py-2 px-3 bg-slate-50 text-slate-600 font-semibold select-none">{t("txDetail.recordedAt")}</th>
                   <td className="py-2 px-3 font-mono text-gray-800" dir="ltr">
-                    {tx.shamsi_date || "—"}
-                    {tx.transaction_time ? ` (${tx.transaction_time})` : ""}
+                    {formatShamsiDate(tx.shamsi_date) || "—"}
+                    {tx.transaction_time ? ` (${formatTimeDari(tx.transaction_time)})` : ""}
                   </td>
                 </tr>
                 <tr className="divide-x divide-x-reverse divide-gray-200">

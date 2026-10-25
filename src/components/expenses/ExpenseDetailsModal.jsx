@@ -2,6 +2,9 @@ import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { Eye, FileText, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { formatTimeDari } from "../../utils";
+import { formatAfghanDateTime } from "../../utils/dateHelpers";
+import { formatShamsiDate } from "../../utils";
 import DocumentPreviewModal from "../common/DocumentPreviewModal";
 const fmt = (n) =>
   Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
@@ -18,8 +21,8 @@ export default function ExpenseDetailsModal({ isOpen, expense, onClose }) {
   const sourceKind = source ? t(`detailsModal.sourceKinds.${source.kind}`) : null;
   const rows = [
     [t("detailsModal.voucher"), expense.voucher_no || `#${expense.id}`],
-    [t("detailsModal.date"), expense.shamsi_date],
-    [t("detailsModal.time"), expense.expense_time],
+    [t("detailsModal.date"), formatShamsiDate(expense.shamsi_date)],
+    [t("detailsModal.time"), formatTimeDari(expense.expense_time)],
     [t("detailsModal.type"), expense.expense_type_name],
     [t("table.category"), expense.category_title],
     [t("detailsModal.source"), expense.source_title],
@@ -31,9 +34,9 @@ export default function ExpenseDetailsModal({ isOpen, expense, onClose }) {
     [t("detailsModal.state"), expense.state_label],
     [t("detailsModal.createdBy"), expense.created_by],
     [t("detailsModal.paidBy"), expense.paid_by],
-    [t("detailsModal.paidAt"), expense.paid_at ? new Date(expense.paid_at).toLocaleString("en-GB") : null],
+    [t("detailsModal.paidAt"), expense.paid_at ? formatAfghanDateTime(expense.paid_at) : null],
     [t("detailsModal.reversedBy"), expense.reversed_by],
-    [t("detailsModal.reversedAt"), expense.reversed_at ? new Date(expense.reversed_at).toLocaleString("en-GB") : null],
+    [t("detailsModal.reversedAt"), expense.reversed_at ? formatAfghanDateTime(expense.reversed_at) : null],
   ];
   return createPortal(
     <>

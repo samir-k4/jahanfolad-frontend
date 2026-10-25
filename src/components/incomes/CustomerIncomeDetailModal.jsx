@@ -5,6 +5,7 @@ import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import { numberToWordsDari } from "../../utils/numberToWordsDari";
 import { formatDocNumber } from "../../utils/formatDocNumber";
 import { formatTimeDari } from "../../utils/timeHelpers";
+import { formatShamsiDate } from "../../utils";
 const fmt = (n) =>
   Number(n || 0).toLocaleString("en-US", {
     minimumFractionDigits: 0,
@@ -169,7 +170,7 @@ export default function CustomerIncomeDetailModal({
             />
             <DetailCard
               label={t("label.date")}
-              value={income.shamsi_date || "—"}
+              value={formatShamsiDate(income.shamsi_date) || "—"}
             />
             <DetailCard
               label={t("detail.recordedAt")}

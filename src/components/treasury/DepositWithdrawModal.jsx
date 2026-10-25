@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { SearchableSelect, CustomDropdown, usePagePerms } from "../common";
 import { toEnglishDigits } from "../../utils";
+import { parseTimeParts } from "../../utils/timeHelpers";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import { apiUrl } from "../../api";
 import { showToast } from "../../utils/toast";
@@ -47,6 +48,7 @@ export default function DepositWithdrawModal({
   const [partyName, setPartyName] = useState(""); 
   const [amount, setAmount] = useState("");
   const [timeStr, setTimeStr] = useState("");
+  const [timePeriod, setTimePeriod] = useState("AM");
   const [dateObj, setDateObj] = useState(() => new DateObject({ calendar: persian, locale: persian_af }));
   const [notes, setNotes] = useState("");
   const fetchNextDocNumber = async () => {
@@ -91,10 +93,9 @@ export default function DepositWithdrawModal({
       setTransactionType(initialType);
       const defaultVaultId = vaults[0]?.id ? String(vaults[0].id) : "";
       setSelectedVaultId(defaultVaultId);
-      const now = new Date();
-      const hours = String(now.getHours()).padStart(2, "0");
-      const minutes = String(now.getMinutes()).padStart(2, "0");
-      setTimeStr(`${hours}:${minutes}`);
+      const currentTime = parseTimeParts(new Date());
+      setTimeStr(`${String(currentTime?.hour || 12).padStart(2, "0")}:${currentTime?.minute || "00"}`);
+      setTimePeriod(currentTime?.period || "AM");
       setCategoryId("");
       setMemberId("");
       fetchNextDocNumber();
@@ -133,6 +134,11 @@ export default function DepositWithdrawModal({
       showToast.error(t("depositWithdraw.categoryRequired"));
       return;
     }
+    const formattedTime = `${toEnglishDigits(timeStr)} ${timePeriod === "PM" ? t("timeSuffix.pm") : t("timeSuffix.am")}`;
+    if (!parseTimeParts(formattedTime)) {
+      showToast.error(t("messages.invalidTime"));
+      return;
+    }
     const gDate = dateObj.toDate();
     const y = gDate.getFullYear();
     const m = String(gDate.getMonth() + 1).padStart(2, "0");
@@ -149,7 +155,7 @@ export default function DepositWithdrawModal({
       reference_number: referenceNumber,
       transaction_date: gregDate,
       shamsi_date: shamsiDate,
-      transaction_time: timeStr,
+      transaction_time: formattedTime,
       paid_by: isDeposit ? (partyName || t("depositWithdraw.defaultPayer")) : (selectedVault?.name || t("party.finance")),
       received_by: isDeposit ? (selectedVault?.name || t("party.cashier")) : (partyName || t("depositWithdraw.defaultReceiver")),
       notes: notes,
@@ -235,13 +241,22 @@ export default function DepositWithdrawModal({
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1 flex items-center gap-1">
                 <Clock size={13} className="text-slate-700" />{t("depositWithdraw.time")}</label>
-              <input
-                type="text"
-                maxLength={TEXT_FIELD_MAX_LENGTH}
-                value={timeStr}
-                onChange={(e) => setTimeStr(toEnglishDigits(e.target.value))}
-                className="w-full bg-white border border-gray-300 rounded-sm px-3 py-1.5 text-xs text-slate-900 font-mono text-center outline-none focus:border-slate-800"
-              />
+              <div className="flex items-center gap-1">
+                <input
+                  type="text"
+                  maxLength={TEXT_FIELD_MAX_LENGTH}
+                  value={timeStr}
+                  onChange={(e) => setTimeStr(toEnglishDigits(e.target.value))}
+                  className="w-full bg-white border border-gray-300 rounded-sm px-3 py-1.5 text-xs text-slate-900 font-mono text-center outline-none focus:border-slate-800"
+                />
+                <button
+                  type="button"
+                  onClick={() => setTimePeriod((period) => (period === "AM" ? "PM" : "AM"))}
+                  className="shrink-0 rounded-sm border border-gray-300 bg-gray-50 px-2 py-1.5 text-xs font-bold text-slate-800"
+                >
+                  {timePeriod === "AM" ? t("timeSuffix.am") : t("timeSuffix.pm")}
+                </button>
+              </div>
             </div>
           </div>
           <div>

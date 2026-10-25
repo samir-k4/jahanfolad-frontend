@@ -223,14 +223,14 @@ export default function TransactionReportModal({
       }}
     >
       {viewMode === "filters" ? (
-        <div className="bg-white w-full max-w-xl max-h-[92vh] rounded-modal shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150 border border-gray-200">
+        <div className="bg-white w-full max-w-2xl max-h-[92vh] rounded-modal shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150 border border-gray-200">
           <div className="bg-white px-5 py-3.5 flex justify-between items-center border-b border-gray-200">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-btn bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200 shadow-2xs">
                 <Printer size={18} />
               </div>
               <div>
-                <h3 className="text-section-title font-bold text-gray-900">{t("report.filterTitle")}</h3>
+                <h3 className="text-base font-semibold text-gray-900">{t("report.filterTitle")}</h3>
               </div>
             </div>
             <button
@@ -241,9 +241,9 @@ export default function TransactionReportModal({
               <X size={18} />
             </button>
           </div>
-          <div className="p-6 overflow-y-auto space-y-4 text-modal-body">
+          <div className="p-6 overflow-y-auto space-y-4 text-xs">
             <div>
-              <label className="block font-bold text-gray-800 mb-1.5 flex items-center gap-1.5">
+              <label className="block font-medium text-gray-800 mb-1.5 flex items-center gap-1.5">
                 <Calendar size={14} className="text-slate-700" />
                 <span>{t("report.range")}</span>
               </label>
@@ -253,7 +253,7 @@ export default function TransactionReportModal({
                     key={item.key}
                     type="button"
                     onClick={() => handlePreset(item.key)}
-                    className={`px-3 py-1.5 rounded-btn font-bold transition-all cursor-pointer border ${
+                    className={`px-3 py-1.5 rounded-btn text-xs font-medium transition-all cursor-pointer border ${
                       activePreset === item.key
                         ? "bg-slate-800 text-white border-slate-800 shadow-2xs"
                         : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
@@ -266,7 +266,7 @@ export default function TransactionReportModal({
             </div>
             <div className="grid grid-cols-2 gap-3.5">
               <div>
-                <label className="block font-bold text-gray-700 mb-1">{t("report.fromDate")}</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">{t("report.fromDate")}</label>
                 <DatePicker
                   value={startDate}
                   onChange={(val) => {
@@ -276,11 +276,11 @@ export default function TransactionReportModal({
                   calendar={persian}
                   locale={persian_af}
                   format="YYYY/MM/DD"
-                  inputClass="w-full bg-white border border-gray-300 rounded-btn px-3 py-1.5 text-modal-body text-gray-900 font-mono outline-none focus:border-slate-800"
+                  inputClass="w-full bg-white border border-gray-300 rounded-btn px-3 py-1.5 text-xs text-gray-900 font-mono outline-none focus:border-slate-800"
                 />
               </div>
               <div>
-                <label className="block font-bold text-gray-700 mb-1">{t("report.toDate")}</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">{t("report.toDate")}</label>
                 <DatePicker
                   value={endDate}
                   onChange={(val) => {
@@ -290,46 +290,49 @@ export default function TransactionReportModal({
                   calendar={persian}
                   locale={persian_af}
                   format="YYYY/MM/DD"
-                  inputClass="w-full bg-white border border-gray-300 rounded-btn px-3 py-1.5 text-modal-body text-gray-900 font-mono outline-none focus:border-slate-800"
+                  inputClass="w-full bg-white border border-gray-300 rounded-btn px-3 py-1.5 text-xs text-gray-900 font-mono outline-none focus:border-slate-800"
                 />
               </div>
             </div>
             <div className="border-t border-gray-100 pt-4 space-y-3.5">
               <div>
-                <label className="block font-bold text-gray-700 mb-1">{t("report.vault")}</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">{t("report.vault")}</label>
                 <SearchableSelect
                   options={vaultOptions}
                   value={selectedVault}
                   onChange={(val) => setSelectedVault(val)}
                   placeholder={t("report.allVaultsOption")}
                   searchPlaceholder={t("report.vaultSearch")}
-                  buttonClassName="w-full bg-white border border-gray-300 rounded-btn px-3 py-2 text-modal-body font-medium text-gray-900 outline-none hover:border-gray-400"
+                  buttonClassName="w-full bg-white border border-gray-300 rounded-btn px-3 py-2 text-xs font-normal text-gray-900 outline-none hover:border-gray-400"
                   usePortal={true}
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">{t("vaultCreate.currencyLabel")}</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">{t("vaultCreate.currencyLabel")}</label>
                   <CustomDropdown
                     options={currencyOptions}
                     value={selectedCurrency}
                     onChange={(val) => setSelectedCurrency(val)}
+                    buttonClassName="w-full px-3 py-2 text-xs font-normal"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">{t("report.type")}</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">{t("report.type")}</label>
                   <CustomDropdown
                     options={typeOptions}
                     value={selectedType}
                     onChange={(val) => setSelectedType(val)}
+                    buttonClassName="w-full px-3 py-2 text-xs font-normal"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 mb-1">{t("report.category")}</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">{t("report.category")}</label>
                   <CustomDropdown
                     options={categoryOptions}
                     value={selectedCategory}
                     onChange={(val) => setSelectedCategory(val)}
+                    buttonClassName="w-full px-3 py-2 text-xs font-normal"
                   />
                 </div>
               </div>
@@ -339,13 +342,13 @@ export default function TransactionReportModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-btn-text font-bold text-gray-700 bg-white border border-gray-300 hover:bg-gray-100 rounded-btn transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-100 rounded-btn transition-colors cursor-pointer"
             >{t("actions.cancel")}</button>
             <button
               type="button"
               onClick={handleFetchReportData}
               disabled={loading}
-              className="px-5 py-2 text-btn-text font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-btn shadow-xs transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              className="px-5 py-2 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-btn shadow-xs transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {loading ? (
                 <>

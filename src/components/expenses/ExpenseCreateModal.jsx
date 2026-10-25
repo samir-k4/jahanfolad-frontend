@@ -14,7 +14,7 @@ import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import { apiUrl } from "../../api";
 import SearchableSelect from "../common/SearchableSelect";
 import CustomDropdown from "../common/CustomDropdown";
-import { toEnglishDigits } from "../../utils";
+import { formatTimeDari, toEnglishDigits } from "../../utils";
 import { useTranslation } from "react-i18next";
 const fmt = (n) => Number(n || 0).toLocaleString("en-US");
 const EMPTY_FORM = {
@@ -25,6 +25,7 @@ const EMPTY_FORM = {
   amount: "",
   currency: "",
   exchange_rate: "1",
+  paid_to: "",
   description: "",
 };
 function Section({ title, children }) {
@@ -98,12 +99,11 @@ export default function ExpenseCreateModal({
           sug.payment_source === "manager_advance" && openAdvances.length > 0
             ? "manager_advance"
             : "vault_direct";
-        const suggestedVault = vaultList.find((v) => String(v.id) === String(sug.vault_id));
         const suggestedCat = cats.find((c) => String(c.id) === String(sug.expense_category_id));
         setFormData((prev) => ({
           ...prev,
           payment_source: source,
-          vault_id: String(suggestedVault?.id || vaultList[0]?.id || ""),
+          vault_id: "",
           manager_advance_id: String(openAdvances[0]?.id || ""),
           expense_category_id: String(suggestedCat?.id || cats[0]?.id || ""),
         }));
@@ -129,24 +129,24 @@ export default function ExpenseCreateModal({
     (isVaultDirect ? selectedVault?.currency : selectedAdvance?.currency) || "AFN"
   ).toUpperCase();
   const availableBalance = isVaultDirect
-    ? Number.POSITIVE_INFINITY
+    ? Number(selectedVault?.current_balance || 0)
     : Number(selectedAdvance?.remaining || 0);
   const expenseCurrency = String(formData.currency || sourceCurrency).toUpperCase();
-  const needsRate = !isVaultDirect && expenseCurrency !== sourceCurrency;
+  const needsRate = expenseCurrency !== sourceCurrency;
   const defaultRateFor = (source, target) => {
     if (source === target) return "1";
     if (source === "AFN" && target === "USD") return String(usdRate);
     if (source === "USD" && target === "AFN") return usdRate > 0 ? (1 / usdRate).toFixed(4) : "1";
-    return "1";
+    return "";
   };
   useEffect(() => {
     setFormData((prev) => ({ ...prev, currency: sourceCurrency, exchange_rate: "1" }));
   }, [sourceCurrency]);
   if (!isOpen) return null;
   const enteredAmount = parseFloat(toEnglishDigits(formData.amount) || "0");
-  const rawRate = parseFloat(toEnglishDigits(formData.exchange_rate) || "1");
+  const rawRate = parseFloat(toEnglishDigits(formData.exchange_rate) || "0");
   const effectiveRate = needsRate ? (rawRate > 0 ? rawRate : 0) : 1;
-  const vaultDeduction = enteredAmount * effectiveRate;
+  const vaultDeduction = Math.round(enteredAmount * effectiveRate * 100) / 100;
   const isOverBalance = vaultDeduction > availableBalance;
   const toUsd = (value, curr) => {
     if (curr === "USD") return value;
@@ -159,6 +159,9 @@ export default function ExpenseCreateModal({
     categories.find((c) => String(c.id) === String(formData.expense_category_id))?.name || "";
   const validate = () => {
     const errors = {};
+    if (isVaultDirect && !formData.vault_id) {
+      errors.vault_id = tx("createModal.errorVault");
+    }
     if (!isVaultDirect && !formData.manager_advance_id) {
       errors.manager_advance_id = tx("createModal.errorAdvance");
     }
@@ -171,10 +174,13 @@ export default function ExpenseCreateModal({
     if (!formData.amount || enteredAmount <= 0) {
       errors.amount = tx("createModal.errorAmount");
     }
+    if (!formData.paid_to.trim()) {
+      errors.paid_to = tx("createModal.errorPaidTo");
+    }
     if (needsRate && !(rawRate > 0)) {
       errors.exchange_rate = tx("createModal.errorRate");
     }
-    if (isOverBalance) {
+    if ((selectedVault || !isVaultDirect) && isOverBalance) {
       errors.amount = tx("createModal.errorBalance", { amount: `${fmt(availableBalance)} ${sourceCurrency}` });
     }
     if (!formData.description.trim()) {
@@ -200,12 +206,13 @@ export default function ExpenseCreateModal({
       const shamsiStr = toEnglishDigits(dateObj.format("YYYY/MM/DD"));
       const payload = {
         payment_source: formData.payment_source,
-        vault_id: null,
+        vault_id: isVaultDirect ? Number(formData.vault_id) : null,
         manager_advance_id: !isVaultDirect ? formData.manager_advance_id : null,
         expense_category_id: formData.expense_category_id ? parseInt(formData.expense_category_id) : null,
         amount: enteredAmount,
         currency: expenseCurrency,
         exchange_rate: effectiveRate,
+        paid_to: formData.paid_to.trim(),
         shamsi_date: shamsiStr,
         expense_date: gregStr,
         title: resolvedCategoryName,
@@ -231,6 +238,10 @@ export default function ExpenseCreateModal({
   const advanceOptions = advances.map((a) => ({
     value: String(a.id),
     label: tx("createModal.advanceLabel", { holder: a.receiver_name || a.employee?.full_name || tx("createModal.defaultHolder"), remaining: fmt(a.remaining), currency: a.currency }),
+  }));
+  const vaultOptions = vaults.map((v) => ({
+    value: String(v.id),
+    label: `${v.name} — ${fmt(v.current_balance)} ${String(v.currency || "AFN").toUpperCase()}`,
   }));
   const categoryOptions = categories.map((c) => ({
     value: String(c.id),
@@ -323,11 +334,37 @@ export default function ExpenseCreateModal({
               </button>
             </div>
             {isVaultDirect ? (
-              <div className="bg-amber-50 border border-amber-200 rounded-card px-3.5 py-2.5 space-y-1">
-                <p className="text-body-text font-bold text-amber-900">
-                  {tx("createModal.vaultChosenByFinance")}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  {tx("createModal.vault")} <span className="text-rose-600">*</span>
+                </label>
+                <SearchableSelect
+                  options={vaultOptions}
+                  value={formData.vault_id}
+                  onChange={(val) => setFormData({ ...formData, vault_id: val })}
+                  placeholder={tx("createModal.vaultPlaceholder")}
+                  searchPlaceholder={tx("createModal.vaultSearch")}
+                  usePortal={true}
+                  buttonClassName={`w-full border rounded-lg px-3 py-2 text-sm font-bold bg-white outline-none ${
+                    fieldErrors.vault_id ? "border-rose-500" : "border-gray-300"
+                  }`}
+                />
+                {fieldErrors.vault_id && (
+                  <span className="text-[10px] text-rose-600 font-bold block mt-0.5">
+                    {fieldErrors.vault_id}
+                  </span>
+                )}
+                {selectedVault && (
+                  <div className="flex justify-between items-center mt-1.5 text-[11px] text-gray-500 font-mono">
+                    <span>{tx("createModal.vaultBalance")}</span>
+                    <span className="font-bold text-emerald-700 text-xs">
+                      {fmt(selectedVault.current_balance)} {sourceCurrency}
+                    </span>
+                  </div>
+                )}
+                <p className="mt-2 rounded-card bg-amber-50 border border-amber-200 px-3 py-2 text-caption-text text-amber-800">
+                  {tx("createModal.immediateDeduction")}
                 </p>
-                <p className="text-caption-text text-amber-800">{tx("createModal.queuedNote")}</p>
               </div>
             ) : (
               <div>
@@ -494,9 +531,32 @@ export default function ExpenseCreateModal({
               <div className="px-2.5 py-2 rounded-lg bg-gray-50 border border-gray-200">
                 <span className="block text-[9.5px] font-bold text-gray-500">{tx("createModal.entryTime")}</span>
                 <span className="block text-xs font-black font-mono text-gray-700 mt-0.5" dir="ltr">
-                  {new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                  {formatTimeDari(new Date())}
                 </span>
               </div>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1">
+                {tx("createModal.paidTo")} <span className="text-rose-600">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.paid_to}
+                maxLength={150}
+                onChange={(e) => {
+                  setFormData({ ...formData, paid_to: e.target.value });
+                  setFieldErrors((prev) => ({ ...prev, paid_to: null }));
+                }}
+                placeholder={tx("createModal.paidToPlaceholder")}
+                className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-slate-800 ${
+                  fieldErrors.paid_to ? "border-rose-500 bg-rose-50/40" : "border-gray-300 bg-white"
+                }`}
+              />
+              {fieldErrors.paid_to && (
+                <span className="text-[10px] text-rose-600 font-bold block mt-0.5">
+                  {fieldErrors.paid_to}
+                </span>
+              )}
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">

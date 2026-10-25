@@ -10,6 +10,7 @@ import {
 import useDebounce from "../hooks/useDebounce";
 import { apiUrl } from "../api";
 import { showToast } from "../utils/toast";
+import { formatShamsiDate } from "../utils";
 import { TooltipButton, TablePagination, CustomDropdown } from "../components/common";
 import CustomerLoanReportModal from "../components/customers/CustomerLoanReportModal";
 import { useTranslation } from "react-i18next";
@@ -239,7 +240,7 @@ export default function CustomerLoansPage() {
                       className="px-3.5 py-2.5 text-center font-mono text-gray-600 border-l border-gray-200"
                       dir="ltr"
                     >
-                      {loan.last_payment_shamsi || "—"}
+                      {formatShamsiDate(loan.last_payment_shamsi) || "—"}
                     </td>
                     <td
                       className="px-3.5 py-2.5 text-center font-mono text-gray-800 font-bold border-l border-gray-200"

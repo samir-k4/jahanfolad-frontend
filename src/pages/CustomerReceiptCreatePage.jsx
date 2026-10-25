@@ -241,7 +241,7 @@ export default function CustomerReceiptCreatePage() {
       const payerName = selectedCustomer 
         ? selectedCustomer.name 
         : customerSearchQuery.trim();
-      const shamsiDateStr = dateObj ? dateObj.format("YYYY/MM/DD") : "";
+      const shamsiDateStr = dateObj ? toEnglishDigits(dateObj.format("YYYY/MM/DD")) : "";
       const payload = {
         vault_id: parseInt(selectedVaultId, 10),
         payer_name: payerName,

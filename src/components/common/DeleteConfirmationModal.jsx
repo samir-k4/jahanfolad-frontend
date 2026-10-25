@@ -17,6 +17,12 @@ export default function DeleteConfirmationModal({
   warning,
   loading,
   namespace = "common",
+  reasonRequired = false,
+  reason = "",
+  onReasonChange,
+  reasonLabel,
+  reasonPlaceholder,
+  confirmLabel,
 }) {
   const { t } = useTranslation(namespace);
   useBodyScrollLock(isOpen);
@@ -75,6 +81,21 @@ export default function DeleteConfirmationModal({
               </p>
             </div>
           )}
+          {reasonRequired && (
+            <div>
+              <label className="mb-1.5 block text-label-text font-bold text-gray-700">
+                {reasonLabel} <span className="text-rose-600">*</span>
+              </label>
+              <textarea
+                rows={3}
+                value={reason}
+                onChange={(event) => onReasonChange?.(event.target.value)}
+                placeholder={reasonPlaceholder}
+                maxLength={500}
+                className="w-full resize-none rounded-input border border-gray-300 bg-white px-3 py-2 text-body-text outline-none focus:border-slate-800"
+              />
+            </div>
+          )}
         </div>
 
         <div className="border-t border-gray-200 bg-gray-50 flex items-center justify-end gap-2.5 px-5 py-3.5">
@@ -89,11 +110,11 @@ export default function DeleteConfirmationModal({
           <button
             type="button"
             onClick={onConfirm}
-            disabled={loading}
+            disabled={loading || (reasonRequired && !reason.trim())}
             className="flex items-center justify-center gap-1.5 rounded-btn bg-rose-600 hover:bg-rose-700 px-4 py-2 text-btn-text font-medium text-white disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer transition-colors"
           >
             <Trash2 size={16} />
-            {loading ? t("actions.deleting") : t("deleteConfirm.confirmButton")}
+            {loading ? t("actions.deleting") : confirmLabel || t("deleteConfirm.confirmButton")}
           </button>
         </div>
       </div>

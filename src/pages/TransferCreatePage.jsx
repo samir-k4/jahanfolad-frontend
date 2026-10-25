@@ -4,12 +4,12 @@ import { useTranslation } from "react-i18next";
 import { ArrowRight, AlertTriangle } from "lucide-react";
 import { DateObject, persian, persian_af } from "../utils/dateHelpers";
 import { toEnglishDigits } from "../utils/dariNumberFormatter";
-import { showToast } from "../utils/toast";
+import { formatTime12, showToast } from "../utils";
 import { apiUrl } from "../api";
 import { SearchableSelect, usePagePerms } from "../components/common";
 
 const formatDateValue = (value) => {
-  const parts = String(value || "").split("/");
+  const parts = toEnglishDigits(value).split("/");
   if (parts.length !== 3) return new DateObject({ calendar: persian, locale: persian_af });
   return new DateObject({ calendar: persian, locale: persian_af, year: parts[0], month: parts[1], day: parts[2] });
 };
@@ -28,12 +28,6 @@ export default function TransferCreatePage() {
   const [toVaultId, setToVaultId] = useState("");
   const [amount, setAmount] = useState("");
   const [dateObj, setDateObj] = useState(() => new DateObject({ calendar: persian, locale: persian_af }));
-  const formatTime12 = (date) => {
-    const hours = date.getHours();
-    const hour12 = hours % 12 || 12;
-    const suffix = hours < 12 ? t("timeSuffix.am") : t("timeSuffix.pm");
-    return `${String(hour12).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")} ${suffix}`;
-  };
   const [time, setTime] = useState(() => formatTime12(new Date()));
   const [receipt, setReceipt] = useState("");
   const [notes, setNotes] = useState("");
@@ -62,7 +56,7 @@ export default function TransferCreatePage() {
           setToVaultId(String(d.to_vault?.id || ""));
           setAmount(String(d.amount || ""));
           setDateObj(formatDateValue(d.shamsi_date));
-          setTime(d.transaction_time || formatTime12(new Date()));
+          setTime(formatTime12(d.transaction_time || new Date()));
           setReceipt(d.receipt_number || "");
           setNotes(d.notes || "");
           setOrigin({ fromId: d.from_vault?.id, toId: d.to_vault?.id, amount: Number(d.amount || 0) });

@@ -723,7 +723,7 @@ export default function CustomerProfilePage() {
                         </td>
 
                         <td className="px-3 py-2.5 text-center font-mono text-gray-600 border-l border-gray-200">
-                          {inv.shamsi_date || "—"}
+                          {toEnglishDigits(inv.shamsi_date) || "—"}
                         </td>
 
                         <td className="px-3 py-2.5 text-center text-gray-700 font-medium border-l border-gray-200">
@@ -817,7 +817,7 @@ export default function CustomerProfilePage() {
                         {rcp.doc_number || rcp.receipt_number || rcp.id}
                       </td>
                       <td className="px-3 py-2.5 text-center font-mono text-gray-600 border-l border-gray-200">
-                        {rcp.shamsi_date || "—"}
+                        {toEnglishDigits(rcp.shamsi_date) || "—"}
                       </td>
                       <td className="px-3.5 py-2.5 text-gray-800 border-l border-gray-200">
                         {rcp.notes || rcp.description || "دریافتی از مشتری"}
@@ -895,7 +895,7 @@ export default function CustomerProfilePage() {
                   <span className="text-sm font-bold text-gray-900">{viewingInvoice.customer_name || customer?.name}</span>
                 </div>
                 <div className="text-left font-mono font-bold text-slate-800">
-                  {viewingInvoice.shamsi_date}
+                  {toEnglishDigits(viewingInvoice.shamsi_date)}
                 </div>
               </div>
 

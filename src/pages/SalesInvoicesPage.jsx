@@ -24,7 +24,7 @@ import {
   TablePagination,
   DeleteConfirmationModal,
 } from "../components/common";
-import { showToast, formatProductName } from "../utils";
+import { showToast, formatProductName, formatShamsiDate } from "../utils";
 
 const fmt = (n) => Number(n || 0).toLocaleString("en-US");
 
@@ -243,7 +243,7 @@ export default function SalesInvoicesPage() {
                       </td>
 
                       <td className="p-3 text-center font-mono text-gray-700 border-l border-gray-100">
-                        {inv.shamsi_date || "—"}
+                        {formatShamsiDate(inv.shamsi_date) || "—"}
                       </td>
 
                       <td className="p-3 text-center font-mono font-bold text-gray-900 border-l border-gray-100" dir="ltr">
@@ -361,7 +361,7 @@ export default function SalesInvoicesPage() {
                   <span className="text-sm font-bold text-gray-900">{viewingInvoice.customer_name}</span>
                 </div>
                 <div className="text-left font-mono font-bold text-gray-700">
-                  {viewingInvoice.shamsi_date}
+                  {formatShamsiDate(viewingInvoice.shamsi_date)}
                 </div>
               </div>
 
@@ -472,7 +472,7 @@ export default function SalesInvoicesPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-500 font-medium">تاریخ فاکتور:</span>
-                  <span className="font-mono text-gray-800">{createdSuccessInvoice.shamsi_date || "—"}</span>
+                  <span className="font-mono text-gray-800">{formatShamsiDate(createdSuccessInvoice.shamsi_date) || "—"}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-500 font-medium">مجموع نهایی:</span>

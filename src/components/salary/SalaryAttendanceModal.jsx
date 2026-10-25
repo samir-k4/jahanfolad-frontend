@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { apiUrl } from "../../api";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import { formatToGregorian } from "../../utils/dateHelpers";
-import { showToast } from "../../utils";
+import { formatShamsiDate, showToast } from "../../utils";
 import {
   ATTENDANCE_STATUS,
   isLeaveStatus,
@@ -120,7 +120,7 @@ export default function SalaryAttendanceModal({
             <tr key={day.gregorian_date || day.shamsi_date} className={day.is_friday ? "bg-gray-50" : ""}>
               <td className={`${CELL} text-center font-mono text-gray-400`}>{offset + index + 1}</td>
               <td className={`${CELL} text-center font-mono text-gray-800`} dir="ltr">
-                {day.shamsi_date}
+                {formatShamsiDate(day.shamsi_date)}
               </td>
               <td className={`${CELL} text-center text-gray-500`}>
                 {day.weekday || t("placeholder.dash")}

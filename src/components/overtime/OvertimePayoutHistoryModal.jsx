@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { FileSpreadsheet, Printer, Trash2, X } from "lucide-react";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import { apiFetch } from "../../api";
-import { DocumentPreviewModal, TooltipButton, usePagePerms } from "../common";
+import { DeleteConfirmationModal, DocumentPreviewModal, TooltipButton, usePagePerms } from "../common";
 import { showToast, toEnglishDigits } from "../../utils";
 import { getCleanErrorMessage } from "../../utils/errorHandler";
 const HEAD =
@@ -29,6 +29,9 @@ export default function OvertimePayoutHistoryModal({ isOpen, onClose, branchId, 
   const [summary, setSummary] = useState({ total_amount: 0, total_count: 0, total_hours: 0 });
   const [loading, setLoading] = useState(false);
   const [sheet, setSheet] = useState(null);
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
   const load = useCallback(async () => {
     if (!isOpen) return;
     setLoading(true);
@@ -47,14 +50,23 @@ export default function OvertimePayoutHistoryModal({ isOpen, onClose, branchId, 
   useEffect(() => {
     load();
   }, [load, reloadKey]);
-  const remove = async (payout) => {
+  const remove = async () => {
+    if (!cancelTarget || !cancelReason.trim()) return;
+    setIsCancelling(true);
     try {
-      const body = await apiFetch(`/overtime-payouts/${payout.id}`, { method: "DELETE" });
+      const body = await apiFetch(`/overtime-payouts/${cancelTarget.id}`, {
+        method: "DELETE",
+        body: { reason: cancelReason.trim() },
+      });
       showToast.success(body?.message || "");
+      setCancelTarget(null);
+      setCancelReason("");
       onChanged?.();
       load();
     } catch (err) {
       showToast.error(getCleanErrorMessage(err, t("payout.deleteError")));
+    } finally {
+      setIsCancelling(false);
     }
   };
   if (!isOpen) return null;
@@ -169,11 +181,14 @@ export default function OvertimePayoutHistoryModal({ isOpen, onClose, branchId, 
                           onClick={() => setSheet(payout)}
                           colorClass={`${ACTION_REST} hover:bg-positive-soft hover:text-positive-text hover:border-positive-line`}
                         />
-                        {canDelete ? (
+                        {canDelete && payout.state !== "reversed" ? (
                           <TooltipButton
                             icon={<Trash2 size={14} />}
-                            tooltip={t("payout.deleteSheet")}
-                            onClick={() => remove(payout)}
+                            tooltip={t("payout.cancelSheet")}
+                            onClick={() => {
+                              setCancelReason("");
+                              setCancelTarget(payout);
+                            }}
                             colorClass={`${ACTION_REST} hover:bg-danger-soft hover:text-danger-text hover:border-danger-line`}
                           />
                         ) : null}
@@ -196,6 +211,26 @@ export default function OvertimePayoutHistoryModal({ isOpen, onClose, branchId, 
           maxWidth="max-w-6xl"
           sheetWidth={1123}
           fileName={sheet ? `${sheet.receipt_number}.pdf` : ""}
+        />
+        <DeleteConfirmationModal
+          isOpen={Boolean(cancelTarget)}
+          onClose={() => setCancelTarget(null)}
+          onConfirm={remove}
+          itemName={
+            cancelTarget
+              ? `${cancelTarget.receipt_number} — ${money(cancelTarget.total_amount)} AFN`
+              : ""
+          }
+          title={t("payout.cancelTitle")}
+          question={t("payout.cancelQuestion")}
+          warning={t("payout.cancelWarning")}
+          reasonRequired
+          reason={cancelReason}
+          onReasonChange={setCancelReason}
+          reasonLabel={t("payout.cancelReason")}
+          reasonPlaceholder={t("payout.cancelReasonPlaceholder")}
+          confirmLabel={t("payout.cancelConfirm")}
+          loading={isCancelling}
         />
       </div>
     </div>,

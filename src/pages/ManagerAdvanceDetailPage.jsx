@@ -35,6 +35,7 @@ export default function ManagerAdvanceDetailPage() {
   const [settleSubmitting, setSettleSubmitting] = useState(false);
   const [showVoucherModal, setShowVoucherModal] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState(null);
+  const [expenseReversalReason, setExpenseReversalReason] = useState("");
   const [isDeletingExpense, setIsDeletingExpense] = useState(false);
   const [showDeleteAdvanceModal, setShowDeleteAdvanceModal] = useState(false);
   const [isDeletingAdvance, setIsDeletingAdvance] = useState(false);
@@ -60,12 +61,14 @@ export default function ManagerAdvanceDetailPage() {
     try {
       const res = await fetch(apiUrl(`/manager-advances/${encodeURIComponent(id)}/expenses/${encodeURIComponent(expenseToDelete.id)}`), {
         method: "DELETE",
-        headers: { Accept: "application/json" },
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: expenseReversalReason.trim() }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || t("detail.expenseDeleteError"));
       showToast.success(json.message || t("detail.expenseDeleted"));
       setExpenseToDelete(null);
+      setExpenseReversalReason("");
       fetchAdvance();
     } catch (err) {
       showToast.error(getCleanErrorMessage(err));
@@ -357,16 +360,17 @@ export default function ManagerAdvanceDetailPage() {
                 <th className="py-1.5 px-1.5 text-center w-10 border border-gray-200">#</th>
                 <th className="py-1.5 px-2.5 text-right border border-gray-200 min-w-[130px]">{t("detail.expenseCategory")}</th>
                 <th className="py-1.5 px-2.5 text-right border border-gray-200">{t("detail.expenseDescription")}</th>
+                <th className="py-1.5 px-2.5 text-right border border-gray-200 min-w-[120px]">{t("detail.expensePaidTo")}</th>
                 <th className="py-1.5 px-2 text-center border border-gray-200 min-w-[90px]">{t("detail.expenseDate")}</th>
                 <th className="py-1.5 px-2.5 text-center border border-gray-200 min-w-[100px]">{t("detail.expenseAmount")}</th>
                 <th className="py-1.5 px-2.5 text-right border border-gray-200">{t("table.createdBy", { ns: "common" })}</th>
-                {canDelete && isOpen && <th className="py-1.5 px-2 text-center w-16 border border-gray-200">{t("table.actions")}</th>}
+                {canDelete && <th className="py-1.5 px-2 text-center w-16 border border-gray-200">{t("table.actions")}</th>}
               </tr>
             </thead>
             <tbody className="bg-white">
               {(advance.expenses?.length || 0) === 0 ? (
                 <tr>
-                  <td colSpan={canDelete && isOpen ? 7 : 6} className="p-10 text-center text-gray-400 text-xs">{t("detail.noExpenses")}</td>
+                  <td colSpan={canDelete ? 8 : 7} className="p-10 text-center text-gray-400 text-xs">{t("detail.noExpenses")}</td>
                 </tr>
               ) : (
                 advance.expenses.map((exp, idx) => (
@@ -380,25 +384,38 @@ export default function ManagerAdvanceDetailPage() {
                     <td className="py-1.5 px-2.5 text-xs text-gray-700 border border-gray-200 font-normal">
                       {exp.description || "—"}
                     </td>
+                    <td className="py-1.5 px-2.5 text-xs text-gray-700 border border-gray-200 font-medium">
+                      {exp.receiver_name || "—"}
+                    </td>
                     <td className="py-1.5 px-2 text-center font-mono text-gray-600 border border-gray-200 text-xs font-normal" dir="ltr">
                       {toEnglishDigits(exp.shamsi_date || "—")}
                     </td>
-                    <td className="py-1.5 px-2.5 text-center font-mono font-medium text-xs text-rose-700 border border-gray-200 text-nowrap" dir="ltr">
-                      −{fmt(exp.amount)} {advance.currency}
+                    <td className={`py-1.5 px-2.5 text-center font-mono font-medium text-xs border border-gray-200 text-nowrap ${exp.state === "reversed" ? "text-gray-500" : "text-rose-700"}`} dir="ltr">
+                      {exp.state === "reversed" ? t("detail.expenseReversed") : `−${fmt(exp.amount)} ${advance.currency}`}
                     </td>
                     <td className="py-1.5 px-2.5 text-gray-700 border border-gray-200 whitespace-nowrap">
                       {exp.created_by || "—"}
+                      {exp.state === "reversed" && exp.reversal_reason && (
+                        <span className="block text-[10px] text-gray-500 mt-0.5" title={exp.reversal_reason}>
+                          {t("detail.expenseReversed")}
+                        </span>
+                      )}
                     </td>
-                    {canDelete && isOpen && (
+                    {canDelete && (
                       <td className="py-1.5 px-2 text-center border border-gray-200">
                         <div className="flex items-center justify-center">
-                          <TooltipButton
-                            tooltip={t("detail.deleteExpenseTip")}
-                            onClick={() => setExpenseToDelete(exp)}
-                            className="w-6 h-6 flex items-center justify-center bg-white text-gray-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 rounded border border-gray-200 transition-colors cursor-pointer"
-                          >
-                            <Trash2 size={13} />
-                          </TooltipButton>
+                          {exp.state !== "reversed" && (
+                            <TooltipButton
+                              tooltip={t("detail.deleteExpenseTip")}
+                              onClick={() => {
+                                setExpenseReversalReason("");
+                                setExpenseToDelete(exp);
+                              }}
+                              className="w-6 h-6 flex items-center justify-center bg-white text-gray-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 rounded border border-gray-200 transition-colors cursor-pointer"
+                            >
+                              <Trash2 size={13} />
+                            </TooltipButton>
+                          )}
                         </div>
                       </td>
                     )}
@@ -409,11 +426,11 @@ export default function ManagerAdvanceDetailPage() {
             {(advance.expenses?.length || 0) > 0 && (
               <tfoot>
                 <tr className="bg-slate-50 border-t border-gray-200 font-bold text-xs">
-                  <td colSpan={5} className="py-2 px-3 text-gray-800 border border-gray-200">{t("detail.expensesTotal")}</td>
+                  <td colSpan={6} className="py-2 px-3 text-gray-800 border border-gray-200">{t("detail.expensesTotal")}</td>
                   <td className="py-2 px-3 text-center font-mono font-bold text-rose-700 text-xs border border-gray-200" dir="ltr">
                     −{fmt(advance.total_spent)} {advance.currency}
                   </td>
-                  {canDelete && isOpen && <td className="border border-gray-200" />}
+                  {canDelete && <td className="border border-gray-200" />}
                 </tr>
               </tfoot>
             )}
@@ -501,6 +518,12 @@ export default function ManagerAdvanceDetailPage() {
         question={t("detail.deleteExpenseQuestion")}
         warning={t("detail.deleteExpenseWarning")}
         loading={isDeletingExpense}
+        reasonRequired
+        reason={expenseReversalReason}
+        onReasonChange={setExpenseReversalReason}
+        reasonLabel={t("detail.reverseReason")}
+        reasonPlaceholder={t("detail.reverseReasonPlaceholder")}
+        confirmLabel={t("detail.reverseConfirm")}
       />
       <ManagerExpenseAddModal
         isOpen={showExpenseForm}

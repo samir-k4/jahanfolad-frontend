@@ -391,7 +391,7 @@ export default function DepositsWithdrawalsPage() {
                 <th className="px-3 py-2.5 w-full border-l border-line text-table-header-text font-bold text-content-body">{t("table.columns.description")}</th>
                 <th className={`${TABLE_HEADER_CELL} text-center`}>{t("table.columns.amount")}</th>
                 <th className={`${TABLE_HEADER_CELL} text-center`}>{t("table.columns.balance")}</th>
-                <th className={TABLE_HEADER_CELL}>{t("createdBy", { ns: "common" })}</th>
+                <th className={TABLE_HEADER_CELL}>{t("label.createdBy")}</th>
                 <th className="px-3 py-2.5 text-center w-36 whitespace-nowrap text-table-header-text font-bold text-content-body">{t("table.columns.actions")}</th>
               </tr>
             </thead>
@@ -420,7 +420,7 @@ export default function DepositsWithdrawalsPage() {
                         {formatDocNumber(tx.receipt_number, tx.id)}
                       </td>
                       <td className={`${TABLE_CELL} font-mono text-content-muted`} dir="ltr">
-                        {tx.shamsi_date || t("emptyValue")}
+                        {toEnglishDigits(tx.shamsi_date) || t("emptyValue")}
                       </td>
                       <td className={TABLE_CELL}>
                         {isDeposit ? (
@@ -489,7 +489,7 @@ export default function DepositsWithdrawalsPage() {
                   <div className="grid grid-cols-2 gap-3 text-table-cell-text">
                     <MobileField label={t("table.columns.date")}>
                       <span className="font-mono text-content-muted" dir="ltr">
-                        {tx.shamsi_date || t("emptyValue")}
+                        {toEnglishDigits(tx.shamsi_date) || t("emptyValue")}
                       </span>
                     </MobileField>
                     <MobileField label={t("table.columns.vault")}>
@@ -518,7 +518,7 @@ export default function DepositsWithdrawalsPage() {
                         {tx.notes || t("emptyValue")}
                       </span>
                     </MobileField>
-                    <MobileField label={t("createdBy", { ns: "common" })}>
+                    <MobileField label={t("label.createdBy")}>
                       {tx.created_by || t("emptyValue")}
                     </MobileField>
                   </div>

@@ -12,6 +12,7 @@ import {
 import { SearchableSelect, CustomDropdown, usePagePerms } from "../components/common";
 import { toEnglishDigits } from "../utils/dariNumberFormatter";
 import { showToast } from "../utils/toast";
+import { parseTimeParts } from "../utils/timeHelpers";
 import { apiUrl } from "../api";
 import {
 } from "../components/treasury/treasuryHelpers";
@@ -135,15 +136,17 @@ export default function DepositWithdrawCreatePage() {
       const pName = isDep ? (tx.paid_by || tx.party_name || "") : (tx.received_by || tx.party_name || "");
       if (pName) setPartyName(pName);
       if (tx.shamsi_date) {
-        const parts = tx.shamsi_date.split("/").map(Number);
+        const parts = toEnglishDigits(tx.shamsi_date).split("/").map(Number);
         if (parts.length === 3) {
           setDateObj(new DateObject({ calendar: persian, locale: persian_af, year: parts[0], month: parts[1], day: parts[2] }));
         }
       }
       if (tx.transaction_time) {
-        const clean = tx.transaction_time.replace(/ب\.ظ|ق\.ظ|AM|PM/gi, "").trim();
-        setTimeStr(clean);
-        setTimePeriod(tx.transaction_time.includes(t("timeSuffix.pm")) || tx.transaction_time.includes("PM") ? "PM" : "AM");
+        const parsedTime = parseTimeParts(tx.transaction_time);
+        if (parsedTime) {
+          setTimeStr(`${String(parsedTime.hour).padStart(2, "0")}:${parsedTime.minute}`);
+          setTimePeriod(parsedTime.period);
+        }
       }
     };
     if (editTxFromState) {
@@ -452,6 +455,10 @@ export default function DepositWithdrawCreatePage() {
       handlerPerson ? t("note.member", { value: handlerPerson }) : null,
     ].filter(Boolean).join(" - ");
     const formatted12Hour = `${timeStr} ${timePeriod === "PM" ? t("timeSuffix.pm") : t("timeSuffix.am")}`;
+    if (!parseTimeParts(formatted12Hour)) {
+      showToast.error(t("messages.invalidTime"));
+      return;
+    }
     const numMemberId = !selectedMemberId || String(selectedMemberId).startsWith("emp-") ? null : (parseInt(selectedMemberId, 10) || null);
     const numCategoryId = parseInt(selectedCategoryId, 10) || null;
     const payload = {
