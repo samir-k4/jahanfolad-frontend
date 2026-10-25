@@ -172,23 +172,20 @@ export default function SettingsPage() {
     saveLogoSize,
   } = useCompany();
   const [settings, setSettings] = useState({
-    company_name: "شرکت تولیدی جهان فولاد",
-    company_tagline:
-      "تولیدکننده انواع میخ‌های صنعتی و سیم‌های ساختمانی با کیفیت برتر",
-    company_about:
-      "تولید و عرضه مستقیم انواع میخ‌های صنعتی، نجاری و سیم‌های ساختمانی و صنعتی با استانداردهای بین‌المللی",
-    company_phone: "+93 799 000 111 / +93 700 222 333",
-    company_email: "info@jahanfolad.af",
-    company_address: "افغانستان، هرات، شهرک صنعتی فاز ۲، خیابان صنعت ۵",
-    company_website: "www.jahanfolad.af",
+    company_name: "",
+    company_tagline: "",
+    company_about: "",
+    company_phone: "",
+    company_email: "",
+    company_address: "",
+    company_website: "",
     company_logo: null,
     company_logo_size: LOGO_SIZE_DEFAULT,
     default_currency: "AFN",
     usd_rate: "70",
     standard_daily_hours: "8",
     low_balance_alert_afn: "10000",
-    print_voucher_footer:
-      "سند فوق صرفاً با مهر و امضای مدیریت مالی و گیرنده وجه دارای اعتبار رسمی می‌باشد.",
+    print_voucher_footer: "",
     employee_account_start: "",
   });
   const [savingSettings, setSavingSettings] = useState(false);
