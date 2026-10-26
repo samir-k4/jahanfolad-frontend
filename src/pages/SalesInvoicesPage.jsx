@@ -27,6 +27,15 @@ import {
 import { showToast, formatProductName, formatShamsiDate } from "../utils";
 
 const fmt = (n) => Number(n || 0).toLocaleString("en-US");
+const currencySign = (currency) => currency === "AFN" ? "؋" : "$";
+const transportAmountInInvoiceCurrency = (invoice) => {
+  const amountAfn = Number(invoice?.transport_amount_afn || 0);
+  if (invoice?.currency === "USD") {
+    const rate = Number(invoice?.transport_exchange_rate || 70);
+    return rate > 0 ? amountAfn / rate : 0;
+  }
+  return amountAfn;
+};
 
 export default function SalesInvoicesPage() {
   const { canCreate, canEdit, canDelete } = usePagePerms("sales");
@@ -224,16 +233,25 @@ export default function SalesInvoicesPage() {
                       </td>
 
                       <td className="p-3 font-bold text-gray-900 border-l border-gray-100">
-                        {inv.customer_id ? (
-                          <Link
-                            to={`/customers/${inv.customer_id}`}
-                            className="hover:text-emerald-700 hover:underline cursor-pointer"
-                          >
-                            {inv.customer_name}
-                          </Link>
-                        ) : (
-                          <span>{inv.customer_name}</span>
-                        )}
+                        <div className="flex flex-col gap-1">
+                          {inv.customer_id ? (
+                            <Link
+                              to={`/customers/${inv.customer_id}`}
+                              className="hover:text-emerald-700 hover:underline cursor-pointer"
+                            >
+                              {inv.customer_name}
+                            </Link>
+                          ) : (
+                            <span>{inv.customer_name}</span>
+                          )}
+                          {(inv.driver_name || inv.truck_plate) && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-500">
+                              <Truck size={11} className="shrink-0" />
+                              {inv.driver_name && <span>راننده: {inv.driver_name}</span>}
+                              {inv.truck_plate && <span dir="ltr">({inv.truck_plate})</span>}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       <td className="p-3 text-center border-l border-gray-100">
@@ -365,6 +383,27 @@ export default function SalesInvoicesPage() {
                 </div>
               </div>
 
+              {(viewingInvoice.driver_name || viewingInvoice.truck_plate || viewingInvoice.notes) && (
+                <div className="rounded-xl border border-gray-200 bg-white p-3 space-y-2">
+                  {(viewingInvoice.driver_name || viewingInvoice.truck_plate) && (
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-gray-700">
+                      {viewingInvoice.driver_name && (
+                        <span><strong className="text-gray-500">راننده:</strong> {viewingInvoice.driver_name}</span>
+                      )}
+                      {viewingInvoice.truck_plate && (
+                        <span><strong className="text-gray-500">پلیت موتر:</strong> <bdi dir="ltr">{viewingInvoice.truck_plate}</bdi></span>
+                      )}
+                    </div>
+                  )}
+                  {viewingInvoice.notes && (
+                    <div className="border-t border-gray-100 pt-2 whitespace-pre-wrap break-words">
+                      <strong className="text-gray-500">توضیحات فاکتور:</strong>
+                      <p className="mt-1 text-gray-800">{viewingInvoice.notes}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="border border-gray-200 rounded-xl overflow-hidden">
                 <table className="w-full text-right border-collapse">
                   <thead className="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
@@ -382,7 +421,7 @@ export default function SalesInvoicesPage() {
                           {Number(it.billable_quantity || it.quantity).toLocaleString()} {it.sales_scale || "تن"}
                         </td>
                         <td className="p-2.5 text-left font-mono font-bold text-gray-900" dir="ltr">
-                          ${fmt(it.total_price)}
+                          {currencySign(viewingInvoice.currency)}{fmt(it.total_price)}
                         </td>
                       </tr>
                     ))}
@@ -391,17 +430,25 @@ export default function SalesInvoicesPage() {
               </div>
 
               <div className="bg-gray-50 p-3 rounded-xl border border-gray-200 space-y-1.5">
+                {transportAmountInInvoiceCurrency(viewingInvoice) > 0 && (
+                  <div className="flex justify-between font-semibold text-gray-700">
+                    <span>هزینه انتقال:</span>
+                    <span className="font-mono" dir="ltr">
+                      {currencySign(viewingInvoice.currency)}{fmt(transportAmountInInvoiceCurrency(viewingInvoice))}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between font-bold text-gray-900">
                   <span>مجموع کل فاکتور:</span>
-                  <span className="font-mono" dir="ltr">${fmt(viewingInvoice.total_amount)}</span>
+                  <span className="font-mono" dir="ltr">{currencySign(viewingInvoice.currency)}{fmt(viewingInvoice.total_amount)}</span>
                 </div>
                 <div className="flex justify-between font-semibold text-emerald-700">
                   <span>مبلغ دریافت شده:</span>
-                  <span className="font-mono" dir="ltr">${fmt(viewingInvoice.paid_amount)}</span>
+                  <span className="font-mono" dir="ltr">{currencySign(viewingInvoice.currency)}{fmt(viewingInvoice.paid_amount)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-rose-700 border-t border-gray-200 pt-1.5">
                   <span>مانده حساب طلب:</span>
-                  <span className="font-mono" dir="ltr">${fmt(viewingInvoice.remaining_amount)}</span>
+                  <span className="font-mono" dir="ltr">{currencySign(viewingInvoice.currency)}{fmt(viewingInvoice.remaining_amount)}</span>
                 </div>
               </div>
 

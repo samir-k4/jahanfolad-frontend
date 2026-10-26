@@ -97,6 +97,9 @@ export default function InvoiceCreatePage() {
   const [hasTransport, setHasTransport] = useState(false);
   const [driverName, setDriverName] = useState("");
   const [truckPlate, setTruckPlate] = useState("");
+  const [hasTransportCost, setHasTransportCost] = useState(false);
+  const [transportAmountAfn, setTransportAmountAfn] = useState("");
+  const [transportExchangeRate, setTransportExchangeRate] = useState("");
   const [notes, setNotes] = useState("");
   const [dispatchedQtyByItemId, setDispatchedQtyByItemId] = useState({});
   const isVariableWeight = (it) =>
@@ -144,6 +147,16 @@ export default function InvoiceCreatePage() {
         }
       })
       .catch(() => {});
+    apiFetch("/sales-invoices/transport-defaults")
+      .then((data) => {
+        if (Number(data.usd_rate) > 0) {
+          setTransportExchangeRate((current) => current || String(data.usd_rate));
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to load the current AFN/USD rate:", error);
+        showToast.error("نرخ تبدیل افغانی به دالر بارگذاری نشد؛ لطفاً نرخ را هنگام ثبت هزینه انتقال وارد کنید.");
+      });
   }, []);
   useEffect(() => {
     let active = true;
@@ -267,6 +280,11 @@ export default function InvoiceCreatePage() {
         setHasTransport(Boolean(inv.driver_name || inv.truck_plate));
         setDriverName(inv.driver_name || "");
         setTruckPlate(inv.truck_plate || "");
+        setHasTransportCost(Number(inv.transport_amount_afn || 0) > 0);
+        setTransportAmountAfn(String(inv.transport_amount_afn || ""));
+        if (Number(inv.transport_exchange_rate) > 0) {
+          setTransportExchangeRate(String(inv.transport_exchange_rate));
+        }
 
         const invItems = inv.items || [];
         if (invItems.length > 0) {
@@ -462,7 +480,16 @@ export default function InvoiceCreatePage() {
     return items.reduce((acc, it) => acc + (parseFloat(it.total) || 0), 0);
   }, [items]);
   const numDiscount = parseFloat(toEnglishDigits(discount)) || 0;
-  const grandTotal = Math.max(0, subtotal - numDiscount);
+  const numTransportAmountAfn = hasTransportCost
+    ? Math.round((parseFloat(toEnglishDigits(transportAmountAfn)) || 0) * 100) / 100
+    : 0;
+  const numTransportExchangeRate =
+    Math.round((parseFloat(toEnglishDigits(transportExchangeRate)) || 0) * 10000) / 10000;
+  const transportAmount = currency === "USD"
+    ? (numTransportExchangeRate > 0 ? numTransportAmountAfn / numTransportExchangeRate : 0)
+    : numTransportAmountAfn;
+  const roundedTransportAmount = Math.round(transportAmount * 100) / 100;
+  const grandTotal = Math.max(0, subtotal - numDiscount + roundedTransportAmount);
   const numPaid = parseFloat(toEnglishDigits(paidAmount)) || 0;
   const remainingBalance = Math.max(0, grandTotal - numPaid);
   const handleSubmit = async (e) => {
@@ -475,7 +502,9 @@ export default function InvoiceCreatePage() {
     const invalidItems = items.filter((it) => {
       if (!it.product_name || !it.unit_price) return true;
       if (isVariableWeight(it)) {
-        return !(Number(toEnglishDigits(it.total_weight)) > 0) ||
+        const enteredWeight = toEnglishDigits(it.total_weight).trim();
+        return !/^(?:\d+\.?\d*|\.\d+)$/.test(enteredWeight) ||
+          !(Number(enteredWeight) > 0) ||
           !WEIGHT_SCALES.includes(it.sales_scale);
       }
       return !(Number(toEnglishDigits(it.quantity)) > 0);
@@ -486,6 +515,10 @@ export default function InvoiceCreatePage() {
     }
     if (items.some((item) => item.product_id && !isVariableWeight(item) && parseWeightKg(item.first_scale) <= 0)) {
       showToast.error("وزن بسته محصول مشخص نیست؛ لطفاً وزن محصول را در فهرست محصولات تکمیل کنید.");
+      return;
+    }
+    if (hasTransportCost && numTransportAmountAfn > 0 && currency === "USD" && numTransportExchangeRate <= 0) {
+      showToast.error("برای تبدیل هزینه انتقال افغانی به دالر، نرخ معتبر تبدیل را وارد کنید.");
       return;
     }
     const missingBranch = isMultiBranch && items.find((it) => it.product_id && !it.branch_id);
@@ -507,6 +540,8 @@ export default function InvoiceCreatePage() {
         currency: currency,
         subtotal: subtotal,
         discount: numDiscount,
+        transport_amount_afn: numTransportAmountAfn,
+        transport_exchange_rate: numTransportExchangeRate > 0 ? numTransportExchangeRate : null,
         total_amount: grandTotal,
         paid_amount: numPaid,
         remaining_amount: remainingBalance,
@@ -834,15 +869,17 @@ export default function InvoiceCreatePage() {
                       <td className="px-2 py-1.5 border-l border-gray-200">
                         {variableWeight ? (
                           <input
-                            type="number"
-                            step="0.001"
-                            min="0.001"
+                            type="text"
+                            inputMode="decimal"
                             required
                             dir="ltr"
                             value={it.total_weight}
                             onFocus={(e) => e.target.select()}
-                            onWheel={(e) => e.target.blur()}
-                            onChange={(e) => handleItemChange(idx, "total_weight", e.target.value)}
+                            onChange={(e) => handleItemChange(
+                              idx,
+                              "total_weight",
+                              toEnglishDigits(e.target.value),
+                            )}
                             aria-label="وزن کل محصول"
                             placeholder="وزن کل"
                             className={`w-full h-[36px] rounded-lg px-2 text-xs font-mono font-bold text-center ${
@@ -1006,6 +1043,73 @@ export default function InvoiceCreatePage() {
                   className="w-full bg-white border border-gray-300 rounded-lg p-3 text-xs text-gray-900 focus:outline-none focus:border-slate-800 leading-relaxed"
                 />
               </div>
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="flex items-center justify-between gap-3 px-3.5 py-2.5 bg-gray-50">
+                  <div>
+                    <div className="text-xs font-bold text-gray-800">هزینه انتقال</div>
+                    <div className="mt-0.5 text-[10px] text-gray-500">به مبلغ فاکتور اضافه می‌شود و تخفیف شامل آن نیست.</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setHasTransportCost((enabled) => !enabled)}
+                    aria-pressed={hasTransportCost}
+                    className={`shrink-0 rounded-lg border px-3 py-1.5 text-[11px] font-bold transition-colors ${
+                      hasTransportCost
+                        ? "border-emerald-700 bg-emerald-700 text-white"
+                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    {hasTransportCost ? "فعال" : "فعال‌سازی"}
+                  </button>
+                </div>
+                {hasTransportCost && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-bold text-gray-700">مبلغ انتقال (افغانی)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={transportAmountAfn}
+                        onChange={(event) => setTransportAmountAfn(event.target.value)}
+                        onFocus={(event) => event.target.select()}
+                        onWheel={(event) => event.target.blur()}
+                        dir="ltr"
+                        className="h-[38px] w-full rounded-lg border border-gray-300 bg-white px-3 text-left font-mono text-xs font-bold text-gray-900 focus:border-slate-800 focus:outline-none"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    {currency === "USD" && (
+                      <div>
+                        <label className="mb-1.5 block text-xs font-bold text-gray-700">نرخ تبدیل (افغانی برای ۱ دالر)</label>
+                        <input
+                          type="number"
+                          min="0.0001"
+                          step="0.0001"
+                          value={transportExchangeRate}
+                          onChange={(event) => setTransportExchangeRate(event.target.value)}
+                          onFocus={(event) => event.target.select()}
+                          onWheel={(event) => event.target.blur()}
+                          dir="ltr"
+                          className="h-[38px] w-full rounded-lg border border-gray-300 bg-white px-3 text-left font-mono text-xs font-bold text-gray-900 focus:border-slate-800 focus:outline-none"
+                          placeholder="مثال: 70"
+                        />
+                      </div>
+                    )}
+                    <div className="sm:col-span-2 rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+                      مبلغ افزوده به فاکتور:{" "}
+                      <strong className="font-mono" dir="ltr">
+                        {fmt(roundedTransportAmount)} {currency === "USD" ? "USD" : "AFN"}
+                      </strong>
+                      {currency === "USD" && numTransportAmountAfn > 0 && numTransportExchangeRate > 0 && (
+                        <span className="mr-2 text-[10px] text-emerald-800">
+                          ({fmt(numTransportAmountAfn)} AFN ÷ {fmt(numTransportExchangeRate)})
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <div className="bg-white border border-gray-200 rounded-xl shadow-2xs overflow-hidden">
@@ -1045,6 +1149,14 @@ export default function InvoiceCreatePage() {
                   </span>
                 </div>
               </div>
+              {hasTransportCost && numTransportAmountAfn > 0 && (
+                <div className="flex items-center justify-between gap-3 border-b border-gray-50 py-1 text-gray-700">
+                  <span className="font-bold">هزینه انتقال:</span>
+                  <span className="font-mono font-bold" dir="ltr">
+                    {fmt(roundedTransportAmount)} {currency}
+                  </span>
+                </div>
+              )}
               <div className="p-3.5 bg-gray-50 border border-gray-200 rounded-lg flex items-center justify-between">
                 <span className="font-bold text-gray-900 text-sm">مجموع قابل پرداخت فاکتور:</span>
                 <span className="font-mono text-base font-black text-gray-900" dir="ltr">
