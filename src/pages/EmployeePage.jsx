@@ -14,13 +14,13 @@ import {
   EMPLOYEE_STATUS,
   HANGAR_CATEGORY_KEYWORD,
   isActiveStatus,
-  isNailPosition,
-  isPackagingPosition,
-  isWirePosition,
 } from "../constants/employeeDomain";
 import { useTranslation } from "react-i18next";
 
-const getEmployeePosition = (emp) => String(emp.job_position?.name || emp.position || "");
+const getEmployeePosition = (emp) =>
+  String(emp.job_position?.name || emp.jobPosition?.name || emp.position || "")
+    .replace(/\s+/g, " ")
+    .trim();
 
 const getEmployeeCategory = (emp) => String(emp.job_category?.name || emp.job_category || "").trim();
 
@@ -96,14 +96,26 @@ export default function EmployeePage() {
   const stats = useMemo(() => {
     const total = employees.length;
     const active = employees.filter((e) => isActiveStatus(e.status)).length;
-    const nailMachineCount = employees.filter((e) => isNailPosition(getEmployeePosition(e))).length;
-    const wireCount = employees.filter((e) => isWirePosition(getEmployeePosition(e))).length;
-    const packagingCount = employees.filter((e) => isPackagingPosition(getEmployeePosition(e))).length;
+    const positionCounts = new Map();
+    employees.forEach((employee) => {
+      const position = getEmployeePosition(employee);
+      if (!position) return;
+
+      const key = position.toLocaleLowerCase();
+      const entry = positionCounts.get(key) || { label: position, count: 0 };
+      entry.count += 1;
+      positionCounts.set(key, entry);
+    });
     const outsideHangarCount = employees.filter((e) => {
       const cat = getEmployeeCategory(e);
       return cat && !cat.includes(HANGAR_CATEGORY_KEYWORD);
     }).length;
-    return { total, active, nailMachineCount, wireCount, packagingCount, outsideHangarCount };
+    return {
+      total,
+      active,
+      positionCounts: [...positionCounts.values()].sort((a, b) => a.label.localeCompare(b.label, "fa")),
+      outsideHangarCount,
+    };
   }, [employees]);
 
   const handleConfirmDelete = useCallback(async (employeeId) => {

@@ -33,12 +33,24 @@ export default function EmployeeHeader({
   const { canCreate } = usePagePerms("employees");
 
   const statItems = [
-    { label: t("list.statTotal"), value: Number(stats.total) || 0, color: "gray" },
-    { label: t("list.statActive"), value: Number(stats.active) || 0, color: "emerald" },
-    { label: t("list.statNail"), value: Number(stats.nailMachineCount) || 0, color: "gray" },
-    { label: t("list.statWire"), value: Number(stats.wireCount) || 0, color: "gray" },
-    { label: t("list.statPackaging"), value: Number(stats.packagingCount) || 0, color: "gray" },
-    { label: t("list.statOutsideHangar"), value: Number(stats.outsideHangarCount) || 0, color: "gray" },
+    { key: "total", label: t("list.statTotal"), value: Number(stats.total) || 0, color: "gray" },
+    { key: "active", label: t("list.statActive"), value: Number(stats.active) || 0, color: "emerald" },
+    ...(Array.isArray(stats.positionCounts)
+      ? stats.positionCounts
+          .filter((position) => Number(position.count) > 0)
+          .map((position) => ({
+            key: `position-${position.label}`,
+            label: `${position.label}:`,
+            value: Number(position.count),
+            color: "gray",
+          }))
+      : []),
+    {
+      key: "outside-hangar",
+      label: t("list.statOutsideHangar"),
+      value: Number(stats.outsideHangarCount) || 0,
+      color: "gray",
+    },
   ];
 
   return (
@@ -99,7 +111,7 @@ export default function EmployeeHeader({
         <div className="flex flex-wrap items-center gap-2">
           {statItems.map((item, idx) => (
             <StatBadge
-              key={idx}
+              key={item.key || idx}
               label={item.label}
               value={item.value}
               unit={t("list.unitPerson")}

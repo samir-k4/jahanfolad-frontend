@@ -38,9 +38,8 @@
     "reversed": "برگشت داده شده"
   },
   "queue": {
-    "bannerTitle": "{{count}} سند در انتظار پرداخت",
-    "bannerAmount": "مجموع مبلغ درخواستی: {{amount}} {{currency}}",
-    "bannerAction": "دیدن صف پرداخت",
+    "bannerTitle": "{{count}} سند قدیمی در انتظار پرداخت؛ این اسناد فقط برای مشاهده هستند",
+    "bannerAmount": "مجموع مبلغ ثبت‌شده: {{amount}} {{currency}}",
     "columnVoucher": "شماره سند",
     "columnState": "وضعیت",
     "printed": "چاپ شده"

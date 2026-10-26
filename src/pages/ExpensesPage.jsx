@@ -4,11 +4,9 @@ import { usePagePerms } from "../components/common";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ExpenseCreateModal from "../components/expenses/ExpenseCreateModal";
-import ExpensePayModal from "../components/expenses/ExpensePayModal";
 import ExpenseReportModal from "../components/expenses/ExpenseReportModal";
 import ExpenseSummaryModal from "../components/expenses/ExpenseSummaryModal";
 import ExpenseDetailsModal from "../components/expenses/ExpenseDetailsModal";
-import ExpenseEditModal from "../components/expenses/ExpenseEditModal";
 import { formatShamsiDate } from "../utils";
 import {
   TrendingDown,
@@ -18,10 +16,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Trash2,
-  Wallet,
-  Ban,
   Info,
-  Pencil,
   Clock,
   X,
   BarChart3,
@@ -69,7 +64,7 @@ const resolvePresetRange = (key) => {
   return { from: null, to: null };
 };
 export default function ExpensesPage() {
-  const { canCreate, canEdit, canDelete } = usePagePerms("expenses");
+  const { canCreate, canDelete } = usePagePerms("expenses");
   const { t } = useTranslation("salary");
   const { t: tx } = useTranslation("expenses");
   const [searchParams] = useSearchParams();
@@ -107,13 +102,10 @@ export default function ExpensesPage() {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   const [selectedStateFilter, setSelectedStateFilter] = useState("all");
-  const [settleTarget, setSettleTarget] = useState(null);
-  const [settleMode, setSettleMode] = useState("pay");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteReason, setDeleteReason] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [detailsTarget, setDetailsTarget] = useState(null);
-  const [editTarget, setEditTarget] = useState(null);
   const notify = (type, message) => {
     (appToast[type] || appToast.info)(message);
   };
@@ -207,10 +199,6 @@ export default function ExpensesPage() {
       setIsDeleting(false);
     }
   };
-  const openSettleModal = (exp, mode) => {
-    setSettleMode(mode);
-    setSettleTarget(exp);
-  };
   const datePresets = useMemo(
     () =>
       Object.entries(DATE_PRESET_LABELS).map(([key, label]) => ({
@@ -290,17 +278,6 @@ export default function ExpensesPage() {
                 currency: CURRENCY_AFN,
               })}
             </span>
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedStateFilter("pending");
-                setCurrentPage(1);
-              }}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface hover:bg-notice-subtle text-notice-deep border border-notice-line rounded-badge text-caption-text transition-colors cursor-pointer shrink-0"
-            >
-              <Wallet size={12} />
-              <span>{tx("queue.bannerAction")}</span>
-            </button>
           </div>
         </div>
       )}
@@ -562,29 +539,7 @@ export default function ExpensesPage() {
                             onClick={() => setDetailsTarget(exp)}
                             className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-300 rounded border border-gray-200 transition-colors cursor-pointer"
                           />
-                          {exp.state === "pending" && canEdit && (
-                            <>
-                              <TooltipButton
-                                icon={<Pencil size={15} />}
-                                tooltip={tx("actions.edit")}
-                                onClick={() => setEditTarget(exp)}
-                                className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 rounded border border-gray-200 transition-colors cursor-pointer"
-                              />
-                              <TooltipButton
-                                icon={<Ban size={15} />}
-                                tooltip={tx("actions.reject")}
-                                onClick={() => openSettleModal(exp, "reject")}
-                                className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 rounded border border-gray-200 transition-colors cursor-pointer"
-                              />
-                              <TooltipButton
-                                icon={<Wallet size={15} />}
-                                tooltip={tx("actions.pay")}
-                                onClick={() => openSettleModal(exp, "pay")}
-                                className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300 rounded border border-gray-200 transition-colors cursor-pointer"
-                              />
-                            </>
-                          )}
-                          {canDelete && exp.can_delete !== false && exp.state !== "reversed" && (
+                          {canDelete && exp.can_delete !== false && exp.state !== "reversed" && exp.state !== "pending" && (
                             <TooltipButton
                               icon={<Trash2 size={15} />}
                               tooltip={tx(exp.state === "paid" ? "actions.reverse" : "actions.delete")}
@@ -640,26 +595,6 @@ export default function ExpensesPage() {
         isOpen={Boolean(detailsTarget)}
         expense={detailsTarget}
         onClose={() => setDetailsTarget(null)}
-      />
-      <ExpenseEditModal
-        isOpen={Boolean(editTarget)}
-        expense={editTarget}
-        onClose={() => setEditTarget(null)}
-        onDone={(message) => {
-          if (message) notify("success", message);
-          fetchExpenses(currentPage);
-        }}
-      />
-      <ExpensePayModal
-        isOpen={Boolean(settleTarget)}
-        mode={settleMode}
-        expense={settleTarget}
-        vaults={vaults}
-        onClose={() => setSettleTarget(null)}
-        onDone={(message) => {
-          if (message) notify("success", message);
-          fetchExpenses(currentPage);
-        }}
       />
       <DeleteConfirmationModal
         isOpen={Boolean(deleteTarget)}

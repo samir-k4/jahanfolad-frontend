@@ -49,9 +49,12 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
     try {
       const params = new URLSearchParams({ date });
       if (branchId && branchId !== "all") params.set("branch_id", String(branchId));
+      const vaultParams = new URLSearchParams();
+      if (branchId && branchId !== "all") vaultParams.set("branch_id", String(branchId));
+      const vaultPath = `/overtime-payouts/vault-options${vaultParams.toString() ? `?${vaultParams}` : ""}`;
       const [body, vaultResponse] = await Promise.all([
         apiFetch(`/overtime-payouts/preview?${params.toString()}`),
-        apiFetch("/vaults"),
+        apiFetch(vaultPath),
       ]);
       setPeriods(body?.periods || null);
       setReceivers(Array.isArray(body?.receivers) ? body.receivers : []);
@@ -355,6 +358,11 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
               searchPlaceholder={t("payout.vaultSearch")}
               buttonClassName={FIELD}
             />
+            {!loading && vaultOptions.length === 0 && (
+              <p role="status" className="text-caption-text text-danger-text">
+                {t("payout.noAvailableVaults")}
+              </p>
+            )}
             {selectedVault && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div className="rounded-card border border-line bg-surface-muted px-3 py-2">
