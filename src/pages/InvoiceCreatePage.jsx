@@ -38,6 +38,7 @@ const SALES_SCALE_OPTIONS = [
   { value: "بندل", label: "بندل", type: "bundle" },
   { value: "متر", label: "متر", type: "meter" },
 ];
+const WEIGHT_SCALES = ["تن", "کیلوگرم"];
 export default function InvoiceCreatePage() {
   const navigate = useNavigate();
   const { id: editInvoiceId } = useParams();
@@ -80,6 +81,8 @@ export default function InvoiceCreatePage() {
       quantity: "1",
       first_scale: "",
       first_scale_kg: 0,
+      total_weight: "",
+      total_weight_kg: 0,
       sales_scale: "تن",
       billable_quantity: 0.025,
       unit_price: "",
@@ -96,6 +99,14 @@ export default function InvoiceCreatePage() {
   const [truckPlate, setTruckPlate] = useState("");
   const [notes, setNotes] = useState("");
   const [dispatchedQtyByItemId, setDispatchedQtyByItemId] = useState({});
+  const isVariableWeight = (it) =>
+    (it.product_obj ||
+      productsList.find((product) => String(product.id) === String(it.product_id)))
+      ?.weight_type === "variable";
+  const getRequiredStock = (it) => {
+    if (isVariableWeight(it)) return Number(it.total_weight_kg) || 0;
+    return Number(toEnglishDigits(it.quantity)) || 0;
+  };
   const getBonusStock = (it) => {
     if (
       it.original_product_id &&
@@ -103,6 +114,7 @@ export default function InvoiceCreatePage() {
       String(it.original_product_id) === String(it.product_id) &&
       String(it.original_branch_id) === String(it.branch_id)
     ) {
+      if (isVariableWeight(it)) return Number(it.original_total_weight_kg) || 0;
       return Number(it.original_quantity) || 0;
     }
     return 0;
@@ -110,11 +122,11 @@ export default function InvoiceCreatePage() {
   const hasStockError = useMemo(() => {
     return items.some((it) => {
       if (!it.product_id || !it.branch_id) return false;
-      const qty = Number(toEnglishDigits(it.quantity)) || 0;
+      const qty = getRequiredStock(it);
       const availableStock = (Number(it.stock) || 0) + getBonusStock(it);
       return qty > availableStock;
     });
-  }, [items]);
+  }, [items, productsList]);
   useEffect(() => {
     apiList("/products")
       .then(setProductsList)
@@ -270,11 +282,19 @@ export default function InvoiceCreatePage() {
             quantity: String(item.quantity),
             first_scale: item.first_scale || "",
             first_scale_kg: parseWeightKg(item.first_scale),
+            total_weight: item.total_weight_kg
+              ? String(
+                  Number(item.total_weight_kg) /
+                    (item.sales_scale === "تن" ? 1000 : 1),
+                )
+              : "",
+            total_weight_kg: Number(item.total_weight_kg) || 0,
             sales_scale: item.sales_scale || "تن",
             billable_quantity: parseFloat(item.billable_quantity) || 0,
             unit_price: String(item.unit_price),
             total: parseFloat(item.total_price) || 0,
             original_quantity: parseFloat(item.quantity) || 0,
+            original_total_weight_kg: Number(item.total_weight_kg) || 0,
             original_product_id: item.product_id ? String(item.product_id) : "",
             original_branch_id: item.branch_id ? String(item.branch_id) : "",
           })));
@@ -306,9 +326,15 @@ export default function InvoiceCreatePage() {
   const recalculateItem = (item) => {
     const qty = parseFloat(toEnglishDigits(item.quantity)) || 0;
     const pkgKg = item.first_scale_kg || parseWeightKg(item.first_scale);
-    const totalKg = qty * pkgKg;
+    const variableWeight = isVariableWeight(item);
+    const enteredWeight = parseFloat(toEnglishDigits(item.total_weight)) || 0;
+    const totalKg = variableWeight
+      ? enteredWeight * (item.sales_scale === "تن" ? 1000 : 1)
+      : qty * pkgKg;
     let billableQty = 0;
-    if (item.sales_scale === "تن") {
+    if (variableWeight) {
+      billableQty = item.sales_scale === "تن" ? totalKg / 1000 : totalKg;
+    } else if (item.sales_scale === "تن") {
       billableQty = totalKg / 1000;
     } else if (item.sales_scale === "کیلوگرم") {
       billableQty = totalKg;
@@ -319,6 +345,7 @@ export default function InvoiceCreatePage() {
     const total = billableQty * price;
     return {
       ...item,
+      total_weight_kg: variableWeight ? totalKg : 0,
       billable_quantity: billableQty,
       total: total,
     };
@@ -336,7 +363,13 @@ export default function InvoiceCreatePage() {
   }, [categoriesList]);
   const handleItemChange = (index, field, value) => {
     const newItems = [...items];
-    let item = { ...newItems[index], [field]: value };
+    const previousItem = newItems[index];
+    let item = { ...previousItem, [field]: value };
+    if (field === "sales_scale" && isVariableWeight(previousItem)) {
+      const oldAmount = parseFloat(toEnglishDigits(previousItem.total_weight)) || 0;
+      const kilograms = oldAmount * (previousItem.sales_scale === "تن" ? 1000 : 1);
+      item.total_weight = String(kilograms / (value === "تن" ? 1000 : 1) || "");
+    }
     if (field === "product_id") {
       const prod = productsList.find((p) => String(p.id) === String(value));
       if (prod) {
@@ -345,8 +378,20 @@ export default function InvoiceCreatePage() {
         const pkgWeight = prod.weight || "";
         item.product_obj = prod;
         item.product_name = cleanName;
-        item.first_scale = pkgWeight;
-        item.first_scale_kg = parseWeightKg(pkgWeight);
+        if (prod.weight_type === "variable") {
+          item.quantity = "";
+          item.first_scale = "";
+          item.first_scale_kg = 0;
+          item.total_weight = "";
+          item.total_weight_kg = 0;
+          item.sales_scale = "تن";
+        } else {
+          item.first_scale = pkgWeight;
+          item.first_scale_kg = parseWeightKg(pkgWeight);
+          item.total_weight = "";
+          item.total_weight_kg = 0;
+          if (!item.quantity) item.quantity = "1";
+        }
         if (item.branch_id && branchInventories[item.branch_id]) {
           item.stock = branchInventories[item.branch_id][prod.id] || 0;
         }
@@ -355,6 +400,8 @@ export default function InvoiceCreatePage() {
         item.product_name = "";
         item.first_scale = "";
         item.first_scale_kg = 0;
+        item.total_weight = "";
+        item.total_weight_kg = 0;
         item.stock = 0;
       }
     }
@@ -390,6 +437,8 @@ export default function InvoiceCreatePage() {
       quantity: "1",
       first_scale: "",
       first_scale_kg: 0,
+      total_weight: "",
+      total_weight_kg: 0,
       sales_scale: "تن",
       billable_quantity: 0.025,
       unit_price: "",
@@ -423,12 +472,19 @@ export default function InvoiceCreatePage() {
       showToast.error("لطفاً مشتری را از لیست انتخاب کنید.");
       return;
     }
-    const invalidItems = items.filter((it) => !it.product_name || !it.quantity || !it.unit_price);
+    const invalidItems = items.filter((it) => {
+      if (!it.product_name || !it.unit_price) return true;
+      if (isVariableWeight(it)) {
+        return !(Number(toEnglishDigits(it.total_weight)) > 0) ||
+          !WEIGHT_SCALES.includes(it.sales_scale);
+      }
+      return !(Number(toEnglishDigits(it.quantity)) > 0);
+    });
     if (invalidItems.length > 0) {
-      showToast.error("لطفاً مشخصات تمام ردیف‌های کالا (محصول، تعداد، قیمت) را تکمیل کنید.");
+      showToast.error("لطفاً برای محصولات با وزن متغیر وزن کل و واحد، و برای محصولات با وزن ثابت تعداد و قیمت را تکمیل کنید.");
       return;
     }
-    if (items.some((item) => item.product_id && parseWeightKg(item.first_scale) <= 0)) {
+    if (items.some((item) => item.product_id && !isVariableWeight(item) && parseWeightKg(item.first_scale) <= 0)) {
       showToast.error("وزن بسته محصول مشخص نیست؛ لطفاً وزن محصول را در فهرست محصولات تکمیل کنید.");
       return;
     }
@@ -464,9 +520,10 @@ export default function InvoiceCreatePage() {
           product_name: it.product_name,
           branch_id: it.branch_id ? parseInt(it.branch_id, 10) : null,
           branch_name: it.branch_name,
-          quantity: parseFloat(toEnglishDigits(it.quantity)) || 0,
+          quantity: isVariableWeight(it) ? null : parseFloat(toEnglishDigits(it.quantity)) || 0,
           first_scale: it.first_scale,
           sales_scale: it.sales_scale,
+          total_weight_kg: isVariableWeight(it) ? Number(it.total_weight_kg) || 0 : null,
           billable_quantity: parseFloat(it.billable_quantity) || 0,
           unit_price: parseFloat(toEnglishDigits(it.unit_price)) || 0,
           total: parseFloat(it.total) || 0,
@@ -664,8 +721,8 @@ export default function InvoiceCreatePage() {
                   <th className="px-2 py-2.5 border-l border-gray-200 min-w-[115px]">گدام</th>
                   <th className="px-2 py-2.5 border-l border-gray-200 text-center w-[65px]">موجودی</th>
                   <th className="px-2 py-2.5 border-l border-gray-200 text-center w-[75px]">تعداد</th>
-                  <th className="px-2 py-2.5 border-l border-gray-200 text-center min-w-[100px]">وزن بسته</th>
-                  <th className="px-2 py-2.5 border-l border-gray-200 text-center min-w-[100px]">واحد فروش</th>
+                  <th className="px-2 py-2.5 border-l border-gray-200 text-center min-w-[100px]">وزن بسته / وزن کل</th>
+                  <th className="px-2 py-2.5 border-l border-gray-200 text-center min-w-[100px]">واحد وزن / فروش</th>
                   <th className="px-2 py-2.5 border-l border-gray-200 text-center min-w-[90px]">مقدار نهایی</th>
                   <th className="px-2 py-2.5 border-l border-gray-200 text-center min-w-[95px]">قیمت واحد</th>
                   <th className="px-2.5 py-2.5 border-l border-gray-200 text-center min-w-[105px]">مجموع ({currency})</th>
@@ -674,7 +731,8 @@ export default function InvoiceCreatePage() {
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
                 {items.map((it, idx) => {
-                  const qtyNum = Number(toEnglishDigits(it.quantity)) || 0;
+                  const variableWeight = isVariableWeight(it);
+                  const qtyNum = getRequiredStock(it);
                   const bonusStock = getBonusStock(it);
                   const stockNum = (Number(it.stock) || 0) + bonusStock;
                   const isOverStock = Boolean(it.product_id && it.branch_id && qtyNum > stockNum);
@@ -709,11 +767,13 @@ export default function InvoiceCreatePage() {
                                   {formatProductName(p, getProductCategoryName(p))}
                                 </span>
                               </div>
-                              {p.weight && (
+                              {p.weight_type === "variable" ? (
+                                <span className="text-amber-700 text-[10px] font-bold shrink-0">متغیر</span>
+                              ) : p.weight ? (
                                 <span className="text-gray-500 text-[10px] font-mono shrink-0">
                                   {p.weight}
                                 </span>
-                              )}
+                              ) : null}
                             </div>
                           )}
                         />
@@ -743,43 +803,72 @@ export default function InvoiceCreatePage() {
                         </span>
                       </td>
                       <td className="px-1.5 py-1.5 border-l border-gray-200 w-[80px]">
-                        <input
-                          type="number"
-                          step="any"
-                          min="0.01"
-                          required
-                          dir="ltr"
-                          value={it.quantity}
-                          onFocus={(e) => e.target.select()}
-                          onWheel={(e) => e.target.blur()}
-                          onChange={(e) => handleItemChange(idx, "quantity", e.target.value)}
-                          className={`w-full h-[36px] rounded-lg px-2 text-xs font-mono font-bold text-center transition-all ${
-                            isOverStock
-                              ? "bg-rose-50 border-2 border-rose-500 text-rose-700 focus:outline-none focus:ring-1 focus:ring-rose-400"
-                              : "bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-slate-800"
-                          }`}
-                        />
-                        {dispatchedQty > 0 && (
-                          <div className="mt-1 text-[10px] font-bold text-amber-700 text-center whitespace-nowrap">
-                            حداقل: {dispatchedQty} (خارج‌شده)
-                          </div>
+                        {variableWeight ? (
+                          <span className="h-[36px] flex items-center justify-center text-gray-400">—</span>
+                        ) : (
+                          <>
+                            <input
+                              type="number"
+                              step="1"
+                              min="1"
+                              required
+                              dir="ltr"
+                              value={it.quantity}
+                              onFocus={(e) => e.target.select()}
+                              onWheel={(e) => e.target.blur()}
+                              onChange={(e) => handleItemChange(idx, "quantity", e.target.value)}
+                              className={`w-full h-[36px] rounded-lg px-2 text-xs font-mono font-bold text-center transition-all ${
+                                isOverStock
+                                  ? "bg-rose-50 border-2 border-rose-500 text-rose-700 focus:outline-none focus:ring-1 focus:ring-rose-400"
+                                  : "bg-white border border-gray-300 text-gray-900 focus:outline-none focus:border-slate-800"
+                              }`}
+                            />
+                            {dispatchedQty > 0 && (
+                              <div className="mt-1 text-[10px] font-bold text-amber-700 text-center whitespace-nowrap">
+                                حداقل: {dispatchedQty} (خارج‌شده)
+                              </div>
+                            )}
+                          </>
                         )}
                       </td>
                       <td className="px-2 py-1.5 border-l border-gray-200">
-                        <input
-                          type="text"
-                          value={it.first_scale || ""}
-                          placeholder={it.product_id ? "وزن ثبت نشده" : "—"}
-                          readOnly
-                          aria-label="وزن بسته محصول"
-                          title="وزن بسته از مشخصات محصول گرفته می‌شود و قابل تغییر نیست"
-                          className="w-full h-[36px] bg-gray-100 border border-gray-200 rounded-lg px-2 text-xs font-mono font-bold text-center text-gray-600 cursor-not-allowed"
-                        />
+                        {variableWeight ? (
+                          <input
+                            type="number"
+                            step="0.001"
+                            min="0.001"
+                            required
+                            dir="ltr"
+                            value={it.total_weight}
+                            onFocus={(e) => e.target.select()}
+                            onWheel={(e) => e.target.blur()}
+                            onChange={(e) => handleItemChange(idx, "total_weight", e.target.value)}
+                            aria-label="وزن کل محصول"
+                            placeholder="وزن کل"
+                            className={`w-full h-[36px] rounded-lg px-2 text-xs font-mono font-bold text-center ${
+                              isOverStock
+                                ? "bg-rose-50 border-2 border-rose-500 text-rose-700"
+                                : "bg-white border border-gray-300 text-gray-900"
+                            }`}
+                          />
+                        ) : (
+                          <input
+                            type="text"
+                            value={it.first_scale || ""}
+                            placeholder={it.product_id ? "وزن ثبت نشده" : "—"}
+                            readOnly
+                            aria-label="وزن بسته محصول"
+                            title="وزن بسته از مشخصات محصول گرفته می‌شود و قابل تغییر نیست"
+                            className="w-full h-[36px] bg-gray-100 border border-gray-200 rounded-lg px-2 text-xs font-mono font-bold text-center text-gray-600 cursor-not-allowed"
+                          />
+                        )}
                       </td>
                       <td className="px-2 py-1.5 border-l border-gray-200">
                         <CustomDropdown
                           usePortal={true}
-                          options={SALES_SCALE_OPTIONS.map((opt) => ({ value: opt.value, label: opt.label }))}
+                          options={SALES_SCALE_OPTIONS
+                            .filter((opt) => !variableWeight || WEIGHT_SCALES.includes(opt.value))
+                            .map((opt) => ({ value: opt.value, label: opt.label }))}
                           value={it.sales_scale}
                           onChange={(val) => handleItemChange(idx, "sales_scale", val)}
                           buttonClassName="w-full h-[36px] px-2 text-xs font-bold text-center"

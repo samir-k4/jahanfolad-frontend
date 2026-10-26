@@ -25,8 +25,14 @@
     "backToExistingCategory": "← بازگشت به انتخاب دسته‌بندی موجود",
     "productNameLabel": "نام محصول",
     "productNamePlaceholder": "میخ ۲ اینچ",
+    "weightTypeLabel": "نوع وزن محصول",
+    "weightTypes": {
+      "fixed": "وزن ثابت",
+      "variable": "وزن متغیر"
+    },
     "weightFieldLabel": "وزن",
     "weightPlaceholder": "مثلاً 25kg",
+    "variableWeightHint": "وزن در هر فاکتور وارد می‌شود",
     "lowStockLabel": "حد هشدار موجودی",
     "lowStockPlaceholder": "10",
     "cancelButton": "انصراف",
@@ -52,6 +58,7 @@
   "messages": {
     "fetchProductsError": "خطا در دریافت لیست محصولات",
     "enterProductName": "نام محصول را وارد کنید.",
+    "enterFixedWeight": "وزن محصول با وزن ثابت را وارد کنید.",
     "enterCategoryName": "نام دسته‌بندی جدید را وارد کنید.",
     "selectCategory": "دسته‌بندی را انتخاب کنید.",
     "createCategoryError": "ایجاد دسته‌بندی با مشکل روبرو شد.",

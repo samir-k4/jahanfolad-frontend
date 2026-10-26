@@ -45,8 +45,9 @@ export default function ProductionPdfModal({
       description: dailyData?.description || "",
       products: rawItems.map((item) => ({
         product_id: item.product_id || item.product?.id,
-        quantity: Number(item.quantity) || 0,
+        quantity: item.product?.weight_type === "variable" ? null : Number(item.quantity) || 0,
         weight: item.weight ?? item.weight_kg ?? item.product?.weight,
+        total_weight_kg: item.total_weight_kg ?? null,
       })),
     };
   }, [dailyData, dateString]);

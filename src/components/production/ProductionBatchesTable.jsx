@@ -164,10 +164,14 @@ export default function ProductionBatchesTable({
                     <td className="p-3 border-l border-gray-200 text-center">
                       <div className="font-bold text-slate-900 text-table-cell-text">
                         <span>{t("table.weightTon", { weight: stats.totalWeightTon })}</span>
-                        <span className="text-gray-400 mx-1"> | </span>
-                        <span className="text-gray-600 font-normal">
-                          {t("table.quantityCarton", { qty: stats.totalQuantity })}
-                        </span>
+                        {stats.totalQuantity > 0 && (
+                          <>
+                            <span className="text-gray-400 mx-1"> | </span>
+                            <span className="text-gray-600 font-normal">
+                              {t("table.quantityCarton", { qty: stats.totalQuantity })}
+                            </span>
+                          </>
+                        )}
                       </div>
                     </td>
                     <td className="p-3 text-center">

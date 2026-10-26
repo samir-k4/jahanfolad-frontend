@@ -230,7 +230,10 @@ export default function WarehouseTransactionsTable({
                         dir="ltr"
                       >
                         {isOut ? "-" : "+"}
-                        {Number(tx.quantity).toLocaleString("en-US")}
+                        {Number(tx.quantity).toLocaleString("en-US", { maximumFractionDigits: 3 })}{" "}
+                        <span className="font-sans text-[10px]">
+                          {tx.product?.weight_type === "variable" ? "کیلوگرم" : "عدد"}
+                        </span>
                       </span>
                     </td>
                     <td className="p-3.5 border-l border-gray-100">

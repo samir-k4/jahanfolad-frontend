@@ -31,7 +31,9 @@ export function formatProductOption(product, weightOverride = "", categoryOverri
   const cleanName = formatProductName(product, categoryOverride);
   const weight =
     typeof product === "object"
-      ? product.weight || weightOverride
+      ? product.weight_type === "variable"
+        ? "متغیر"
+        : product.weight || weightOverride
       : weightOverride;
   if (weight) {
     return `\u200E${cleanName}  —  ${weight}`;

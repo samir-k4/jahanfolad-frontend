@@ -34,6 +34,7 @@ const MODES = {
 const emptyForm = () => ({
   name: "",
   weight: "",
+  weightType: "fixed",
   categoryId: "",
   threshold: String(PRODUCT_DEFAULTS.LOW_STOCK_THRESHOLD),
 });
@@ -66,6 +67,7 @@ export default function ProductFormModal({
       setForm({
         name: product.name || "",
         weight: product.weight || "",
+        weightType: product.weight_type || "fixed",
         categoryId: product.category_id || "",
         threshold: String(
           product.low_stock_threshold ?? PRODUCT_DEFAULTS.LOW_STOCK_THRESHOLD,
@@ -79,6 +81,9 @@ export default function ProductFormModal({
     setForm((prev) => ({ ...prev, [field]: value }));
   const validate = useCallback(() => {
     if (!form.name.trim()) return t("messages.enterProductName");
+    if (form.weightType === "fixed" && !form.weight.trim()) {
+      return t("messages.enterFixedWeight");
+    }
     if (useNewCategory && !newCategoryName.trim()) {
       return t("messages.enterCategoryName");
     }
@@ -113,7 +118,8 @@ export default function ProductFormModal({
       const body = {
         name: form.name.trim(),
         category_id: categoryId,
-        weight: weight === "" ? null : weight,
+        weight_type: form.weightType,
+        weight: form.weightType === "fixed" && weight !== "" ? weight : null,
         low_stock_threshold:
           form.threshold === ""
             ? PRODUCT_DEFAULTS.LOW_STOCK_THRESHOLD
@@ -231,15 +237,36 @@ export default function ProductFormModal({
               />
             </div>
             <div>
+              <label className={labelClass}>{t("insertModal.weightTypeLabel")}</label>
+              <div className="flex gap-4 rounded-lg border border-gray-200 px-3 py-2.5">
+                {["fixed", "variable"].map((weightType) => (
+                  <label key={weightType} className="flex items-center gap-2 text-table-cell-text font-medium text-gray-700 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="product-weight-type"
+                      value={weightType}
+                      checked={form.weightType === weightType}
+                      onChange={() => {
+                        setField("weightType", weightType);
+                        if (weightType === "variable") setField("weight", "");
+                      }}
+                    />
+                    {t(`insertModal.weightTypes.${weightType}`)}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
               <label className={labelClass}>{t("insertModal.weightFieldLabel")}</label>
               <input
                 type="text"
                 dir="ltr"
                 value={form.weight}
                 onChange={(e) => setField("weight", e.target.value)}
-                placeholder={label("weightPlaceholder")}
+                placeholder={form.weightType === "variable" ? t("insertModal.variableWeightHint") : label("weightPlaceholder")}
+                disabled={form.weightType === "variable"}
                 maxLength={255}
-                className={`${inputClass} text-right`}
+                className={`${inputClass} text-right ${form.weightType === "variable" ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
               />
             </div>
             <div>

@@ -111,6 +111,7 @@ function MoveRowItem({
     [inventoryData, row.product_id],
   );
   const availableStock = availableStockOf(selectedInvItem, targetBranchId);
+  const isVariable = selectedInvItem?.weight_type === "variable";
   return (
     <div className="p-3 bg-gray-50/70 border border-gray-200 rounded-card flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
       <span className="font-mono text-gray-400 text-caption-text w-6 text-center shrink-0 hidden md:block">
@@ -142,27 +143,41 @@ function MoveRowItem({
           buttonClassName="py-2 px-2.5 text-table-cell-text font-medium rounded-input"
         />
         <div className="mt-1 px-2 text-caption-text text-gray-600 font-mono">
-          {t("stock.colCartonWeight")}: {selectedInvItem?.weight || "—"}
+          {selectedInvItem?.weight_type === "variable"
+            ? "وزن متغیر"
+            : `${t("stock.colCartonWeight")}: ${selectedInvItem?.weight || "—"}`}
         </div>
       </div>
       <div className="w-full md:w-48 shrink-0 flex items-center space-x-2 space-x-reverse">
         <input
           type="number"
-          min="1"
-          step="1"
-          max={showStock && selectedInvItem ? availableStock : undefined}
+          min={isVariable ? "0.001" : "1"}
+          step={isVariable ? "0.001" : "1"}
+          max={showStock && selectedInvItem
+            ? availableStock / (isVariable && row.weight_unit === "تن" ? 1000 : 1)
+            : undefined}
           value={row.quantity}
           onFocus={(e) => e.target.select()}
           onWheel={(e) => e.target.blur()}
           onChange={(e) => updateRow(row.id, "quantity", e.target.value)}
           placeholder={label("qtyPlaceholder")}
           required
-          className="flex-1 w-full bg-white border border-gray-300 rounded-input px-3 py-2 text-table-cell-text text-gray-900 font-bold font-mono outline-none focus:border-slate-800 placeholder:text-placeholder-text shadow-xs"
+          className="flex-1 min-w-0 w-full bg-white border border-gray-300 rounded-input px-3 py-2 text-table-cell-text text-gray-900 font-bold font-mono outline-none focus:border-slate-800 placeholder:text-placeholder-text shadow-xs"
           dir="ltr"
         />
+        {isVariable && (
+          <select
+            value={row.weight_unit || "کیلوگرم"}
+            onChange={(e) => updateRow(row.id, "weight_unit", e.target.value)}
+            className="bg-white border border-gray-300 rounded-input px-2 py-2 text-xs font-bold text-gray-800"
+          >
+            <option value="کیلوگرم">کیلوگرم</option>
+            <option value="تن">تن</option>
+          </select>
+        )}
         {showStock && selectedInvItem && (
           <div className="text-caption-text bg-slate-100 text-slate-800 border border-slate-200 px-2 py-2 rounded-badge font-mono shrink-0 whitespace-nowrap shadow-2xs">
-            {label("stockPrefix")} {availableStock}
+            {label("stockPrefix")} {Number(availableStock).toLocaleString("en-US", { maximumFractionDigits: 3 })} {selectedInvItem.weight_type === "variable" ? "کیلوگرم" : "عدد"}
           </div>
         )}
       </div>
@@ -203,6 +218,7 @@ export default function WarehouseStockMoveModal({
     category_id: "all",
     product_id: "",
     quantity: "",
+    weight_unit: "کیلوگرم",
   });
   const [modalBranchId, setModalBranchId] = useState("");
   const [rows, setRows] = useState([emptyRow()]);
@@ -224,7 +240,8 @@ export default function WarehouseStockMoveModal({
             id: makeRowId(),
             category_id: String(prefilled.category_id || "all"),
             product_id: String(prefilled.product_id),
-            quantity: "1",
+            quantity: prefilled.weight_type === "variable" ? "" : "1",
+            weight_unit: "کیلوگرم",
           }
         : emptyRow(),
     ]);
@@ -241,7 +258,19 @@ export default function WarehouseStockMoveModal({
       prev.map((r) => {
         if (r.id !== id) return r;
         if (field === "category_id") {
-          return { ...r, category_id: value, product_id: "", quantity: "" };
+          return { ...r, category_id: value, product_id: "", quantity: "", weight_unit: "کیلوگرم" };
+        }
+        if (field === "product_id") {
+          return { ...r, product_id: value, quantity: "", weight_unit: "کیلوگرم" };
+        }
+        if (field === "weight_unit") {
+          const amount = Number(r.quantity) || 0;
+          const kilograms = amount * (r.weight_unit === "تن" ? 1000 : 1);
+          return {
+            ...r,
+            weight_unit: value,
+            quantity: String(kilograms / (value === "تن" ? 1000 : 1) || ""),
+          };
         }
         return { ...r, [field]: value };
       }),
@@ -255,7 +284,11 @@ export default function WarehouseStockMoveModal({
       const rowNum = i + 1;
       if (!row.product_id) return t("messages.selectProductRow", { rowNum });
       const qty = Number(row.quantity);
-      if (!Number.isInteger(qty) || qty <= 0) {
+      const invItem = inventoryData.find(
+        (inv) => String(inv.product_id) === String(row.product_id),
+      );
+      const isVariable = invItem?.weight_type === "variable";
+      if ((!isVariable && (!Number.isInteger(qty) || qty <= 0)) || (isVariable && (!Number.isFinite(qty) || qty <= 0))) {
         return t("messages.enterValidQtyRow", { rowNum });
       }
       if (seen.has(String(row.product_id))) {
@@ -263,11 +296,9 @@ export default function WarehouseStockMoveModal({
       }
       seen.add(String(row.product_id));
       if (config.checksStock) {
-        const invItem = inventoryData.find(
-          (inv) => String(inv.product_id) === String(row.product_id),
-        );
         const available = availableStockOf(invItem, targetBranchId);
-        if (qty > available) {
+        const requested = qty * (isVariable && row.weight_unit === "تن" ? 1000 : 1);
+        if (requested > available) {
           return t("messages.exportQtyExceedsStock", {
             productName:
               formatProductName(invItem?.product_name) ||
@@ -298,6 +329,7 @@ export default function WarehouseStockMoveModal({
           products: rows.map((r) => ({
             product_id: Number(r.product_id),
             quantity: Number(r.quantity),
+            weight_unit: r.weight_unit,
           })),
         },
       });

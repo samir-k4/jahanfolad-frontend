@@ -220,7 +220,7 @@ export default function WarehouseStockTable({
                     <td className="p-3.5 text-center border-l border-gray-100">
                       <span
                         className={`font-bold font-mono px-3 py-0.5 rounded-lg inline-block border ${
-                          item.current_stock === 0
+                          Number(item.current_stock) === 0
                             ? "bg-rose-50 text-rose-800 border-rose-200"
                             : item.status === "low_stock"
                               ? "bg-amber-50 text-amber-900 border-amber-200"
@@ -228,7 +228,8 @@ export default function WarehouseStockTable({
                         }`}
                         dir="ltr"
                       >
-                        {Number(item.current_stock).toLocaleString("en-US")}
+                        {Number(item.current_stock).toLocaleString("en-US", { maximumFractionDigits: 3 })}{" "}
+                        <span className="font-sans text-[10px]">{item.stock_unit}</span>
                       </span>
                     </td>
                     {isGlobal && showBranch && (
@@ -250,6 +251,7 @@ export default function WarehouseStockTable({
                                 </span>
                                 <span className="font-mono font-bold" dir="ltr">
                                   {Number(b.stock).toLocaleString("en-US")}
+                                  {" "}{item.stock_unit}
                                 </span>
                               </span>
                             ))
@@ -310,7 +312,8 @@ export default function WarehouseStockTable({
                           title={t("stock.editThresholdTitle")}
                         >
                           <span className="font-mono font-bold text-gray-700 text-table-cell-text">
-                            {item.low_stock_threshold ?? 10}
+                            {item.low_stock_threshold ?? 10}{" "}
+                            <span className="font-sans text-[10px]">{item.stock_unit}</span>
                           </span>
                           <Edit2
                             size={13}

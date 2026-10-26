@@ -5,7 +5,9 @@ export const logWeightKg = (log) =>
     ? parseWeightKg(log.weight_kg)
     : parseWeightKg(log?.product?.weight);
 export const logWeightTon = (log) =>
-  (Number(log?.quantity) || 0) * logWeightKg(log) / 1000;
+  log?.total_weight_kg != null
+    ? (Number(log.total_weight_kg) || 0) / 1000
+    : (Number(log?.quantity) || 0) * logWeightKg(log) / 1000;
 export const getBatchLogs = (batch) =>
   batch?.production_logs || batch?.productionLogs || [];
 export const getBatchStats = (batch) => {

@@ -77,9 +77,11 @@ export default function ProductionDetailModal({
               <span className="font-extrabold text-slate-900 text-table-cell-text block">
                 {t("table.weightTon", { weight: stats.totalWeightTon })}
               </span>
-              <span className="text-caption-text text-gray-500">
-                {t("table.quantityCarton", { qty: stats.totalQuantity })}
-              </span>
+              {stats.totalQuantity > 0 && (
+                <span className="text-caption-text text-gray-500">
+                  {t("table.quantityCarton", { qty: stats.totalQuantity })}
+                </span>
+              )}
             </div>
           </div>
           {batch.description && (
@@ -125,7 +127,10 @@ export default function ProductionDetailModal({
                         t("detailModal.fallbackProductName", { productId: log.product_id })
                     );
                     const cat = log.product?.category?.name || "—";
-                    const wKg = logWeightKg(log);
+                    const isVariable = log.product?.weight_type === "variable";
+                    const wKg = isVariable
+                      ? Number(log.total_weight_kg) || 0
+                      : logWeightKg(log);
                     const q = Number(log.quantity) || 0;
                     const ton = logWeightTon(log).toFixed(3);
                     return (
@@ -140,10 +145,10 @@ export default function ProductionDetailModal({
                           {cat}
                         </td>
                         <td className="p-2.5 text-center font-bold text-gray-800 border-l border-gray-100">
-                          {q}
+                          {isVariable ? "—" : q}
                         </td>
                         <td className="p-2.5 text-center text-gray-600 font-mono border-l border-gray-100">
-                          {wKg ? `${wKg}KG` : "—"}
+                          {wKg ? `${wKg}KG${isVariable ? " (کل)" : ""}` : "—"}
                         </td>
                         <td className="p-2.5 text-center font-bold text-slate-900">
                           {t("table.weightTon", { weight: ton })}

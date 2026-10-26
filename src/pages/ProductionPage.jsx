@@ -25,6 +25,7 @@ const emptyRow = (id) => ({
   category: "",
   product: null,
   weight: "",
+  weight_unit: "کیلوگرم",
   quantity: "",
 });
 export default function ProductionPage() {
@@ -104,7 +105,19 @@ export default function ProductionPage() {
     );
   const updateRow = (id, field, value) =>
     setProductionRows((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)),
+      prev.map((row) => {
+        if (row.id !== id) return row;
+        if (field === "weight_unit" && row.product?.weight_type === "variable") {
+          const amount = Number(row.weight) || 0;
+          const kilograms = amount * (row.weight_unit === "تن" ? 1000 : 1);
+          return {
+            ...row,
+            weight_unit: value,
+            weight: String(kilograms / (value === "تن" ? 1000 : 1) || ""),
+          };
+        }
+        return { ...row, [field]: value };
+      }),
     );
   useEffect(() => {
     if (branches.length === 1) {
@@ -141,10 +154,13 @@ export default function ProductionPage() {
       category: log.product?.category_id || log.product?.category?.id || "",
       product: log.product,
       weight:
-        log.weight_kg !== null && log.weight_kg !== undefined
+        log.product?.weight_type === "variable"
+          ? String(log.total_weight_kg ?? "")
+          : log.weight_kg !== null && log.weight_kg !== undefined
           ? `${Number(log.weight_kg)}KG`
           : String(log.product?.weight || ""),
-      quantity: log.quantity,
+      weight_unit: "کیلوگرم",
+      quantity: log.quantity ?? "",
     }));
     setProductionRows(rows.length ? rows : [emptyRow(makeRowId())]);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -187,8 +203,10 @@ export default function ProductionPage() {
     setShowPdfModal(true);
   };
   const handleGeneratePdf = () => {
-    const validRows = productionRows.filter(
-      (r) => r.product && Number(r.quantity) > 0,
+    const validRows = productionRows.filter((r) =>
+      r.product?.weight_type === "variable"
+        ? Number(r.weight) > 0
+        : Number(r.quantity) > 0,
     );
     if (!validRows.length) {
       showToast.error(t("messages.noValidProductsForPdf"));
@@ -198,7 +216,10 @@ export default function ProductionPage() {
       products: validRows.map((row) => ({
         product_id: row.product.id,
         weight: row.weight || row.product?.weight,
-        quantity: Number(row.quantity),
+        quantity: row.product?.weight_type === "variable" ? null : Number(row.quantity),
+        total_weight_kg: row.product?.weight_type === "variable"
+          ? Number(row.weight) * (row.weight_unit === "تن" ? 1000 : 1)
+          : null,
       })),
       date: globalData.date,
       branch_id: globalData.branch || null,
@@ -217,7 +238,11 @@ export default function ProductionPage() {
       const rowNum = i + 1;
       if (!row.category) return t("messages.selectCategory", { rowNum });
       if (!row.product) return t("messages.selectProduct", { rowNum });
-      if (!row.weight) return t("messages.specifyWeight", { rowNum });
+      if (row.product.weight_type === "variable") {
+        if (!(Number(row.weight) > 0)) return t("messages.specifyWeight", { rowNum });
+        continue;
+      }
+      if (!row.product.weight) return t("messages.specifyWeight", { rowNum });
       if (!Number.isInteger(Number(row.quantity)) || Number(row.quantity) <= 0) {
         return t("messages.invalidQuantity", { rowNum });
       }
@@ -237,8 +262,11 @@ export default function ProductionPage() {
       description: globalData.description?.trim() || "",
       products: productionRows.map((row) => ({
         product_id: row.product.id,
-        weight: String(row.weight),
-        quantity: Number(row.quantity),
+        weight: row.product.weight_type === "variable" ? null : String(row.product.weight),
+        quantity: row.product.weight_type === "variable" ? null : Number(row.quantity),
+        total_weight_kg: row.product.weight_type === "variable"
+          ? Number(row.weight) * (row.weight_unit === "تن" ? 1000 : 1)
+          : null,
       })),
     };
     const isEditing = Boolean(editingBatch);

@@ -200,6 +200,8 @@ export default function ProductionEntryForm({
                       updateRow(row.id, "category", val);
                       updateRow(row.id, "product", null);
                       updateRow(row.id, "weight", "");
+                      updateRow(row.id, "weight_unit", "کیلوگرم");
+                      updateRow(row.id, "quantity", "");
                     }}
                     placeholder={
                       t("form.categoryPlaceholder")
@@ -239,11 +241,21 @@ export default function ProductionEntryForm({
                         "product",
                         selectedProduct || null,
                       );
-                      const defaultWeight =
-                        selectedProduct?.weight ||
-                        getProductWeights(selectedProduct)[0] ||
-                        "";
-                      updateRow(row.id, "weight", defaultWeight);
+                      updateRow(
+                        row.id,
+                        "weight",
+                        selectedProduct?.weight_type === "variable"
+                          ? ""
+                          : selectedProduct?.weight ||
+                              getProductWeights(selectedProduct)[0] ||
+                              "",
+                      );
+                      updateRow(row.id, "weight_unit", "کیلوگرم");
+                      updateRow(
+                        row.id,
+                        "quantity",
+                        selectedProduct?.weight_type === "variable" ? "" : row.quantity,
+                      );
                     }}
                     disabled={!row.category}
                     placeholder={
@@ -266,34 +278,57 @@ export default function ProductionEntryForm({
                   <label className="block md:hidden text-label-text text-gray-500 mb-1">
                     {t("form.weightLabelColon")}
                   </label>
-                  <div
-                    className="w-full bg-gray-100 border border-gray-200 rounded-lg py-1.5 px-2.5 text-table-cell-text text-gray-700 text-center font-mono cursor-not-allowed"
-                    aria-readonly="true"
-                    title="وزن بسته از مشخصات محصول گرفته می‌شود و قابل تغییر نیست"
-                  >
-                    {row.weight || "—"}
-                  </div>
+                  {row.product?.weight_type === "variable" ? (
+                    <div className="flex gap-1">
+                      <input
+                        type="number"
+                        min="0.001"
+                        step="0.001"
+                        value={row.weight}
+                        onChange={(e) => updateRow(row.id, "weight", e.target.value)}
+                        placeholder="وزن کل"
+                        className="min-w-0 w-full bg-white border border-gray-300 rounded-lg py-1.5 px-2 text-table-cell-text text-gray-800 text-center font-mono"
+                        dir="ltr"
+                      />
+                      <select
+                        value={row.weight_unit || "کیلوگرم"}
+                        onChange={(e) => updateRow(row.id, "weight_unit", e.target.value)}
+                        className="max-w-20 bg-white border border-gray-300 rounded-lg px-1 text-xs font-bold"
+                      >
+                        <option value="کیلوگرم">کیلوگرم</option>
+                        <option value="تن">تن</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div
+                      className="w-full bg-gray-100 border border-gray-200 rounded-lg py-1.5 px-2.5 text-table-cell-text text-gray-700 text-center font-mono cursor-not-allowed"
+                      aria-readonly="true"
+                      title="وزن بسته از مشخصات محصول گرفته می‌شود و قابل تغییر نیست"
+                    >
+                      {row.weight || "—"}
+                    </div>
+                  )}
                 </div>
                 <div className="col-span-2 md:p-2.5 md:border-l md:border-gray-100 mt-2 md:mt-0">
                   <label className="block md:hidden text-label-text text-gray-500 mb-1">
                     {t("form.quantityLabelColon")}
                   </label>
-                  <input
-                    type="number"
-                    min="1"
-                    step="1"
-                    dir="ltr"
-                    onFocus={(e) => e.target.select()}
-                    onWheel={(e) => e.target.blur()}
-                    className="w-full bg-white border border-gray-300 rounded-lg py-1.5 px-2.5 text-table-cell-text text-gray-800 focus:border-slate-800 outline-none text-center font-mono font-medium placeholder:text-placeholder-text"
-                    placeholder={
-                      t("form.quantityPlaceholder")
-                    }
-                    value={row.quantity}
-                    onChange={(e) =>
-                      updateRow(row.id, "quantity", e.target.value)
-                    }
-                  />
+                  {row.product?.weight_type === "variable" ? (
+                    <div className="text-center text-gray-400">—</div>
+                  ) : (
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      dir="ltr"
+                      onFocus={(e) => e.target.select()}
+                      onWheel={(e) => e.target.blur()}
+                      className="w-full bg-white border border-gray-300 rounded-lg py-1.5 px-2.5 text-table-cell-text text-gray-800 focus:border-slate-800 outline-none text-center font-mono font-medium placeholder:text-placeholder-text"
+                      placeholder={t("form.quantityPlaceholder")}
+                      value={row.quantity}
+                      onChange={(e) => updateRow(row.id, "quantity", e.target.value)}
+                    />
+                  )}
                 </div>
                 <div className="col-span-1 md:p-2.5 text-center mt-2 md:mt-0 flex justify-center">
                   <button

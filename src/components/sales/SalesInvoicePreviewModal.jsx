@@ -434,13 +434,13 @@ export default function SalesInvoicePreviewModal({
                       {itemsSummary.map((it) => (
                         <tr key={it.id}>
                           <td className="p-2 font-bold text-gray-900">{formatProductName(it.product_name)}</td>
-                          <td className="p-2 text-center font-mono text-gray-700" dir="ltr">{fmt(it.quantity)}</td>
-                          <td className="p-2 text-center font-mono text-amber-700" dir="ltr">{fmt(it.dispatched_quantity)}</td>
-                          <td className="p-2 text-center font-mono font-bold text-emerald-700" dir="ltr">{fmt(it.remaining_quantity)}</td>
+                          <td className="p-2 text-center font-mono text-gray-700" dir="ltr">{fmt(it.quantity)} {it.quantity_unit}</td>
+                          <td className="p-2 text-center font-mono text-amber-700" dir="ltr">{fmt(it.dispatched_quantity)} {it.quantity_unit}</td>
+                          <td className="p-2 text-center font-mono font-bold text-emerald-700" dir="ltr">{fmt(it.remaining_quantity)} {it.quantity_unit}</td>
                           <td className="p-1.5 text-center">
                             <input
                               type="number"
-                              step="any"
+                              step={it.weight_type === "variable" ? "0.001" : "1"}
                               min="0"
                               max={it.remaining_quantity}
                               dir="ltr"

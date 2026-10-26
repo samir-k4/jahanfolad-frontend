@@ -187,7 +187,9 @@ export default function ProductsList() {
                       <p className="text-[11px] font-medium text-gray-500" dir="rtl">
                         {t("list.weightLabel")}{" "}
                         <span className="text-gray-800 font-bold">
-                          {product.weight || t("table.emptyValue", { ns: "common" })}
+                          {product.weight_type === "variable"
+                            ? "متغیر"
+                            : product.weight || t("table.emptyValue", { ns: "common" })}
                         </span>
                       </p>
                     </div>
