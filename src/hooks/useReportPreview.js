@@ -18,7 +18,12 @@ export default function useReportPreview({
   const iframeRef = useRef(null);
   const requestIdRef = useRef(0);
   const requestInit = useCallback(
-    () => (method === "GET" ? { method, headers } : { method, body: buildPayload(), headers }),
+    () => ({
+      method,
+      ...(method === "GET" ? {} : { body: buildPayload() }),
+      headers,
+      includeSelectedBranch: false,
+    }),
     [method, buildPayload, headers]
   );
   const fetchReportHtml = useCallback(async () => {

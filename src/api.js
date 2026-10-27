@@ -125,7 +125,14 @@ function handleUnauthorized(path) {
   });
 }
 
-function buildInit({ method = 'GET', body, signal, accept, headers } = {}) {
+function buildInit({
+  method = 'GET',
+  body,
+  signal,
+  accept,
+  headers,
+  includeSelectedBranch = true,
+} = {}) {
   const isWrite = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase());
   let selectedBranch = "";
   try {
@@ -139,7 +146,7 @@ function buildInit({ method = 'GET', body, signal, accept, headers } = {}) {
     headers: {
       Accept: accept || 'application/json',
       ...(isWrite ? { [APP_REQUEST_HEADER]: APP_REQUEST_VALUE } : {}),
-      ...(selectedBranch ? { "X-Branch-Id": selectedBranch } : {}),
+      ...(includeSelectedBranch && selectedBranch ? { "X-Branch-Id": selectedBranch } : {}),
       ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
       ...headers,
     },
