@@ -2,10 +2,9 @@ import  { useState, useEffect, useCallback } from "react";
 import { TEXT_FIELD_MAX_LENGTH } from "../constants/treasuryDomain";
 import { usePagePerms, DocumentPreviewModal } from "../components/common";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CustomerIncomeReportModal from "../components/incomes/CustomerIncomeReportModal";
 import CustomerIncomeDetailModal from "../components/incomes/CustomerIncomeDetailModal";
-import CustomerIncomeEditModal from "../components/incomes/CustomerIncomeEditModal";
 import {
   TooltipButton,
   TablePagination,
@@ -32,13 +31,12 @@ import {
 import { formatDocNumber } from "../utils/formatDocNumber";
 import { showToast } from "../utils/toast";
 import { apiUrl } from "../api";
-import useVaults from "../hooks/useVaults";
 import useIncomeCategories from "../hooks/useIncomeCategories";
 export default function CustomerReceiptsPage() {
   const nextSignal = useAbortController();
+  const navigate = useNavigate();
   const { t } = useTranslation("incomes");
   const { canCreate, canDelete, canEdit } = usePagePerms("incomes");
-  const { vaults } = useVaults();
   const { categories } = useIncomeCategories();
   const [loading, setLoading] = useState(false);
   const [incomes, setIncomes] = useState([]);
@@ -59,10 +57,8 @@ export default function CustomerReceiptsPage() {
   }, [debouncedSearchQuery]);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedIncomeForDetail, setSelectedIncomeForDetail] = useState(null);
-  const [selectedIncomeForEdit, setSelectedIncomeForEdit] = useState(null);
   const [selectedIncomeForVoucher, setSelectedIncomeForVoucher] = useState(null);
   const [incomeToDelete, setIncomeToDelete] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const fetchIncomes = useCallback(async () => {
     const signal = nextSignal();
     setLoading(true);
@@ -299,7 +295,11 @@ export default function CustomerReceiptsPage() {
                             <TooltipButton
                               icon={<Edit2 size={13} />}
                               tooltip={t("label.editTitle")}
-                              onClick={() => setSelectedIncomeForEdit(inc)}
+                              onClick={() =>
+                                navigate(`/incomes/create?edit=${encodeURIComponent(inc.id)}`, {
+                                  state: { income: inc, returnTo: "/customer-receipts" },
+                                })
+                              }
                               colorClass="bg-white text-gray-500 border border-gray-300 hover:bg-amber-500 hover:text-white hover:border-amber-500 shadow-2xs"
                             />
                           )}
@@ -358,18 +358,11 @@ export default function CustomerReceiptsPage() {
         onClose={() => setSelectedIncomeForDetail(null)}
         income={selectedIncomeForDetail}
         onOpenVoucher={(inc) => setSelectedIncomeForVoucher(inc)}
-        onOpenEdit={(inc) => setSelectedIncomeForEdit(inc)}
-      />
-      <CustomerIncomeEditModal
-        isOpen={!!selectedIncomeForEdit}
-        onClose={() => setSelectedIncomeForEdit(null)}
-        onSuccess={() => {
-          showToast.success(t("messages.updated"));
-          fetchIncomes();
-        }}
-        income={selectedIncomeForEdit}
-        vaults={vaults}
-        categories={categories}
+        onOpenEdit={(inc) =>
+          navigate(`/incomes/create?edit=${encodeURIComponent(inc.id)}`, {
+            state: { income: inc, returnTo: "/customer-receipts" },
+          })
+        }
       />
       <DeleteConfirmationModal
         isOpen={!!incomeToDelete}
@@ -383,7 +376,6 @@ export default function CustomerReceiptsPage() {
         title={t("delete.title")}
         question={t("delete.question")}
         warning={t("delete.warning")}
-        loading={isDeleting}
       />
     </div>
   );

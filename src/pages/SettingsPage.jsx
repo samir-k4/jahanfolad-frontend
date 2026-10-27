@@ -30,6 +30,7 @@ import {
   KeyRound,
   Lock,
   LockOpen,
+  User,
 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import UserFormModal from "../components/settings/UserFormModal";
@@ -38,14 +39,16 @@ import CategoryFormModal from "../components/settings/CategoryFormModal";
 import VaultTransactionCategoriesManager from "../components/settings/VaultTransactionCategoriesManager";
 import PayRulesTable from "../components/settings/PayRulesTable";
 import SalaryPaymentTypesTable from "../components/settings/SalaryPaymentTypesTable";
+import ProfileSettingsTab from "../components/settings/ProfileSettingsTab";
 import { useCompany } from "../context/CompanyContext";
 import { useBranch } from "../context/BranchContext";
 import CompanyLogoPlate from "../components/common/CompanyLogoPlate";
 import useDebounce from "../hooks/useDebounce";
 import { apiFetch, apiList } from "../api";
 import { TooltipButton, CustomDropdown, usePagePerms } from "../components/common";
-const TAB_IDS = ["users", "categories", "company", "policies", "branches", "backup"];
+const TAB_IDS = ["profile", "users", "categories", "company", "policies", "branches", "backup"];
 const TAB_ICONS = {
+  profile: User,
   users: Users,
   categories: Tag,
   company: Building,
@@ -108,6 +111,24 @@ const PanelHeader = ({ icon: Icon, title, subtitle, children }) => (
     {children ? <div className="shrink-0">{children}</div> : null}
   </div>
 );
+const UserAvatar = ({ user }) => {
+  const [failedPhotoUrl, setFailedPhotoUrl] = useState(null);
+  const photoUrl = user.profile_photo_url;
+
+  return (
+    <div className="relative w-9 h-9 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-caption-text shrink-0 overflow-hidden">
+      <span>{user.name ? user.name.charAt(0) : "U"}</span>
+      {photoUrl && failedPhotoUrl !== photoUrl && (
+        <img
+          src={photoUrl}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          onError={() => setFailedPhotoUrl(photoUrl)}
+        />
+      )}
+    </div>
+  );
+};
 const StatusToggle = ({ isActive, onClick, activeLabel, inactiveLabel, size = 20 }) => (
   <button
     type="button"
@@ -132,12 +153,17 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const { canEdit: canEditUsers, canDelete: canDeleteUsers, canCreate: canCreateUsers } =
     usePagePerms("users");
-  const { canEdit: canEditSettings } = usePagePerms("settings");
+  const { canView: canViewSettings, canEdit: canEditSettings } = usePagePerms("settings");
   const { canView: canViewTreasury } = usePagePerms("treasury");
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(
     () => searchParams.get("tab") || "users",
   );
+  const requestedTab = searchParams.get("tab");
+  useEffect(() => {
+    if (requestedTab === "profile") setActiveTab("profile");
+  }, [requestedTab]);
+  const visibleTabIds = canViewSettings ? TAB_IDS : ["profile"];
   const notify = (type, message) => {
     (appToast[type] || appToast.info)(message);
   };
@@ -563,24 +589,26 @@ export default function SettingsPage() {
               <span>{t("permission.backToDashboard", { ns: "common" })}</span>
             </Link>
             <h1 className="text-xl font-bold text-gray-800 tracking-tight mt-1">
-              {t("page.title")}
+              {activeTab === "profile" ? t("navigation.profile", { ns: "common" }) : t("page.title")}
             </h1>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button type="button" onClick={handleDownloadBackup} className={SECONDARY_BTN_CLASS}>
-              <Download size={15} className="text-gray-500" />
-              <span>{t("action.backup")}</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleSaveSettings}
-              disabled={savingSettings}
-              className={PRIMARY_BTN_CLASS}
-            >
-              <Save size={15} />
-              <span>{savingSettings ? t("action.saving") : t("actions.saveChanges", { ns: "common" })}</span>
-            </button>
-          </div>
+          {activeTab !== "profile" && (
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={handleDownloadBackup} className={SECONDARY_BTN_CLASS}>
+                <Download size={15} className="text-gray-500" />
+                <span>{t("action.backup")}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveSettings}
+                disabled={savingSettings}
+                className={PRIMARY_BTN_CLASS}
+              >
+                <Save size={15} />
+                <span>{savingSettings ? t("action.saving") : t("actions.saveChanges", { ns: "common" })}</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
@@ -588,7 +616,7 @@ export default function SettingsPage() {
           <nav
             className={`${PANEL_CLASS} p-1.5 flex lg:flex-col gap-1 overflow-x-auto lg:overflow-visible`}
           >
-            {TAB_IDS.map((tabId) => {
+            {visibleTabIds.map((tabId) => {
               const Icon = TAB_ICONS[tabId];
               const isActive = activeTab === tabId;
               return (
@@ -610,6 +638,7 @@ export default function SettingsPage() {
           </nav>
         </div>
         <div className="lg:col-span-9 xl:col-span-10 min-w-0">
+          {activeTab === "profile" && <ProfileSettingsTab />}
           {activeTab === "users" && (
             <div className={PANEL_CLASS}>
               <PanelHeader icon={Shield} title={t("users.title")} subtitle={t("users.subtitle")}>
@@ -680,9 +709,7 @@ export default function SettingsPage() {
                           <tr key={u.id} className="hover:bg-gray-50/70 transition-colors">
                             <td className={TD_CLASS}>
                               <div className="flex items-center gap-2.5">
-                                <div className="w-9 h-9 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-caption-text shrink-0">
-                                  {u.name ? u.name.charAt(0) : "U"}
-                                </div>
+                                <UserAvatar user={u} />
                                 <div className="min-w-0">
                                   <span className="font-bold text-gray-900 block whitespace-normal break-words">
                                     {u.name}
@@ -740,9 +767,7 @@ export default function SettingsPage() {
                     {users.map((u) => (
                       <div key={u.id} className="p-4 space-y-2.5">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-9 h-9 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-caption-text shrink-0">
-                            {u.name ? u.name.charAt(0) : "U"}
-                          </div>
+                          <UserAvatar user={u} />
                           <div className="min-w-0">
                             <span className="font-bold text-gray-900 block whitespace-normal break-words">
                               {u.name}

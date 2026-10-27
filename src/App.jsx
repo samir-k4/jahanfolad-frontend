@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Routes,
@@ -66,6 +66,12 @@ export default function App() {
     document.title = t("app.title");
   }, [i18n.resolvedLanguage, t]);
   const activeTab = location.pathname;
+  const isProfileSettingsTab =
+    location.pathname === "/settings" &&
+    new URLSearchParams(location.search).get("tab") === "profile";
+  const mobileNavValue = isProfileSettingsTab
+    ? "/settings?tab=profile"
+    : activeTab;
   const isFluidPage = [
     "/treasury",
     "/vault",
@@ -89,9 +95,17 @@ export default function App() {
     "/sales",
     "/settings",
   ].some((path) => location.pathname.startsWith(path));
-  const isCustomersPage = ["/customers", "/customer-loans"].some((path) =>
-    location.pathname.startsWith(path)
-  );
+  const isRouteActive = (paths) =>
+    paths.some(
+      (path) =>
+        location.pathname === path || location.pathname.startsWith(`${path}/`),
+    );
+  const getNavItemClass = (isActive) =>
+    `inline-flex items-center transition-all duration-200 ease-out origin-center py-1.5 ${
+      isActive
+        ? "text-white font-bold scale-105 brightness-125"
+        : "text-slate-300 hover:text-white hover:scale-105"
+    }`;
   const handleMobileNavChange = (event) => {
     navigate(event.target.value);
   };
@@ -140,17 +154,13 @@ export default function App() {
         <div className="hidden md:flex items-center space-x-6 space-x-reverse text-base font-medium pr-1">
           <Link
             to="/"
-            className={`hover:text-slate-300 py-1.5 transition-colors ${
-              activeTab === "/"
-                ? "text-white border-b-2 border-white font-bold"
-                : "text-slate-300"
-            }`}
+            className={getNavItemClass(activeTab === "/")}
           >
             {t("navigation.home")}
           </Link>
           <NavGroup pages={["production", "products", "warehouse"]}>
           <div className="relative group cursor-pointer">
-            <div className="flex items-center space-x-1 space-x-reverse hover:text-slate-300 py-1.5 text-slate-300">
+            <div className={`${getNavItemClass(isRouteActive(["/production", "/products", "/godam"]))} space-x-1 space-x-reverse`}>
               <span>{t("navigation.groups.productionWarehouse")}</span>
               <ChevronDown size={14} />
             </div>
@@ -158,7 +168,7 @@ export default function App() {
               <PageLink
                 page="production"
                 to="/production"
-                className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 font-bold text-slate-900"
+                className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
               >
                 {t("navigation.pages.production")}
               </PageLink>
@@ -181,7 +191,7 @@ export default function App() {
           </NavGroup>
           <NavGroup pages={["employees", "attendance", "overtime", "salaries"]}>
           <div className="relative group cursor-pointer">
-            <div className="flex items-center space-x-1 space-x-reverse hover:text-slate-300 py-1.5 text-slate-300">
+            <div className={`${getNavItemClass(isRouteActive(["/employees", "/attendance", "/overtime", "/salaries", "/salary"]))} space-x-1 space-x-reverse`}>
               <span>{t("navigation.groups.humanResources")}</span>
               <ChevronDown size={14} />
             </div>
@@ -219,7 +229,7 @@ export default function App() {
           </NavGroup>
           <NavGroup pages={["treasury", "advances", "incomes"]}>
           <div className="relative group cursor-pointer">
-            <div className="flex items-center space-x-1 space-x-reverse hover:text-slate-300 py-1.5 text-slate-300">
+            <div className={`${getNavItemClass(isRouteActive(["/treasury", "/vault", "/vaults", "/manager-advances", "/incomes", "/customer-receipts"]))} space-x-1 space-x-reverse`}>
               <span>{t("navigation.groups.accounts")}</span>
               <ChevronDown size={14} />
             </div>
@@ -250,7 +260,7 @@ export default function App() {
           </NavGroup>
           <NavGroup pages={["treasury"]}>
           <div className="relative group cursor-pointer">
-            <div className="flex items-center space-x-1 space-x-reverse hover:text-slate-300 py-1.5 text-slate-300">
+            <div className={`${getNavItemClass(isRouteActive(["/deposits-withdrawals", "/transfers", "/transactions/deposits-withdrawals"]))} space-x-1 space-x-reverse`}>
               <span>{t("navigation.groups.transactions")}</span>
               <ChevronDown size={14} />
             </div>
@@ -274,7 +284,7 @@ export default function App() {
           </NavGroup>
           <NavGroup pages={["expenses", "settings"]}>
           <div className="relative group cursor-pointer">
-            <div className="flex items-center space-x-1 space-x-reverse hover:text-slate-300 py-1.5 text-slate-300">
+            <div className={`${getNavItemClass(isRouteActive(["/expenses", "/settings"]))} space-x-1 space-x-reverse`}>
               <span>{t("navigation.groups.expenses")}</span>
               <ChevronDown size={14} />
             </div>
@@ -282,7 +292,7 @@ export default function App() {
               <PageLink
                 page="expenses"
                 to="/expenses"
-                className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700 font-bold"
+                className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
               >
                 {t("navigation.pages.expenses")}
               </PageLink>
@@ -309,9 +319,7 @@ export default function App() {
           <NavGroup pages={["customers"]}>
           <div className="relative group cursor-pointer">
             <div
-              className={`flex items-center space-x-1 space-x-reverse hover:text-slate-300 py-1.5 ${
-                isCustomersPage ? "text-white font-bold" : "text-slate-300"
-              }`}
+              className={`${getNavItemClass(isRouteActive(["/customers", "/customer-loans"]))} space-x-1 space-x-reverse`}
             >
               <span>{t("navigation.groups.customers")}</span>
               <ChevronDown size={14} />
@@ -336,7 +344,7 @@ export default function App() {
           </NavGroup>
           <NavGroup pages={["sales"]}>
           <div className="relative group cursor-pointer">
-            <div className="flex items-center space-x-1 space-x-reverse hover:text-slate-300 py-1.5 text-slate-300">
+            <div className={`${getNavItemClass(isRouteActive(["/sales"]))} space-x-1 space-x-reverse`}>
               <span>{t("navigation.groups.sales")}</span>
               <ChevronDown size={14} />
             </div>
@@ -361,7 +369,7 @@ export default function App() {
           <PageLink
             page="reports"
             to="/reports"
-            className={`hover:text-slate-300 py-1.5 ${activeTab === "/reports" ? "text-white border-b-2 border-white font-bold" : "text-slate-300"}`}
+            className={getNavItemClass(isRouteActive(["/reports"]))}
           >
             {t("navigation.pages.reports")}
           </PageLink>
@@ -382,13 +390,22 @@ export default function App() {
             </div>
           </div>
           <div className="h-5 w-px bg-slate-700 mx-1 hidden sm:block" />
-          <PageLink
-            page="settings"
-            to="/settings"
+          <Link
+            to="/settings?tab=profile"
             className="flex items-center gap-2.5 bg-slate-800/90 hover:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700/80 cursor-pointer transition-colors"
           >
-            <div className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-inner">
+            <div className="relative w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-inner overflow-hidden">
               <User size={15} />
+              {user?.profile_photo_url && (
+                <img
+                  src={user.profile_photo_url}
+                  alt=""
+                  className="absolute inset-0 w-full h-full rounded-full object-cover"
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                  }}
+                />
+              )}
             </div>
             <div className="hidden sm:flex flex-col text-right leading-tight">
               <span className="text-xs font-bold text-white">{user?.name}</span>
@@ -396,7 +413,7 @@ export default function App() {
                 {user?.role_title}
               </span>
             </div>
-          </PageLink>
+          </Link>
           <button
             type="button"
             onClick={logout}
@@ -411,7 +428,7 @@ export default function App() {
       <div className="md:hidden bg-white p-2 border-b border-gray-200 fixed top-12 w-full z-40 shadow-xs mt-1">
         <select
           className="w-full p-2 border border-gray-300 rounded-input text-base text-gray-800 bg-white"
-          value={activeTab}
+          value={mobileNavValue}
           onChange={handleMobileNavChange}
         >
           {can("dashboard") && (
@@ -465,6 +482,7 @@ export default function App() {
           {can("settings") && (
             <option value="/settings">{t("navigation.pages.settings")}</option>
           )}
+          <option value="/settings?tab=profile">{t("navigation.profile")}</option>
         </select>
       </div>
       <main
@@ -879,9 +897,13 @@ export default function App() {
           <Route
             path="/settings"
             element={
-              <RequirePage page={pageForPath("/settings")}>
+              isProfileSettingsTab ? (
                 <SettingsPage />
-              </RequirePage>
+              ) : (
+                <RequirePage page={pageForPath("/settings")}>
+                  <SettingsPage />
+                </RequirePage>
+              )
             }
           />
         </Routes>

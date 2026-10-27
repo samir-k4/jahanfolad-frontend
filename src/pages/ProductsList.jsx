@@ -1,7 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Plus, Edit, Search } from "lucide-react";
-import { ProductFormModal } from "../components/products";
+import { Plus, Edit, Edit2, Eye, Search, Trash2 } from "lucide-react";
+import {
+  ProductCategoryFormModal,
+  ProductDetailsModal,
+  ProductFormModal,
+} from "../components/products";
 import TooltipButton from "../components/common/TooltipButton";
 import { formatProductName } from "../utils/productFormat";
 import { showToast } from "../utils/toast";
@@ -22,12 +26,14 @@ export default function ProductsList() {
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [formMode, setFormMode] = useState(null);
   const [editProduct, setEditProduct] = useState(null);
+  const [editCategory, setEditCategory] = useState(null);
+  const [detailsProduct, setDetailsProduct] = useState(null);
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const [productsData, categoriesData] = await Promise.all([
-        apiList("/products"),
+        apiList("/products?include_inactive=true"),
         apiList("/product-categories"),
       ]);
       setProducts(productsData);
@@ -49,6 +55,37 @@ export default function ProductsList() {
   const handleSaved = () => {
     closeForm();
     loadData();
+  };
+  const handleCategorySaved = () => {
+    setEditCategory(null);
+    loadData();
+  };
+  const handleToggleActive = async (product) => {
+    const isActive = product.is_active !== false;
+    const nextIsActive = !isActive;
+    try {
+      await apiFetch(`/products/${product.id}`, {
+        method: "PATCH",
+        body: { is_active: nextIsActive },
+      });
+      setProducts((current) =>
+        current.map((item) =>
+          item.id === product.id ? { ...item, is_active: nextIsActive } : item,
+        ),
+      );
+      setDetailsProduct((current) =>
+        current?.id === product.id
+          ? { ...current, is_active: nextIsActive }
+          : current,
+      );
+      showToast.success(
+        t(nextIsActive ? "messages.activateSuccess" : "messages.deactivateSuccess"),
+      );
+    } catch (err) {
+      showToast.error(
+        getCleanErrorMessage(err, t("messages.updateStatusError")),
+      );
+    }
   };
   const handleDeleteProduct = (target) => {
     if (!target) return;
@@ -103,6 +140,7 @@ export default function ProductsList() {
               (p) =>
                 includes(p.name, term) ||
                 includes(category.name, term) ||
+                includes(category.unit, term) ||
                 includes(p.weight, term),
             )
           : categoryProducts;
@@ -164,48 +202,163 @@ export default function ProductsList() {
           />
         </div>
       </div>
-      <div className="w-full bg-white rounded-xl border border-gray-200 overflow-hidden shadow-2xs">
+      <div className="w-full bg-white rounded-xl border border-gray-200 shadow-2xs">
         <div className="divide-y divide-gray-200">
           {filteredCategories.map((category) => (
             <div key={category.id} className="bg-white">
               <div className="bg-gray-50 border-b border-gray-200 px-5 py-3 flex items-center justify-between">
-                <h3 className="font-bold text-xs text-gray-800">{category.name}</h3>
-                <span className="text-[11px] bg-white text-gray-700 font-bold px-2.5 py-0.5 rounded-full border border-gray-200 font-mono">
-                  {t("list.productsCount", { count: category.products.length })}
-                </span>
+                <div className="flex items-center gap-3">
+                  <h3 className="font-bold text-xs text-gray-800">{category.name}</h3>
+                  <span className="text-[11px] bg-white text-gray-700 font-semibold px-2.5 py-0.5 rounded-lg border border-gray-200">
+                    {t("list.categoryUnitLabel")}: {category.unit || "کارتن"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] bg-white text-gray-700 font-bold px-2.5 py-0.5 rounded-full border border-gray-200 font-mono">
+                    {t("list.productsCount", { count: category.products.length })}
+                  </span>
+                  {can("products", "edit") && (
+                    <TooltipButton
+                      icon={<Edit size={14} />}
+                      tooltip={t("list.tooltipEditCategory")}
+                      onClick={() => setEditCategory(category)}
+                      colorClass="text-gray-600 hover:text-gray-900 bg-white hover:bg-gray-100 border border-gray-300"
+                    />
+                  )}
+                </div>
               </div>
-              <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 bg-white">
-                {category.products.map((product) => (
-                  <div
-                    key={product.id}
-                    className="bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 rounded-xl p-3.5 flex justify-between items-center gap-2 transition-colors shadow-2xs"
-                  >
-                    <div className="space-y-1 min-w-0">
-                      <p className="font-bold text-gray-900 text-xs whitespace-normal break-words" dir="ltr">
-                        {formatProductName(product.name)}
-                      </p>
-                      <p className="text-[11px] font-medium text-gray-500" dir="rtl">
-                        {t("list.weightLabel")}{" "}
-                        <span className="text-gray-800 font-bold">
-                          {product.weight_type === "variable"
-                            ? "متغیر"
-                            : product.weight || t("table.emptyValue", { ns: "common" })}
-                        </span>
-                      </p>
-                    </div>
-                    {can("products", "edit") && (
-                      <TooltipButton
-                        icon={<Edit size={14} />}
-                        tooltip={t("list.tooltipEdit")}
-                        onClick={() => {
-                          setEditProduct(product);
-                          setFormMode("edit");
-                        }}
-                        colorClass="text-gray-600 hover:text-gray-900 bg-white hover:bg-gray-100 border border-gray-300"
-                      />
-                    )}
-                  </div>
-                ))}
+              <div className="overflow-x-auto bg-white">
+                <table className="w-full min-w-[980px] text-right border-collapse" dir="rtl">
+                  <thead>
+                    <tr className="bg-white text-gray-600 text-table-header-text border-b border-gray-200">
+                      <th className="p-3.5 w-14 text-center border-l border-gray-200">
+                        {t("list.colIndex")}
+                      </th>
+                      <th className="p-3.5 border-l border-gray-200">
+                        {t("list.colProduct")}
+                      </th>
+                      <th className="p-3.5 text-center border-l border-gray-200">
+                        {t("insertModal.weightFieldLabel")}
+                      </th>
+                      <th className="p-3.5 text-center border-l border-gray-200">
+                        {t("list.colUnit")}
+                      </th>
+                      <th className="p-3.5 text-center border-l border-gray-200">
+                        {t("list.colThreshold")}
+                      </th>
+                      <th className="p-3.5 text-center border-l border-gray-200">
+                        {t("list.colStatus")}
+                      </th>
+                      <th className="p-3.5 text-center">
+                        {t("list.colActions")}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 text-table-cell-text">
+                    {category.products.map((product, index) => {
+                      const isActive = product.is_active !== false;
+                      const unit = category.unit || "کارتن";
+                      const stockUnit =
+                        product.weight_type === "variable" ? "کیلوگرم" : unit;
+                      return (
+                        <tr
+                          key={product.id}
+                          className={`hover:bg-gray-50/70 ${
+                            isActive ? "" : "bg-gray-50/60 text-gray-500"
+                          }`}
+                        >
+                          <td className="p-3.5 text-center font-mono text-gray-500 border-l border-gray-100">
+                            {index + 1}
+                          </td>
+                          <td className="p-3.5 font-bold text-gray-900 border-l border-gray-100">
+                            {formatProductName(product.name)}
+                          </td>
+                          <td className="p-3.5 text-center font-mono border-l border-gray-100">
+                            {product.weight_type === "variable"
+                              ? t("insertModal.weightTypes.variable")
+                              : product.weight || t("table.emptyValue", { ns: "common" })}
+                          </td>
+                          <td className="p-3.5 text-center border-l border-gray-100">
+                            {unit}
+                          </td>
+                          <td className="p-3.5 text-center border-l border-gray-100">
+                            <span className="inline-flex items-center gap-1 font-mono" dir="rtl">
+                              <span dir="ltr">{product.low_stock_threshold ?? 10}</span>
+                              <span className="text-[10px] font-sans">{stockUnit}</span>
+                            </span>
+                          </td>
+                          <td className="p-3.5 text-center border-l border-gray-100">
+                            {can("products", "edit") ? (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleActive(product)}
+                                title={t(isActive ? "list.deactivateButton" : "list.activateButton")}
+                                className={`inline-flex items-center space-x-1 space-x-reverse rounded-badge px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                                  isActive ? "text-emerald-800" : "text-rose-800"
+                                }`}
+                              >
+                                <span
+                                  className={`h-1.5 w-1.5 rounded-full ${
+                                    isActive ? "bg-emerald-600" : "bg-rose-600"
+                                  }`}
+                                />
+                                <span>
+                                  {t(isActive ? "list.activeStatus" : "list.inactiveStatus")}
+                                </span>
+                              </button>
+                            ) : (
+                              <span
+                                className={`inline-flex items-center space-x-1 space-x-reverse rounded-badge px-2 py-0.5 text-[11px] font-medium ${
+                                  isActive ? "text-emerald-800" : "text-rose-800"
+                                }`}
+                              >
+                                <span
+                                  className={`h-1.5 w-1.5 rounded-full ${
+                                    isActive ? "bg-emerald-600" : "bg-rose-600"
+                                  }`}
+                                />
+                                <span>
+                                  {t(isActive ? "list.activeStatus" : "list.inactiveStatus")}
+                                </span>
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-3.5">
+                            <div className="flex items-center justify-center space-x-1 space-x-reverse">
+                              <TooltipButton
+                                tooltip={t("list.detailsButton")}
+                                onClick={() =>
+                                  setDetailsProduct({ ...product, category })
+                                }
+                                className="w-7 h-7 flex items-center justify-center bg-white hover:bg-slate-800 hover:text-white text-gray-600 rounded-btn border border-gray-300 transition-colors cursor-pointer !p-0 shadow-2xs"
+                                icon={<Eye size={13} />}
+                              />
+                              {can("products", "edit") && (
+                                <TooltipButton
+                                  tooltip={t("list.tooltipEdit")}
+                                  onClick={() => {
+                                    setEditProduct(product);
+                                    setFormMode("edit");
+                                  }}
+                                  className="w-7 h-7 flex items-center justify-center bg-white hover:bg-slate-800 hover:text-white text-gray-600 rounded-btn border border-gray-300 transition-colors cursor-pointer !p-0 shadow-2xs"
+                                  icon={<Edit2 size={13} />}
+                                />
+                              )}
+                              {can("products", "delete") && (
+                                <TooltipButton
+                                  tooltip={t("editModal.deleteButton")}
+                                  onClick={() => handleDeleteProduct(product)}
+                                  className="w-7 h-7 flex items-center justify-center bg-white hover:bg-rose-700 hover:text-white text-gray-600 rounded-btn border border-gray-300 transition-colors cursor-pointer !p-0 shadow-2xs"
+                                  icon={<Trash2 size={13} />}
+                                />
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
           ))}
@@ -229,6 +382,16 @@ export default function ProductsList() {
         categories={categories}
         onSaved={handleSaved}
         onDelete={can("products", "delete") ? handleDeleteProduct : undefined}
+      />
+      <ProductCategoryFormModal
+        isOpen={Boolean(editCategory)}
+        category={editCategory}
+        onClose={() => setEditCategory(null)}
+        onSaved={handleCategorySaved}
+      />
+      <ProductDetailsModal
+        product={detailsProduct}
+        onClose={() => setDetailsProduct(null)}
       />
     </div>
   );

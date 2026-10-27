@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { TEXT_FIELD_MAX_LENGTH, NOTES_MAX_LENGTH } from "../constants/treasuryDomain";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import DatePicker, { DateObject } from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import persian_af from "../utils/persian_af";
 import {
   ArrowRight,
   Save,
-  Search,
   Check,
   FileText,
   CheckCircle2,
@@ -25,6 +24,8 @@ import {
 } from "../utils/dariNumberFormatter";
 import { showToast } from "../utils/toast";
 import { apiUrl } from "../api";
+import { formatToGregorian } from "../utils/dateHelpers";
+import useIncomeCategories from "../hooks/useIncomeCategories";
 import { INCOME_TYPE, INCOME_TYPE_IDS, INCOME_TYPE_KEYS, balanceState } from "../constants/incomeDomain";
 export default function CustomerReceiptCreatePage() {
   const { t } = useTranslation("incomes");
@@ -39,13 +40,20 @@ export default function CustomerReceiptCreatePage() {
       })),
     [t]
   );
-  const { canCreate } = usePagePerms("incomes");
+  const { canCreate, canEdit } = usePagePerms("incomes");
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
+  const { categories } = useIncomeCategories(Boolean(searchParams.get("edit")));
+  const editIncomeId = searchParams.get("edit");
+  const isEditMode = Boolean(editIncomeId);
+  const returnTo = location.state?.returnTo || "/incomes";
   const preselectedCustomerId = searchParams.get("customer_id");
+  const [editingIncome, setEditingIncome] = useState(() => location.state?.income || null);
+  const [loadingEdit, setLoadingEdit] = useState(Boolean(editIncomeId && !location.state?.income));
+  const [editLoadError, setEditLoadError] = useState("");
   const [customers, setCustomers] = useState([]);
   const [vaults, setVaults] = useState([]);
-  const [loadingResources, setLoadingResources] = useState(true);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [receiptNumber, setReceiptNumber] = useState(() => String(Math.floor(1000 + Math.random() * 9000)));
@@ -56,6 +64,7 @@ export default function CustomerReceiptCreatePage() {
   const [customerLoanDetails, setCustomerLoanDetails] = useState(null);
   const [loadingCustomerLoan, setLoadingCustomerLoan] = useState(false);
   const [selectedType, setSelectedType] = useState(INCOME_TYPE.INVOICE);
+  const [incomeCategoryId, setIncomeCategoryId] = useState("");
   const [typeSearchQuery, setTypeSearchQuery] = useState("");
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
   const typeDropdownRef = useRef(null);
@@ -73,6 +82,86 @@ export default function CustomerReceiptCreatePage() {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [voucherReceipt, setVoucherReceipt] = useState(null);
   useEffect(() => {
+    if (!editIncomeId) {
+      setEditingIncome(null);
+      setLoadingEdit(false);
+      setEditLoadError("");
+      return undefined;
+    }
+
+    const routeIncome = location.state?.income;
+    if (routeIncome && String(routeIncome.id) === String(editIncomeId)) {
+      setEditingIncome(routeIncome);
+      setLoadingEdit(false);
+      setEditLoadError("");
+      return undefined;
+    }
+
+    let active = true;
+    setLoadingEdit(true);
+    setEditLoadError("");
+    fetch(apiUrl(`/incomes/${encodeURIComponent(editIncomeId)}`), {
+      headers: { Accept: "application/json" },
+    })
+      .then(async (res) => {
+        const data = await res.json().catch(() => null);
+        if (!res.ok) {
+          throw new Error(getCleanErrorMessage(data, t("edit.updateError")));
+        }
+        return data?.data ?? data;
+      })
+      .then((income) => {
+        if (active) setEditingIncome(income);
+      })
+      .catch((err) => {
+        console.error("Load income for editing error:", err);
+        if (active) setEditLoadError(getCleanErrorMessage(err, t("edit.updateError")));
+      })
+      .finally(() => {
+        if (active) setLoadingEdit(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [editIncomeId, location.state?.income, t]);
+
+  useEffect(() => {
+    if (!isEditMode || !editingIncome || String(editingIncome.id) !== String(editIncomeId)) return;
+
+    setReceiptNumber(String(editingIncome.receipt_number || ""));
+    setSelectedCustomer(editingIncome.customer || null);
+    setCustomerSearchQuery(editingIncome.payer_name || "");
+    setSelectedType(
+      editingIncome.category_name || editingIncome.category?.name || INCOME_TYPE.INVOICE,
+    );
+    setIncomeCategoryId(String(editingIncome.income_category_id || ""));
+    setSelectedVaultId(String(editingIncome.vault_id || ""));
+    setCurrency(editingIncome.currency || "USD");
+    setSettlementCurrency(
+      editingIncome.settlement_currency
+        || editingIncome.customer_transaction?.currency
+        || editingIncome.currency
+        || "USD",
+    );
+    setExchangeRate(String(editingIncome.exchange_rate || "70.00"));
+    setAmount(String(editingIncome.amount || ""));
+    setDescription(editingIncome.description || "");
+    setReceivedBy(editingIncome.received_by || t("create.defaultReceiver"));
+    if (editingIncome.shamsi_date) {
+      const [year, month, day] = toEnglishDigits(editingIncome.shamsi_date).split("/");
+      if (year && month && day) {
+        setDateObj(new DateObject({
+          calendar: persian,
+          locale: persian_af,
+          year: Number(year),
+          month: Number(month),
+          day: Number(day),
+        }));
+      }
+    }
+  }, [editIncomeId, editingIncome, isEditMode, t]);
+  useEffect(() => {
     const handleClickOutside = (e) => {
       if (typeDropdownRef.current && !typeDropdownRef.current.contains(e.target)) {
         setIsTypeDropdownOpen(false);
@@ -86,7 +175,6 @@ export default function CustomerReceiptCreatePage() {
   }, []);
   useEffect(() => {
     const fetchVaults = async () => {
-      setLoadingResources(true);
       try {
         const vRes = await fetch(apiUrl("/vaults"));
         if (vRes.ok) {
@@ -97,7 +185,9 @@ export default function CustomerReceiptCreatePage() {
             (v.name && v.name.includes(t("navigation.pages.incomes", { ns: "common" }))) ||
             (v.name && v.name.includes(t("create.defaultShort")))
           );
-          if (customerVault) {
+          if (isEditMode) {
+            return;
+          } else if (customerVault) {
             setSelectedVaultId(String(customerVault.id));
           } else if (vList.length > 0) {
             setSelectedVaultId(String(vList[0].id));
@@ -105,12 +195,10 @@ export default function CustomerReceiptCreatePage() {
         }
       } catch (err) {
         console.error("Error fetching vaults:", err);
-      } finally {
-        setLoadingResources(false);
       }
     };
     fetchVaults();
-  }, []);
+  }, [isEditMode, t]);
   useEffect(() => {
     let active = true;
     const fetchCustomers = async () => {
@@ -217,7 +305,7 @@ export default function CustomerReceiptCreatePage() {
     return 0;
   }, [isAfn, numAmount, numRate]);
   const handleSubmit = async (e) => {
-    if (!canCreate) return;
+    if (isEditMode ? !canEdit : !canCreate) return;
     e.preventDefault();
     if (submitting) return;
     if (!selectedCustomer && !customerSearchQuery.trim()) {
@@ -243,7 +331,7 @@ export default function CustomerReceiptCreatePage() {
         : customerSearchQuery.trim();
       const shamsiDateStr = dateObj ? toEnglishDigits(dateObj.format("YYYY/MM/DD")) : "";
       const payload = {
-        vault_id: parseInt(selectedVaultId, 10),
+        ...(!isEditMode ? { vault_id: parseInt(selectedVaultId, 10) } : {}),
         payer_name: payerName,
         customer_id: selectedCustomer ? selectedCustomer.id : null,
         amount: numAmount,
@@ -251,24 +339,49 @@ export default function CustomerReceiptCreatePage() {
         settlement_currency: settlementCurrency,
         exchange_rate: needsExchangeRate ? numRate : 1.0,
         category_name: selectedType,
-        receipt_number: receiptNumber.trim() || String(Math.floor(1000 + Math.random() * 9000)),
+        ...(isEditMode
+          ? {
+              income_category_id: incomeCategoryId ? Number(incomeCategoryId) : null,
+              income_date: dateObj ? formatToGregorian(dateObj) : editingIncome?.income_date,
+            }
+          : {
+              receipt_number:
+                receiptNumber.trim() || String(Math.floor(1000 + Math.random() * 9000)),
+            }),
         shamsi_date: shamsiDateStr,
-        title: `دریافتی ${selectedType} — ${payerName}`,
-        description: description.trim() || `دریافت وجه بابت ${selectedType} از طرف ${payerName}`,
-        received_by: receivedBy.trim() || t("create.defaultReceiver"),
+        title: isEditMode
+          ? editingIncome?.title
+          : `دریافتی ${selectedType} — ${payerName}`,
+        description: isEditMode
+          ? description.trim()
+          : description.trim() || `دریافت وجه بابت ${selectedType} از طرف ${payerName}`,
+        received_by: isEditMode
+          ? receivedBy.trim()
+          : receivedBy.trim() || t("create.defaultReceiver"),
       };
-      const res = await fetch(apiUrl("/incomes"), {
-        method: "POST",
+      const res = await fetch(
+        apiUrl(isEditMode ? `/incomes/${encodeURIComponent(editIncomeId)}` : "/incomes"),
+        {
+        method: isEditMode ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
         body: JSON.stringify(payload),
-      });
+        },
+      );
       const resData = await res.json();
       if (!res.ok) {
-        const cleanMsg = getCleanErrorMessage(resData, t("create.createError"));
+        const cleanMsg = getCleanErrorMessage(
+          resData,
+          isEditMode ? t("edit.updateError") : t("create.createError"),
+        );
         throw new Error(cleanMsg);
+      }
+      if (isEditMode) {
+        showToast.success(t("messages.updated"));
+        navigate(returnTo, { replace: true });
+        return;
       }
       showToast.success(t("create.created"));
       setCreatedReceiptData({
@@ -289,17 +402,47 @@ export default function CustomerReceiptCreatePage() {
       setSubmitting(false);
     }
   };
+  if (isEditMode && loadingEdit) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center gap-3 text-gray-600" role="status">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-700 border-t-transparent" />
+        <span>{t("balance.loading")}</span>
+      </div>
+    );
+  }
+  if (isEditMode && editLoadError) {
+    return (
+      <div className="mx-auto mt-10 max-w-xl rounded-card border border-rose-200 bg-white p-6 text-center shadow-2xs" dir="rtl">
+        <p className="font-semibold text-rose-700">{editLoadError}</p>
+        <Link to={returnTo} className="mt-4 inline-flex rounded-btn border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700">
+          {t("label.cancel")}
+        </Link>
+      </div>
+    );
+  }
+  if ((isEditMode && !canEdit) || (!isEditMode && !canCreate)) {
+    return (
+      <div className="mx-auto mt-10 max-w-xl rounded-card border border-amber-200 bg-white p-6 text-center shadow-2xs" dir="rtl">
+        <p className="font-semibold text-gray-800">{t("common:permission.denied")}</p>
+        <Link to={returnTo} className="mt-4 inline-flex rounded-btn border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700">
+          {t("label.cancel")}
+        </Link>
+      </div>
+    );
+  }
   return (
     <div className="w-full space-y-4 font-sans text-gray-800" dir="rtl">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-200 pb-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">{t("label.createTitle")}</h1>
+            <h1 className="text-xl font-bold text-gray-900 tracking-tight">
+              {isEditMode ? t("label.editTitle") : t("label.createTitle")}
+            </h1>
           </div>
         </div>
         <div className="flex items-center gap-2.5">
           <Link
-            to="/incomes"
+            to={returnTo}
             className="px-3.5 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-btn hover:bg-gray-50 transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
           >
             <ArrowRight size={15} />
@@ -426,13 +569,36 @@ export default function CustomerReceiptCreatePage() {
                     )}
                   </div>
                 </div>
+                {isEditMode && (
+                  <div>
+                    <label className="block text-xs font-bold text-gray-800 mb-1.5">
+                      {t("edit.category")}
+                    </label>
+                    <SearchableSelect
+                      options={categories}
+                      value={incomeCategoryId}
+                      onChange={setIncomeCategoryId}
+                      placeholder={t("edit.categoryPlaceholder")}
+                      searchPlaceholder={t("edit.categorySearch")}
+                      noResultsText={t("edit.categoryEmpty")}
+                      getOptionLabel={(category) => category.name}
+                      getOptionValue={(category) => String(category.id)}
+                      buttonClassName="h-[40px] px-3 text-xs"
+                      usePortal
+                    />
+                  </div>
+                )}
                 <div className="relative" ref={vaultDropdownRef}>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">{t("create.vault")}<span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
                     <div
-                      onClick={() => setIsVaultDropdownOpen(!isVaultDropdownOpen)}
-                      className={`w-full h-[40px] px-3 bg-white border rounded-btn text-xs flex items-center justify-between cursor-pointer transition-colors ${
+                      onClick={() => {
+                        if (!isEditMode) setIsVaultDropdownOpen(!isVaultDropdownOpen);
+                      }}
+                      className={`w-full h-[40px] px-3 border rounded-btn text-xs flex items-center justify-between transition-colors ${
+                        isEditMode ? "bg-gray-50 border-gray-200 cursor-not-allowed" : "bg-white border-gray-300 cursor-pointer"
+                      } ${
                         isVaultDropdownOpen ? "border-emerald-600 ring-1 ring-emerald-600" : "border-gray-300 hover:border-gray-400"
                       }`}
                     >
@@ -448,7 +614,10 @@ export default function CustomerReceiptCreatePage() {
                       </div>
                       <ChevronDown size={16} className={`text-gray-400 shrink-0 transition-transform ${isVaultDropdownOpen ? "rotate-180" : ""}`} />
                     </div>
-                    {isVaultDropdownOpen && (
+                    {isEditMode && (
+                      <p className="mt-1 text-[11px] text-gray-500">{t("edit.vaultLocked")}</p>
+                    )}
+                    {!isEditMode && isVaultDropdownOpen && (
                       <div className="absolute top-full right-0 left-0 mt-1 bg-white border border-gray-200 rounded-card shadow-xl z-50 overflow-hidden animate-in fade-in-50 duration-150">
                         <div className="p-2 border-b border-gray-100 bg-gray-50">
                           <input
@@ -752,12 +921,16 @@ export default function CustomerReceiptCreatePage() {
                   ) : (
                     <>
                       <Save size={15} />
-                      <span>{t("create.submit")}</span>
+                      <span>
+                        {isEditMode
+                          ? t("actions.saveChanges", { ns: "common" })
+                          : t("create.submit")}
+                      </span>
                     </>
                   )}
                 </button>
                 <Link
-                  to="/incomes"
+                  to={returnTo}
                   className="w-full py-2 px-4 bg-white hover:bg-gray-50 text-gray-700 font-semibold text-xs border border-gray-300 rounded-btn transition-colors flex items-center justify-center gap-1.5"
                 >
                   <X size={14} />

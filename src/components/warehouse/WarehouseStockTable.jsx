@@ -219,16 +219,18 @@ export default function WarehouseStockTable({
                     </td>
                     <td className="p-3.5 text-center border-l border-gray-100">
                       <span
-                        className={`font-bold font-mono px-3 py-0.5 rounded-lg inline-block border ${
+                        className={`font-bold font-mono px-3 py-0.5 rounded-lg inline-flex items-center gap-1 border ${
                           Number(item.current_stock) === 0
                             ? "bg-rose-50 text-rose-800 border-rose-200"
                             : item.status === "low_stock"
                               ? "bg-amber-50 text-amber-900 border-amber-200"
                               : "bg-emerald-50 text-emerald-800 border-emerald-200"
                         }`}
-                        dir="ltr"
+                        dir="rtl"
                       >
-                        {Number(item.current_stock).toLocaleString("en-US", { maximumFractionDigits: 3 })}{" "}
+                        <span dir="ltr">
+                          {Number(item.current_stock).toLocaleString("en-US", { maximumFractionDigits: 3 })}
+                        </span>
                         <span className="font-sans text-[10px]">{item.stock_unit}</span>
                       </span>
                     </td>
@@ -249,9 +251,9 @@ export default function WarehouseStockTable({
                                 <span className="font-bold">
                                   {b.branch_name}:
                                 </span>
-                                <span className="font-mono font-bold" dir="ltr">
-                                  {Number(b.stock).toLocaleString("en-US")}
-                                  {" "}{item.stock_unit}
+                                <span className="inline-flex items-center gap-1 font-mono font-bold" dir="rtl">
+                                  <span dir="ltr">{Number(b.stock).toLocaleString("en-US")}</span>
+                                  <span className="font-sans text-[10px]">{item.stock_unit}</span>
                                 </span>
                               </span>
                             ))
@@ -311,8 +313,8 @@ export default function WarehouseStockTable({
                           className="group inline-flex items-center space-x-1 space-x-reverse cursor-pointer px-2.5 py-0.5 rounded-lg hover:bg-gray-100 transition-colors"
                           title={t("stock.editThresholdTitle")}
                         >
-                          <span className="font-mono font-bold text-gray-700 text-table-cell-text">
-                            {item.low_stock_threshold ?? 10}{" "}
+                          <span className="inline-flex items-center gap-1 font-mono font-bold text-gray-700 text-table-cell-text" dir="rtl">
+                            <span dir="ltr">{item.low_stock_threshold ?? 10}</span>
                             <span className="font-sans text-[10px]">{item.stock_unit}</span>
                           </span>
                           <Edit2

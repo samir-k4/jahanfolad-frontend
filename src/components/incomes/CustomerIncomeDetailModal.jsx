@@ -6,6 +6,7 @@ import { numberToWordsDari } from "../../utils/numberToWordsDari";
 import { formatDocNumber } from "../../utils/formatDocNumber";
 import { formatTimeDari } from "../../utils/timeHelpers";
 import { formatShamsiDate } from "../../utils";
+import { usePagePerms } from "../common";
 const fmt = (n) =>
   Number(n || 0).toLocaleString("en-US", {
     minimumFractionDigits: 0,
@@ -47,6 +48,7 @@ export default function CustomerIncomeDetailModal({
   onOpenEdit,
 }) {
   const { t } = useTranslation("incomes");
+  const { canEdit } = usePagePerms("incomes");
   useBodyScrollLock(isOpen);
   if (!isOpen || !income) return null;
   const docCode = formatDocNumber(income.receipt_number, income.id);
@@ -197,17 +199,19 @@ export default function CustomerIncomeDetailModal({
               <FileText size={15} />
               <span>{t("detail.viewVoucher")}</span>
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                if (onOpenEdit) onOpenEdit(income);
-              }}
-              className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 text-btn-text font-bold rounded-btn border border-gray-300 flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <Edit2 size={13} />
-              <span>{t("detail.edit")}</span>
-            </button>
+            {canEdit && onOpenEdit && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenEdit(income);
+                }}
+                className="px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 text-btn-text font-bold rounded-btn border border-gray-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Edit2 size={13} />
+                <span>{t("detail.edit")}</span>
+              </button>
+            )}
           </div>
           <button
             type="button"

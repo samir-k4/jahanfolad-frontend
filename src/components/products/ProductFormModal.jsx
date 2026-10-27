@@ -55,12 +55,14 @@ export default function ProductFormModal({
   const [form, setForm] = useState(emptyForm);
   const [useNewCategory, setUseNewCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryUnit, setNewCategoryUnit] = useState("");
   const [saving, setSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   useEffect(() => {
     if (!isOpen) return;
     setUseNewCategory(false);
     setNewCategoryName("");
+    setNewCategoryUnit("");
     setSaving(false);
     setShowDeleteModal(false);
     if (isEdit && product) {
@@ -87,6 +89,9 @@ export default function ProductFormModal({
     if (useNewCategory && !newCategoryName.trim()) {
       return t("messages.enterCategoryName");
     }
+    if (useNewCategory && !newCategoryUnit.trim()) {
+      return t("messages.enterCategoryUnit");
+    }
     if (!useNewCategory && !form.categoryId) return t("messages.selectCategory");
     const threshold = Number(form.threshold);
     if (form.threshold !== "" && (!Number.isInteger(threshold) || threshold < 0)) {
@@ -109,7 +114,10 @@ export default function ProductFormModal({
       if (useNewCategory) {
         const created = await apiItem("/product-categories", {
           method: "POST",
-          body: { name: newCategoryName.trim() },
+          body: {
+            name: newCategoryName.trim(),
+            unit: newCategoryUnit.trim(),
+          },
         });
         categoryId = created.id;
       }
@@ -187,11 +195,23 @@ export default function ProductFormModal({
                   maxLength={255}
                   className={inputClass}
                 />
+                <label className={`${labelClass} mt-3`}>
+                  {t("insertModal.newCategoryUnitLabel")}
+                </label>
+                <input
+                  type="text"
+                  value={newCategoryUnit}
+                  onChange={(e) => setNewCategoryUnit(e.target.value)}
+                  placeholder={t("insertModal.newCategoryUnitPlaceholder")}
+                  maxLength={80}
+                  className={inputClass}
+                />
                 <button
                   type="button"
                   onClick={() => {
                     setUseNewCategory(false);
                     setNewCategoryName("");
+                    setNewCategoryUnit("");
                   }}
                   className="mt-2 text-caption-text font-semibold text-gray-600 hover:text-slate-800 cursor-pointer block"
                 >
@@ -207,10 +227,23 @@ export default function ProductFormModal({
                   placeholder={t("insertModal.categoryPlaceholder")}
                   searchPlaceholder={t("insertModal.categorySearchPlaceholder")}
                   noResultsText={t("insertModal.categoryNoResults")}
-                  getOptionLabel={(cat) => cat?.name || ""}
+                  getOptionLabel={(cat) =>
+                    cat ? `${cat.name} — ${cat.unit || ""}` : ""
+                  }
                   getOptionValue={(cat) => cat?.id}
                   buttonClassName="py-2 px-3 text-table-cell-text"
                 />
+                {form.categoryId && (
+                  <p className="mt-1.5 text-caption-text text-gray-500">
+                    {t("insertModal.categoryUnitLabel")}:{" "}
+                    <span className="font-semibold text-gray-700">
+                      {categories.find(
+                        (category) =>
+                          String(category.id) === String(form.categoryId),
+                      )?.unit || "کارتن"}
+                    </span>
+                  </p>
+                )}
                 {config.allowsNewCategory && (
                   <button
                     type="button"

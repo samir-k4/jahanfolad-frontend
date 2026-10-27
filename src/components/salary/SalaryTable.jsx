@@ -204,7 +204,7 @@ export default function SalaryTable({
         </div>
       ) : (
         <div className="overflow-x-auto bg-white">
-          <table className="w-full text-right border-collapse bg-white">
+          <table className="salary-payroll-table w-full border-collapse bg-white">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200 text-gray-700 text-table-header-text font-bold">
                 <th className={`${HEAD} text-center w-12`}>{t("table.rowIndex", { ns: "common" })}</th>
@@ -237,7 +237,7 @@ export default function SalaryTable({
                     <button
                       type="button"
                       onClick={() => navigate(`/employees/${row.id}`)}
-                      className="font-bold text-gray-900 hover:text-emerald-700 transition-colors cursor-pointer block truncate text-right w-full"
+                      className="font-bold text-gray-900 hover:text-emerald-700 transition-colors cursor-pointer block truncate text-center w-full"
                     >
                       {row.full_name}
                     </button>

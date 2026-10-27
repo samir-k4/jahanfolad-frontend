@@ -91,7 +91,9 @@
     "closeButton": "بستن"
   },
   "pdfModal": {
-    "title": "پیش‌نمایش راپور و جدول تولیدات روزانه (A4 افقی)",
+    "title": "راپور تولیدات روزانه",
+    "productFilterLabel": "محصول:",
+    "allProducts": "همه محصولات",
     "downloadButton": "ذخیره راپور (PDF)",
     "generatingButton": "در حال تولید PDF در سرور...",
     "printReportShort": "چاپ راپور",

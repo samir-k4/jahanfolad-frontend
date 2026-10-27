@@ -312,7 +312,7 @@ export default function ProductionPage() {
   };
   const showBranch = isMultiBranch;
   return (
-    <div className="w-full space-y-4 font-sans" dir="rtl">
+    <div className="w-full min-h-full space-y-4 rounded-card p-3 font-sans sm:p-4" dir="rtl">
       <ProductionEntryForm
         showBranch={showBranch}
         globalData={globalData}
@@ -375,6 +375,7 @@ export default function ProductionPage() {
         dailyData={pdfModalData}
         branchName={pdfBranchName || branchNameOf(globalData.branch)}
         dateString={pdfDateString || globalData.date}
+        products={products}
       />
       <PeriodicProductionReportModal
         showBranch={showBranch}

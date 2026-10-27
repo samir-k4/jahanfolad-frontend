@@ -5,6 +5,7 @@
   "navigation": {
     "home": "صفحه اصلی",
     "logout": "خروج از سیستم",
+    "profile": "پروفایل من",
     "groups": {
       "productionWarehouse": "تولیدات و گدام",
       "humanResources": "منابع بشری",

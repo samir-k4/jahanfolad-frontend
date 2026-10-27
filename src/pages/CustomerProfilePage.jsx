@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { escapeHtml as esc } from "../utils/escapeHtml";
 import { showToast as appToast } from "../utils/toast";
@@ -16,13 +16,10 @@ import {
 } from "lucide-react";
 import useBodyScrollLock from "../hooks/useBodyScrollLock";
 import useDebounce from "../hooks/useDebounce";
-import useVaults from "../hooks/useVaults";
-import useIncomeCategories from "../hooks/useIncomeCategories";
 import { apiUrl } from "../api";
 import { TooltipButton, SearchableSelect, DeleteConfirmationModal, DocumentPreviewModal, usePagePerms } from "../components/common";
 import SalesInvoicePreviewModal from "../components/sales/SalesInvoicePreviewModal";
 import CustomerIncomeDetailModal from "../components/incomes/CustomerIncomeDetailModal";
-import CustomerIncomeEditModal from "../components/incomes/CustomerIncomeEditModal";
 import CustomerOpeningBalanceModal from "../components/customers/CustomerOpeningBalanceModal";
 import { toEnglishDigits, formatProductName } from "../utils";
 
@@ -69,15 +66,12 @@ export default function CustomerProfilePage() {
   const [viewingInvoice, setViewingInvoice] = useState(null);
   const [previewInvoice, setPreviewInvoice] = useState(null);
   const [selectedIncomeForDetail, setSelectedIncomeForDetail] = useState(null);
-  const [selectedIncomeForEdit, setSelectedIncomeForEdit] = useState(null);
   const [selectedIncomeForVoucher, setSelectedIncomeForVoucher] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [showStatementPdf, setShowStatementPdf] = useState(false);
   const [showOpeningBalanceModal, setShowOpeningBalanceModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const { vaults } = useVaults();
-  const { categories } = useIncomeCategories();
   const { canEdit } = usePagePerms("customers");
   const openingBalanceEntries = useMemo(
     () => statement.filter((item) => item.reference_type === "opening_balance"),
@@ -974,19 +968,11 @@ export default function CustomerProfilePage() {
         onClose={() => setSelectedIncomeForDetail(null)}
         income={selectedIncomeForDetail}
         onOpenVoucher={(inc) => setSelectedIncomeForVoucher(inc)}
-        onOpenEdit={(inc) => setSelectedIncomeForEdit(inc)}
-      />
-
-      <CustomerIncomeEditModal
-        isOpen={!!selectedIncomeForEdit}
-        onClose={() => setSelectedIncomeForEdit(null)}
-        income={selectedIncomeForEdit}
-        vaults={vaults}
-        categories={categories}
-        onSuccess={() => {
-          setSelectedIncomeForEdit(null);
-          fetchCustomerData();
-        }}
+        onOpenEdit={(inc) =>
+          navigate(`/incomes/create?edit=${encodeURIComponent(inc.id)}`, {
+            state: { income: inc, returnTo: `/customers/${id}` },
+          })
+        }
       />
 
       <CustomerOpeningBalanceModal

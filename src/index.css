@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+.salary-payroll-table th,
+.salary-payroll-table td {
+  text-align: center;
+}
+
 /* ========================================================================= */
 /* Typography: Roshan AL Global @font-face Declarations                      */
 /* ========================================================================= */

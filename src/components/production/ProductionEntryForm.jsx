@@ -3,7 +3,6 @@ import {
   Plus,
   Trash2,
   Save,
-  FileText,
   Printer,
   Edit2,
   X,
@@ -39,22 +38,17 @@ export default function ProductionEntryForm({
   const { t } = useTranslation("production");
   return (
     <div className="w-full space-y-4 font-sans" dir="rtl">
-      <div className="bg-white p-5 border border-gray-200 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex items-center space-x-3 space-x-reverse">
-          <div className="p-2 rounded-lg border bg-slate-100 text-slate-800 border-slate-200 shrink-0">
-            <FileText size={22} className="shrink-0" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-800 tracking-tight">
-              {t("navigation.pages.production", { ns: "common" })}
-            </h1>
-          </div>
+      <div className="w-full flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-200 pb-4">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 tracking-tight">
+            {t("navigation.pages.production", { ns: "common" })}
+          </h1>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto justify-end">
           <button
             type="button"
             onClick={handleGeneratePdf}
-            className="flex items-center space-x-2 space-x-reverse bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg border border-gray-300 text-btn-text transition-colors cursor-pointer"
+            className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-btn border border-gray-300 text-btn-text transition-colors cursor-pointer"
             title={t("form.printPreviewTitle")}
           >
             <Printer size={16} className="text-gray-600" />
@@ -212,7 +206,11 @@ export default function ProductionEntryForm({
                     noResultsText={
                       t("table.noResults")
                     }
-                    getOptionLabel={(cat) => cat?.name || ""}
+                    getOptionLabel={(cat) =>
+                      cat?.name
+                        ? `${cat.name} (${cat.unit || "کارتن"})`
+                        : ""
+                    }
                     getOptionValue={(cat) => cat?.id}
                     buttonClassName="py-1.5 px-2.5 text-table-cell-text"
                   />

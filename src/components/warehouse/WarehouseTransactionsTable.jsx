@@ -232,7 +232,9 @@ export default function WarehouseTransactionsTable({
                         {isOut ? "-" : "+"}
                         {Number(tx.quantity).toLocaleString("en-US", { maximumFractionDigits: 3 })}{" "}
                         <span className="font-sans text-[10px]">
-                          {tx.product?.weight_type === "variable" ? "کیلوگرم" : "عدد"}
+                          {tx.product?.weight_type === "variable"
+                            ? "کیلوگرم"
+                            : (tx.product?.category?.unit || "کارتن")}
                         </span>
                       </span>
                     </td>

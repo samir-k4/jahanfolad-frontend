@@ -134,6 +134,7 @@ function buildInit({
   includeSelectedBranch = true,
 } = {}) {
   const isWrite = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase());
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
   let selectedBranch = "";
   try {
     selectedBranch = localStorage.getItem("jfc_selected_branch") || "";
@@ -147,10 +148,10 @@ function buildInit({
       Accept: accept || 'application/json',
       ...(isWrite ? { [APP_REQUEST_HEADER]: APP_REQUEST_VALUE } : {}),
       ...(includeSelectedBranch && selectedBranch ? { "X-Branch-Id": selectedBranch } : {}),
-      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+      ...(body !== undefined && !isFormData ? { 'Content-Type': 'application/json' } : {}),
       ...headers,
     },
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    ...(body !== undefined ? { body: isFormData ? body : JSON.stringify(body) } : {}),
     ...(signal ? { signal } : {}),
   };
 }

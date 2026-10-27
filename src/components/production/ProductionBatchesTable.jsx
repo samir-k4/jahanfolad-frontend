@@ -63,7 +63,7 @@ export default function ProductionBatchesTable({
             presets={listFilterPresets}
             activeKey={filterPeriod}
             onChange={setFilterPeriod}
-            buttonClassName="px-3 py-1.5 rounded-pill text-btn-text"
+            buttonClassName="px-3 py-1.5 rounded-btn text-btn-text"
           />
           <TooltipButton
             icon={
@@ -72,7 +72,7 @@ export default function ProductionBatchesTable({
                 className={isLoadingBatches ? "animate-spin text-slate-600" : ""}
               />
             }
-            tooltip={t("table.tooltipRefresh")}
+            ariaLabel={t("table.tooltipRefresh")}
             onClick={onRefresh}
             disabled={isLoadingBatches}
             colorClass="bg-white hover:bg-slate-800 hover:text-white text-gray-700 border border-gray-300"
@@ -80,10 +80,10 @@ export default function ProductionBatchesTable({
           <button
             type="button"
             onClick={onOpenHeaderReport}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 text-btn-text font-bold rounded-lg shadow-2xs transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-btn-text font-bold rounded-btn shadow-2xs transition-colors cursor-pointer"
             title={t("table.reportButtonTitle")}
           >
-            <FileText size={14} className="text-amber-700" />
+            <FileText size={14} className="text-slate-600" />
             <span>{t("table.reportButton")}</span>
           </button>
         </div>

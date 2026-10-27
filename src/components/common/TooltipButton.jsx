@@ -4,6 +4,7 @@ export default function TooltipButton({
   icon,
   iconProps,
   tooltip,
+  ariaLabel,
   onClick,
   disabled = false,
   colorClass = "",
@@ -19,13 +20,13 @@ export default function TooltipButton({
     }
     return children || null;
   };
-
   return (
     <div className="relative group/tip inline-flex">
       <button
         type="button"
         onClick={onClick}
         disabled={disabled}
+        aria-label={ariaLabel}
         className={`p-1.5 rounded-btn transition-colors cursor-pointer disabled:opacity-40 ${colorClass} ${className}`}
       >
         {renderIcon()}
