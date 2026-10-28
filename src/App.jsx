@@ -39,6 +39,7 @@ const VaultDetailPage = lazy(() => import("./pages/VaultDetailPage"));
 const ManagerAdvancesPage = lazy(() => import("./pages/ManagerAdvancesPage"));
 const ManagerAdvanceDetailPage = lazy(() => import("./pages/ManagerAdvanceDetailPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const SystemTransactionsPage = lazy(() => import("./pages/SystemTransactionsPage"));
 const Login = lazy(() => import("./pages/Login"));
 const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
 import { NavGroup, PageLink, RequirePage, BranchGate, PasswordChangeModal } from "./components/common";
@@ -94,6 +95,7 @@ export default function App() {
     "/customer-loans",
     "/sales",
     "/settings",
+    "/system-transactions",
   ].some((path) => location.pathname.startsWith(path));
   const isRouteActive = (paths) =>
     paths.some(
@@ -366,13 +368,30 @@ export default function App() {
             </div>
           </div>
           </NavGroup>
-          <PageLink
-            page="reports"
-            to="/reports"
-            className={getNavItemClass(isRouteActive(["/reports"]))}
-          >
-            {t("navigation.pages.reports")}
-          </PageLink>
+          <NavGroup pages={["reports", "activity_logs"]}>
+          <div className="relative group cursor-pointer">
+            <div className={`${getNavItemClass(isRouteActive(["/reports", "/system-transactions"]))} space-x-1 space-x-reverse`}>
+              <span>{t("navigation.groups.other")}</span>
+              <ChevronDown size={14} />
+            </div>
+            <div className="absolute right-0 w-48 bg-white text-gray-800 rounded-card shadow-xl hidden group-hover:block border border-gray-200 overflow-hidden z-50">
+              <PageLink
+                page="reports"
+                to="/reports"
+                className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
+              >
+                {t("navigation.pages.reports")}
+              </PageLink>
+              <PageLink
+                page="activity_logs"
+                to="/system-transactions"
+                className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
+              >
+                {t("navigation.pages.systemTransactions")}
+              </PageLink>
+            </div>
+          </div>
+          </NavGroup>
         </div>
         <div className="flex items-center space-x-3.5 space-x-reverse">
           <div className="relative group/tip inline-flex">
@@ -481,6 +500,9 @@ export default function App() {
           )}
           {can("settings") && (
             <option value="/settings">{t("navigation.pages.settings")}</option>
+          )}
+          {can("activity_logs") && (
+            <option value="/system-transactions">{t("navigation.pages.systemTransactions")}</option>
           )}
           <option value="/settings?tab=profile">{t("navigation.profile")}</option>
         </select>
@@ -883,6 +905,14 @@ export default function App() {
             element={
               <RequirePage page={pageForPath("/reports")}>
                 <Reports />
+              </RequirePage>
+            }
+          />
+          <Route
+            path="/system-transactions"
+            element={
+              <RequirePage page={pageForPath("/system-transactions")}>
+                <SystemTransactionsPage />
               </RequirePage>
             }
           />

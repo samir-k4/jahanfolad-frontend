@@ -13,6 +13,7 @@ import { SearchableSelect, CustomDropdown, usePagePerms } from "../components/co
 import { toEnglishDigits } from "../utils/dariNumberFormatter";
 import { showToast } from "../utils/toast";
 import { parseTimeParts } from "../utils/timeHelpers";
+import { exceedsBalance, willGoNegative } from "../utils/vaultBalance";
 import { apiUrl } from "../api";
 import {
 } from "../components/treasury/treasuryHelpers";
@@ -310,7 +311,8 @@ export default function DepositWithdrawCreatePage() {
     }
     return Number((currentBalance - convertedVaultAmount).toFixed(2));
   }, [isDeposit, currentBalance, convertedVaultAmount]);
-  const isInsufficientFunds = !isDeposit && convertedVaultAmount > currentBalance;
+  const isInsufficientFunds = !isDeposit && exceedsBalance(selectedVault, currentBalance, convertedVaultAmount);
+  const goesNegative = !isDeposit && willGoNegative(selectedVault, currentBalance, convertedVaultAmount);
   const handleAmountChange = (e) => {
     const raw = e.target.value.replace(/,/g, "");
     setAmount(toEnglishDigits(raw));
@@ -955,6 +957,12 @@ export default function DepositWithdrawCreatePage() {
                 </span>
               </div>
             </div>
+            {goesNegative && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2 text-amber-800 text-xs font-medium">
+                <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                <span>{t("form.willGoNegative", { balance: expectedNewBalance.toLocaleString("en-US"), currency: vaultCurrency })}</span>
+              </div>
+            )}
             {isInsufficientFunds && (
               <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-start gap-2 text-rose-800 text-xs font-medium">
                 <AlertTriangle size={16} className="text-rose-600 shrink-0 mt-0.5" />

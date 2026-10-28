@@ -7,6 +7,7 @@ import { apiFetch } from "../../api";
 import { SearchableSelect } from "../common";
 import { showToast, numberToWordsDari, toEnglishDigits } from "../../utils";
 import { getCleanErrorMessage } from "../../utils/errorHandler";
+import { exceedsBalance } from "../../utils/vaultBalance";
 const NOTES_MAX_LENGTH = 1000;
 const NAME_MAX_LENGTH = 150;
 const KINDS = ["week", "friday"];
@@ -77,8 +78,7 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
   const enteredRate = Number(toEnglishDigits(exchangeRate));
   const appliedRate = needsRate ? enteredRate : 1;
   const vaultDeduction = Math.round(total * (appliedRate > 0 ? appliedRate : 0) * 100) / 100;
-  const insufficientBalance =
-    Boolean(selectedVault) && vaultDeduction > Number(selectedVault.current_balance || 0);
+  const insufficientBalance = exceedsBalance(selectedVault, Number(selectedVault?.current_balance || 0), vaultDeduction);
   const amountInWords = useMemo(() => numberToWordsDari(total), [total]);
   const alreadyDone = !!active?.payout;
   const canSend =

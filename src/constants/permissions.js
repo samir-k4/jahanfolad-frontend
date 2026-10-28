@@ -163,6 +163,13 @@ export const PAGES = {
             "edit",
             "delete"
         ]
+    },
+    "activity_logs": {
+        "label": "ترانزکشن‌های سیستم",
+        "group": "سایر",
+        "actions": [
+            "view"
+        ]
     }
 };
 

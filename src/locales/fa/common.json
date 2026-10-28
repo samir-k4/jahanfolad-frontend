@@ -13,7 +13,8 @@
       "transactions": "معاملات",
       "sales": "فروش",
       "expenses": "مصارف",
-      "customers": "مشتریان"
+      "customers": "مشتریان",
+      "other": "سایر"
     },
     "pages": {
       "dashboard": "داشبورد",
@@ -41,7 +42,8 @@
       "customerLoansMobile": "لیست قرضداری مشتریان",
       "invoices": "فاکتور",
       "reports": "راپور ها",
-      "settings": "تنظیمات سیستم و کاربران"
+      "settings": "تنظیمات سیستم و کاربران",
+      "systemTransactions": "ترانزکشن های سیستم"
     },
     "pageLabels": {
       "dashboard": "داشبورد",

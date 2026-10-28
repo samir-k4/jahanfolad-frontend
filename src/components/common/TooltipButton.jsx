@@ -33,10 +33,10 @@ export default function TooltipButton({
       </button>
       {tooltip && (
         <div
-          className="absolute bottom-full left-0 mb-1.5 hidden group-hover/tip:flex flex-col items-start pointer-events-none z-50 whitespace-nowrap animate-in fade-in zoom-in-95 duration-150"
+          className="absolute bottom-full left-0 mb-1.5 hidden group-hover/tip:flex flex-col items-start pointer-events-none z-50 w-max max-w-[14rem] animate-in fade-in zoom-in-95 duration-150"
           dir="rtl"
         >
-          <div className="bg-slate-900 text-white text-xs font-bold py-1 px-2.5 rounded-tooltip shadow-xl border border-slate-700">
+          <div className="bg-slate-900 text-white text-xs font-bold leading-relaxed text-right whitespace-normal break-words py-1 px-2.5 rounded-tooltip shadow-xl border border-slate-700">
             {tooltip}
           </div>
           <div className="w-1.5 h-1.5 bg-slate-900 rotate-45 -mt-0.5 mr-auto ml-2.5 border-r border-b border-slate-700" />

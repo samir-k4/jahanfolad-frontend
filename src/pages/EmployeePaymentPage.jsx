@@ -61,7 +61,7 @@ const FILTER_FIELD =
   "w-full bg-white border border-gray-300 rounded-input py-1.5 px-2.5 text-caption-text text-gray-800 outline-none focus:border-slate-700";
 const CELL = "p-3 rounded-none border-l border-gray-200";
 const HEAD = "p-3 rounded-none border-l border-gray-200 text-table-header-text font-bold text-gray-700";
-const CHIP = "px-3 py-1.5 rounded-badge text-caption-text border transition-colors cursor-pointer";
+const CHIP = "px-4 py-2 rounded-btn text-btn-text border transition-colors cursor-pointer";
 const CHIP_ON = "bg-slate-800 text-white border-slate-800 font-bold shadow-2xs";
 const CHIP_OFF = "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 font-medium";
 const BTN_PRIMARY =
@@ -410,12 +410,7 @@ export default function EmployeePaymentPage() {
     () => Object.values(PAYMENT_SOURCE).map((key) => ({ key, label: t(`payment.history.source.${key}`) })),
     [t]
   );
-  const totals = [
-    { key: "totalAmount", value: money(historySummary.total_amount), unit: currency },
-    { key: "handAmount", value: money(historySummary.hand_amount), unit: currency },
-    { key: "runAmount", value: money(historySummary.run_amount), unit: currency },
-    { key: "recordCount", value: String(historySummary.total_count), unit: t("payment.history.unit") },
-  ];  return (
+  return (
     <div className="w-full space-y-4 font-sans" dir="rtl">
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-gray-200 pb-3">
         <div>
@@ -754,12 +749,7 @@ export default function EmployeePaymentPage() {
       </div>
       <div className={PANEL}>
         <div className="p-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-2.5">
-          <h2 className={SECTION_TITLE}>
-            {t("payment.history.heading")}
-            <span className="font-mono text-caption-text font-normal text-gray-500 mr-2" dir="ltr">
-              {paginationMeta.total}
-            </span>
-          </h2>
+          <h2 className={SECTION_TITLE}>{t("payment.history.heading")}</h2>
           <div className="flex flex-wrap items-center gap-2">
             {sourceFilters.map((filter) => (
               <button
@@ -780,76 +770,69 @@ export default function EmployeePaymentPage() {
             />
           </div>
         </div>
-        <div className="p-4 border-b border-gray-200 bg-gray-50/70 grid grid-cols-1 md:grid-cols-12 gap-2.5 items-center">
-          <div className="md:col-span-5">
+        <div className="p-4 border-b border-gray-200 bg-gray-50/70 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <FilterPresetButtons
               presets={datePresets}
               activeKey={activePreset}
               onChange={applyPreset}
-              buttonClassName="px-3 py-1.5 rounded-pill text-caption-text"
+              buttonClassName="px-4 py-2 rounded-btn text-btn-text"
               className="flex flex-wrap items-center gap-2"
             />
+            <label className="flex items-center gap-1.5 text-btn-text text-gray-700 font-bold">
+              <span>{t("payment.history.fromLabel")}</span>
+              <DatePicker
+                value={filterStartDate}
+                onChange={(date) => {
+                  setActivePreset(DATE_PRESET.CUSTOM);
+                  setFilterStartDate(date);
+                }}
+                calendar={persian}
+                locale={persian_af}
+                format="YYYY/MM/DD"
+                inputClass={`${FILTER_FIELD} w-32 py-2 font-mono text-center`}
+                placeholder={t("payment.history.fromPlaceholder")}
+              />
+            </label>
+            <label className="flex items-center gap-1.5 text-btn-text text-gray-700 font-bold">
+              <span>{t("payment.history.toLabel")}</span>
+              <DatePicker
+                value={filterEndDate}
+                onChange={(date) => {
+                  setActivePreset(DATE_PRESET.CUSTOM);
+                  setFilterEndDate(date);
+                }}
+                calendar={persian}
+                locale={persian_af}
+                format="YYYY/MM/DD"
+                inputClass={`${FILTER_FIELD} w-32 py-2 font-mono text-center`}
+                placeholder={t("payment.history.toPlaceholder")}
+              />
+            </label>
           </div>
-          <div className="md:col-span-2">
-            <DatePicker
-              value={filterStartDate}
-              onChange={(date) => {
-                setActivePreset(DATE_PRESET.CUSTOM);
-                setFilterStartDate(date);
-              }}
-              calendar={persian}
-              locale={persian_af}
-              format="YYYY/MM/DD"
-              inputClass={`${FILTER_FIELD} font-mono text-center`}
-              placeholder={t("payment.history.fromPlaceholder")}
-            />
-          </div>
-          <div className="md:col-span-2">
-            <DatePicker
-              value={filterEndDate}
-              onChange={(date) => {
-                setActivePreset(DATE_PRESET.CUSTOM);
-                setFilterEndDate(date);
-              }}
-              calendar={persian}
-              locale={persian_af}
-              format="YYYY/MM/DD"
-              inputClass={`${FILTER_FIELD} font-mono text-center`}
-              placeholder={t("payment.history.toPlaceholder")}
-            />
-          </div>
-          <div className="md:col-span-3 grid grid-cols-2 gap-2.5">
-            <BranchSelect
-              variant="searchable"
-              value={historyBranchFilter}
-              onChange={setHistoryBranchFilter}
-              includeAll
-              allLabel={t("payment.history.branchAll")}
-              placeholder={t("payment.history.branchPlaceholder")}
-              buttonClassName={FILTER_FIELD}
-            />
-            <div className="relative">
-              <Search size={14} className="text-gray-400 absolute right-2.5 top-2" />
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="w-44">
+              <BranchSelect
+                variant="searchable"
+                value={historyBranchFilter}
+                onChange={setHistoryBranchFilter}
+                includeAll
+                allLabel={t("payment.history.branchAll")}
+                placeholder={t("payment.history.branchPlaceholder")}
+                buttonClassName={`${FILTER_FIELD} py-2`}
+              />
+            </div>
+            <div className="relative w-52">
+              <Search size={14} className="text-gray-400 absolute right-2.5 top-3" />
               <input
                 type="text"
                 value={historySearchTerm}
                 onChange={(event) => setHistorySearchTerm(event.target.value)}
                 placeholder={t("payment.history.searchPlaceholder")}
-                className={`${FILTER_FIELD} pr-8`}
+                className={`${FILTER_FIELD} py-2 pr-8`}
               />
             </div>
           </div>
-        </div>
-        <div className="px-4 py-2.5 border-b border-gray-200 flex flex-wrap gap-x-6 gap-y-1.5">
-          {totals.map((total) => (
-            <span key={total.key} className="text-caption-text">
-              <span className="text-gray-500">{t(`payment.history.${total.key}`)}</span>{" "}
-              <strong className="font-mono text-gray-800" dir="ltr">
-                {total.value}
-              </strong>{" "}
-              <span className="text-gray-400">{total.unit}</span>
-            </span>
-          ))}
         </div>
         {paymentsLoading ? (
           <p className="py-12 text-center text-label-text text-gray-500">{t("payment.history.loading")}</p>
@@ -938,14 +921,26 @@ export default function EmployeePaymentPage() {
                                 colorClass={`${ACTION_REST} hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-200`}
                               />
                             )}
-                            {canDelete && !fromRun && (
-                              <TooltipButton
-                                icon={<Trash2 size={15} />}
-                                tooltip={t("payment.history.tooltip.delete")}
-                                onClick={() => setPendingDelete(payment)}
-                                colorClass={`${ACTION_REST} hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200`}
-                              />
-                            )}
+                            {(() => {
+                              const lockReason = !canDelete
+                                ? t("payment.history.tooltip.deleteNoPermission")
+                                : fromRun
+                                  ? t("payment.history.tooltip.deleteLockedRun")
+                                  : null;
+                              return (
+                                <TooltipButton
+                                  icon={lockReason ? <Lock size={15} /> : <Trash2 size={15} />}
+                                  tooltip={lockReason || t("payment.history.tooltip.delete")}
+                                  onClick={() => !lockReason && setPendingDelete(payment)}
+                                  disabled={Boolean(lockReason)}
+                                  colorClass={
+                                    lockReason
+                                      ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                                      : `${ACTION_REST} hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200`
+                                  }
+                                />
+                              );
+                            })()}
                           </div>
                         </td>
                       </tr>

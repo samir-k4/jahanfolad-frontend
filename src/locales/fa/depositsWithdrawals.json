@@ -300,6 +300,7 @@
     "phoneExample": "مثال: 0799000000",
     "saveAndSelect": "ذخیره و انتخاب",
     "amountLabel": "مبلغ معامله ({{currency}}):",
+    "willGoNegative": "این برداشت موجودی حساب را منفی می‌کند (موجودی جدید: {{balance}} {{currency}}). حساب بدهکار خواهد شد.",
     "insufficientFunds": "مبلغ درخواستی معادل {{amount}} {{currency}} است که از موجودی فعلی حساب ({{balance}} {{currency}}) بیشتر می‌باشد.",
     "editDocTitle": "ویرایش سند شماره {{number}}"
   },

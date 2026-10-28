@@ -134,7 +134,7 @@ export default function VaultsTable({
                       <td className="py-1.5 px-2 text-center font-mono font-bold text-xs text-gray-700 border border-gray-200">
                         {vault.currency}
                       </td>
-                      <td className="py-1.5 px-3 text-left border border-gray-200 font-bold font-mono text-xs text-gray-900" dir="ltr">
+                      <td className={`py-1.5 px-3 text-left border border-gray-200 font-bold font-mono text-xs ${Number(vault.current_balance) < 0 ? "text-rose-600" : "text-gray-900"}`} dir="ltr">
                         {isAfn ? "" : "$"}
                         {Number(vault.current_balance || 0).toLocaleString("en-US")}
                         {isAfn ? " AFN" : " USD"}

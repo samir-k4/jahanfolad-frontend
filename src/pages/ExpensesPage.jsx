@@ -7,6 +7,7 @@ import ExpenseCreateModal from "../components/expenses/ExpenseCreateModal";
 import ExpenseReportModal from "../components/expenses/ExpenseReportModal";
 import ExpenseSummaryModal from "../components/expenses/ExpenseSummaryModal";
 import ExpenseDetailsModal from "../components/expenses/ExpenseDetailsModal";
+import ExpenseEditModal from "../components/expenses/ExpenseEditModal";
 import { formatShamsiDate } from "../utils";
 import {
   TrendingDown,
@@ -20,6 +21,7 @@ import {
   Clock,
   X,
   BarChart3,
+  Pencil,
 } from "lucide-react";
 import useDebounce from "../hooks/useDebounce";
 import { apiUrl } from "../api";
@@ -64,7 +66,7 @@ const resolvePresetRange = (key) => {
   return { from: null, to: null };
 };
 export default function ExpensesPage() {
-  const { canCreate, canDelete } = usePagePerms("expenses");
+  const { canCreate, canEdit, canDelete } = usePagePerms("expenses");
   const { t } = useTranslation("salary");
   const { t: tx } = useTranslation("expenses");
   const [searchParams] = useSearchParams();
@@ -103,9 +105,9 @@ export default function ExpensesPage() {
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   const [selectedStateFilter, setSelectedStateFilter] = useState("all");
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [deleteReason, setDeleteReason] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [detailsTarget, setDetailsTarget] = useState(null);
+  const [editTarget, setEditTarget] = useState(null);
   const notify = (type, message) => {
     (appToast[type] || appToast.info)(message);
   };
@@ -184,14 +186,12 @@ export default function ExpensesPage() {
     try {
       const res = await fetch(apiUrl(`/expenses/${deleteTarget.id}`), {
         method: "DELETE",
-        headers: { Accept: "application/json", "Content-Type": "application/json" },
-        body: JSON.stringify({ reason: deleteReason.trim() || undefined }),
+        headers: { Accept: "application/json" },
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || tx("toast.deleteError"));
       notify("success", json.message || tx("toast.deleteSuccess"));
       setDeleteTarget(null);
-      setDeleteReason("");
       fetchExpenses(currentPage);
     } catch (err) {
       notify("error", err.message);
@@ -539,12 +539,19 @@ export default function ExpensesPage() {
                             onClick={() => setDetailsTarget(exp)}
                             className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-300 rounded border border-gray-200 transition-colors cursor-pointer"
                           />
+                          {canEdit && exp.can_edit !== false && (
+                            <TooltipButton
+                              icon={<Pencil size={14} />}
+                              tooltip={tx("actions.edit")}
+                              onClick={() => setEditTarget(exp)}
+                              className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 rounded border border-gray-200 transition-colors cursor-pointer"
+                            />
+                          )}
                           {canDelete && exp.can_delete !== false && exp.state !== "reversed" && exp.state !== "pending" && (
                             <TooltipButton
                               icon={<Trash2 size={15} />}
-                              tooltip={tx(exp.state === "paid" ? "actions.reverse" : "actions.delete")}
+                              tooltip={tx("actions.delete")}
                               onClick={() => {
-                                setDeleteReason("");
                                 setDeleteTarget(exp);
                               }}
                               className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 rounded border border-gray-200 transition-colors cursor-pointer"
@@ -596,6 +603,15 @@ export default function ExpensesPage() {
         expense={detailsTarget}
         onClose={() => setDetailsTarget(null)}
       />
+      <ExpenseEditModal
+        isOpen={Boolean(editTarget)}
+        expense={editTarget}
+        onClose={() => setEditTarget(null)}
+        onDone={(message) => {
+          notify("success", message || tx("toast.updateSuccess"));
+          fetchExpenses(currentPage);
+        }}
+      />
       <DeleteConfirmationModal
         isOpen={Boolean(deleteTarget)}
         onClose={() => setDeleteTarget(null)}
@@ -605,33 +621,16 @@ export default function ExpensesPage() {
             ? `${deleteTarget.voucher_no || `#${deleteTarget.id}`} — ${fmt(deleteTarget.amount)} ${deleteTarget.currency || CURRENCY_AFN}`
             : ""
         }
-        title={tx(
-          deleteTarget?.state !== "paid"
-            ? "delete.title"
-            : deleteTarget.payment_source === "manager_advance"
-            ? "reversal.advanceTitle"
-            : "reversal.title"
-        )}
-        question={tx(
-          deleteTarget?.state !== "paid"
-            ? "delete.question"
-            : deleteTarget.payment_source === "manager_advance"
-            ? "reversal.advanceQuestion"
-            : "reversal.question"
-        )}
+        title={tx("delete.title")}
+        question={tx("delete.question")}
         warning={tx(
           deleteTarget?.state !== "paid"
             ? "delete.warning"
             : deleteTarget.payment_source === "manager_advance"
-            ? "reversal.advanceWarning"
-            : "reversal.warning"
+            ? "delete.advanceWarning"
+            : "delete.paidWarning"
         )}
-        reasonRequired={deleteTarget?.state === "paid"}
-        reason={deleteReason}
-        onReasonChange={setDeleteReason}
-        reasonLabel={tx("reversal.reason")}
-        reasonPlaceholder={tx("reversal.reasonPlaceholder")}
-        confirmLabel={tx(deleteTarget?.state === "paid" ? "reversal.confirm" : "delete.confirm")}
+        confirmLabel={tx("delete.confirm")}
         loading={isDeleting}
       />
     </div>

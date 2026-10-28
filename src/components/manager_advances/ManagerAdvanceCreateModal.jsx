@@ -13,6 +13,7 @@ import { usePagePerms } from "../common";
 import { apiUrl } from "../../api";
 import SearchableSelect from "../common/SearchableSelect";
 import { toEnglishDigits } from "../../utils";
+import { exceedsBalance } from "../../utils/vaultBalance";
 const fmt = (n) => Number(n || 0).toLocaleString("en-US");
 export default function ManagerAdvanceCreateModal({
   isOpen,
@@ -106,7 +107,7 @@ export default function ManagerAdvanceCreateModal({
       errs.amount = t("create.amountRequired");
     } else {
       const selectedVault = vaults.find((v) => String(v.id) === String(formData.vault_id));
-      if (selectedVault && numAmount > Number(selectedVault.current_balance || 0)) {
+      if (selectedVault && exceedsBalance(selectedVault, Number(selectedVault.current_balance || 0), numAmount)) {
         errs.amount = `مبلغ امانت از موجودی صندوق (${fmt(selectedVault.current_balance)} ${selectedVault.currency}) بیشتر است.`;
       }
     }

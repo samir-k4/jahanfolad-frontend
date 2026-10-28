@@ -24,6 +24,7 @@ export const PATH_TO_PAGE = [
   ["/reports", "reports"],
   ["/settings/users", "users"],
   ["/settings", "settings"],
+  ["/system-transactions", "activity_logs"],
 ];
 
 /** Which permission page does this path belong to? "/" is the dashboard. */

@@ -212,7 +212,7 @@ export default function VaultCreateModal({
               <input
                 type="number"
                 step="any"
-                min="0"
+                min={formData.type === VAULT_TYPE.CASH_DRAWER ? "0" : undefined}
                 value={formData.initial_balance}
                 onFocus={(e) => e.target.select()}
                 onWheel={(e) => e.target.blur()}

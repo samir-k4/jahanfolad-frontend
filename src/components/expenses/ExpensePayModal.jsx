@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { SearchableSelect } from "../common";
 import { apiUrl } from "../../api";
 import { toEnglishDigits } from "../../utils/dariNumberFormatter";
+import { exceedsBalance } from "../../utils/vaultBalance";
 const fmt = (n) =>
   Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 const FIELD =
@@ -47,7 +48,7 @@ export default function ExpensePayModal({ isOpen, mode = "pay", expense, vaults 
   const vaultCurrency = String(selectedVault?.currency || expenseCurrency).toUpperCase();
   const sameCurrency = vaultCurrency === expenseCurrency;
   const deduction = sameCurrency ? amountValue : amountValue * Number(expense.exchange_rate || 1);
-  const overBalance = !fromAdvance && selectedVault ? deduction > Number(selectedVault.current_balance || 0) : false;
+  const overBalance = !fromAdvance && selectedVault ? exceedsBalance(selectedVault, Number(selectedVault.current_balance || 0), deduction) : false;
   const submit = async () => {
     if (isReject) {
       if (!reason.trim()) {

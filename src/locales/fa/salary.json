@@ -266,6 +266,8 @@
       "handAmount": "پرداخت‌های وسط ماه:",
       "runAmount": "پرداخت‌های بستن ماه:",
       "recordCount": "تعداد کل رکوردهای یافت‌شده:",
+      "fromLabel": "از تاریخ",
+      "toLabel": "تا تاریخ",
       "fromPlaceholder": "انتخاب تاریخ شروع...",
       "toPlaceholder": "انتخاب تاریخ ختم...",
       "branchAll": "تمام شعبات",
@@ -299,7 +301,9 @@
       },
       "tooltip": {
         "reprint": "چاپ مجدد سند",
-        "delete": "حذف سند"
+        "delete": "حذف سند",
+        "deleteLockedRun": "این پرداخت جزو بستن ماه است و از بخش معاشات (باز کردن دوباره) قابل حذف می‌باشد",
+        "deleteNoPermission": "شما اجازه حذف ندارید"
       }
     },
     "presets": {

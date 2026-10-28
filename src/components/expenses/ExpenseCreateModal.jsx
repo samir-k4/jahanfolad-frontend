@@ -15,6 +15,7 @@ import { apiUrl } from "../../api";
 import SearchableSelect from "../common/SearchableSelect";
 import CustomDropdown from "../common/CustomDropdown";
 import { formatTimeDari, toEnglishDigits } from "../../utils";
+import { exceedsBalance } from "../../utils/vaultBalance";
 import { useTranslation } from "react-i18next";
 const fmt = (n) => Number(n || 0).toLocaleString("en-US");
 const EMPTY_FORM = {
@@ -147,7 +148,9 @@ export default function ExpenseCreateModal({
   const rawRate = parseFloat(toEnglishDigits(formData.exchange_rate) || "0");
   const effectiveRate = needsRate ? (rawRate > 0 ? rawRate : 0) : 1;
   const vaultDeduction = Math.round(enteredAmount * effectiveRate * 100) / 100;
-  const isOverBalance = vaultDeduction > availableBalance;
+  const isOverBalance = isVaultDirect
+    ? exceedsBalance(selectedVault, availableBalance, vaultDeduction)
+    : vaultDeduction > availableBalance;
   const toUsd = (value, curr) => {
     if (curr === "USD") return value;
     if (curr === "AFN") return usdRate > 0 ? value / usdRate : null;

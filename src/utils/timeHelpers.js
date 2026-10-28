@@ -1,4 +1,4 @@
-import { toDariDigits, toEnglishDigits } from "./dariNumberFormatter";
+import { toEnglishDigits } from "./dariNumberFormatter";
 
 const parseClock = (value) => {
   if (value instanceof Date) {
@@ -68,7 +68,5 @@ export const formatTime12 = (value) => {
   return `${String(parsed.hour).padStart(2, "0")}:${parsed.minute} ${marker}`;
 };
 
-export const formatTimeDari = (value) => {
-  const formatted = formatTime12(value);
-  return formatted === "—" ? formatted : toDariDigits(formatted);
-};
+// "Dari" here means the Dari AM/PM markers (ق.ظ / ب.ظ); the digits are always English (08:29 ب.ظ).
+export const formatTimeDari = (value) => formatTime12(value);

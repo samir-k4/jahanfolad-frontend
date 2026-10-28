@@ -5,6 +5,7 @@ import { ArrowRight, AlertTriangle } from "lucide-react";
 import { DateObject, persian, persian_af } from "../utils/dateHelpers";
 import { toEnglishDigits } from "../utils/dariNumberFormatter";
 import { formatTime12, showToast } from "../utils";
+import { exceedsBalance, willGoNegative } from "../utils/vaultBalance";
 import { apiUrl } from "../api";
 import { SearchableSelect, usePagePerms } from "../components/common";
 
@@ -100,7 +101,8 @@ export default function TransferCreatePage() {
 
   const sameVault = Boolean(fromVaultId) && fromVaultId === toVaultId;
   const currencyMismatch = Boolean(fromVault && toVault) && fromVault.currency !== toVault.currency;
-  const insufficient = Boolean(fromVault) && numAmount > fromBefore;
+  const insufficient = exceedsBalance(fromVault, fromBefore, numAmount);
+  const fromGoesNegative = willGoNegative(fromVault, fromBefore, numAmount);
   const blocked = sameVault || currencyMismatch || insufficient || numAmount <= 0 || !fromVaultId || !toVaultId;
 
   const handleFromChange = (val) => {
@@ -275,6 +277,12 @@ export default function TransferCreatePage() {
                 </div>
               </div>
             ))}
+            {fromGoesNegative && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-badge flex items-start gap-2 text-amber-800 text-caption-text font-medium">
+                <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                <span>{t("messages.willGoNegative", { balance: fromAfter.toLocaleString("en-US"), currency })}</span>
+              </div>
+            )}
             {insufficient && (
               <div className="p-3 bg-danger-soft border border-danger-line rounded-badge flex items-start gap-2 text-danger-text text-caption-text font-medium">
                 <AlertTriangle size={16} className="shrink-0 mt-0.5" />

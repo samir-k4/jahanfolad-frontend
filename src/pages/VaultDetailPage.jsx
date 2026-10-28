@@ -228,7 +228,7 @@ export default function VaultDetailPage() {
             <div className="flex items-center gap-4">
               <div className="text-left" dir="ltr">
                 <p className="text-xs text-gray-500 mb-0.5">{t("vaultDetail.currentBalance")}</p>
-                <p className="font-mono text-base font-bold text-slate-900 leading-none">
+                <p className={`font-mono text-base font-bold leading-none ${Number(vault.current_balance) < 0 ? "text-rose-600" : "text-slate-900"}`}>
                   {Number(vault.current_balance || 0).toLocaleString("en-US")}
                   <span className="text-xs text-gray-500 ml-1">
                     {vault.currency}
