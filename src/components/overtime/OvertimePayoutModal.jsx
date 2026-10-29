@@ -28,7 +28,7 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
   const [receivers, setReceivers] = useState([]);
   const [vaults, setVaults] = useState([]);
   const [usdRate, setUsdRate] = useState(70);
-  const [vaultId, setVaultId] = useState("");
+  const [fundingSource, setFundingSource] = useState("");
   const [exchangeRate, setExchangeRate] = useState("1");
   const [kind, setKind] = useState(KINDS[0]);
   const [loading, setLoading] = useState(false);
@@ -69,7 +69,7 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
   }, [load]);
   const active = periods?.[kind] || null;
   const total = Number(active?.total_amount || 0);
-  const selectedVault = vaults.find((vault) => String(vault.id) === String(vaultId)) || null;
+  const selectedVault = vaults.find((vault) => `${vault.source_type}:${vault.id}` === fundingSource) || null;
   const vaultCurrency = String(selectedVault?.currency || "AFN").toUpperCase();
   const needsRate = Boolean(selectedVault) && vaultCurrency !== "AFN";
   const enteredRate = Number(toEnglishDigits(exchangeRate));
@@ -99,7 +99,10 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
           date,
           kind,
           branch_id: branchId && branchId !== "all" ? Number(branchId) : undefined,
-          vault_id: Number(vaultId),
+          funding_source: selectedVault.source_type,
+          vault_id: selectedVault.source_type === "vault" ? Number(selectedVault.id) : undefined,
+          manager_advance_id:
+            selectedVault.source_type === "manager_advance" ? Number(selectedVault.id) : undefined,
           exchange_rate: appliedRate,
           receiver_employee_id: receiverId ? Number(receiverId) : undefined,
           receiver_name: receiverId ? undefined : receiverName.trim(),
@@ -129,8 +132,8 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
     return "text-accent-strong";
   };
   const vaultOptions = vaults.map((vault) => ({
-    value: String(vault.id),
-    label: `${vault.name} — ${money(vault.current_balance)} ${String(vault.currency || "AFN").toUpperCase()}`,
+    value: `${vault.source_type}:${vault.id}`,
+    label: `${vault.source_type === "manager_advance" ? "امانت مدیریت" : "صندوق"}: ${vault.name} — ${money(vault.current_balance)} ${String(vault.currency || "AFN").toUpperCase()}`,
   }));
   const defaultRateForVault = (currency) => {
     if (currency === "USD" && usdRate > 0) return (1 / usdRate).toFixed(6);
@@ -138,7 +141,7 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
   };
   useEffect(() => {
     if (selectedVault) setExchangeRate(defaultRateForVault(vaultCurrency));
-  }, [vaultId, usdRate, selectedVault?.currency]);
+  }, [fundingSource, usdRate, selectedVault?.currency]);
   if (!isOpen) return null;
   return createPortal(
     <div
@@ -348,8 +351,8 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
               {t("payout.vault")} <span className="text-danger-text">*</span>
             </label>
             <SearchableSelect
-              value={vaultId}
-              onChange={setVaultId}
+              value={fundingSource}
+              onChange={setFundingSource}
               options={vaultOptions}
               placeholder={t("payout.vaultPlaceholder")}
               searchPlaceholder={t("payout.vaultSearch")}
