@@ -999,9 +999,20 @@ export default function SettingsPage() {
                                     />
                                     <TooltipButton
                                       icon={Trash2}
-                                      tooltip={t("categories.tooltip.delete")}
+                                      tooltip={
+                                        cat.is_locked
+                                          ? "این سرفصل محافظت شده و قابل حذف نیست."
+                                          : cat.can_delete === false
+                                            ? "این سرفصل در اسناد مصرف استفاده شده است؛ ابتدا آن را غیرفعال کنید."
+                                            : t("categories.tooltip.delete")
+                                      }
+                                      disabled={cat.is_locked || cat.can_delete === false}
                                       onClick={() => handleDeleteCategory(cat)}
-                                      className="bg-white text-gray-500 border border-gray-300 hover:text-rose-600 hover:border-rose-300"
+                                      className={`border ${
+                                        cat.is_locked || cat.can_delete === false
+                                          ? "bg-slate-100 text-slate-500 border-slate-300"
+                                          : "bg-white text-gray-500 border-gray-300 hover:text-rose-600 hover:border-rose-300"
+                                      }`}
                                     />
                                   </>
                                 )}

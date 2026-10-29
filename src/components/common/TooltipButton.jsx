@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 export default function TooltipButton({
   icon,
@@ -11,6 +11,7 @@ export default function TooltipButton({
   className = "",
   children,
 }) {
+  const [tooltipPosition, setTooltipPosition] = useState(null);
   const renderIcon = () => {
     if (!icon) return children || null;
     if (React.isValidElement(icon)) return icon;
@@ -21,19 +22,35 @@ export default function TooltipButton({
     return children || null;
   };
   return (
-    <div className="relative group/tip inline-flex">
+    <div
+      className="relative group/tip inline-flex"
+      onMouseEnter={(event) => {
+        if (tooltip) {
+          const rect = event.currentTarget.getBoundingClientRect();
+          setTooltipPosition({
+            left: Math.max(8, Math.min(rect.left, window.innerWidth - 232)),
+            bottom: Math.max(8, window.innerHeight - rect.top + 6),
+          });
+        }
+      }}
+      onMouseLeave={() => setTooltipPosition(null)}
+    >
       <button
         type="button"
         onClick={onClick}
         disabled={disabled}
         aria-label={ariaLabel}
-        className={`p-1.5 rounded-btn transition-colors cursor-pointer disabled:opacity-40 ${colorClass} ${className}`}
+        className={`p-1.5 rounded-btn transition-colors cursor-pointer disabled:opacity-60 ${colorClass} ${className}`}
       >
         {renderIcon()}
       </button>
-      {tooltip && (
+      {tooltip && tooltipPosition && (
         <div
-          className="absolute bottom-full left-0 mb-1.5 hidden group-hover/tip:flex flex-col items-start pointer-events-none z-50 w-max max-w-[14rem] animate-in fade-in zoom-in-95 duration-150"
+          className="fixed flex flex-col items-start pointer-events-none z-[9999] w-max max-w-[14rem] animate-in fade-in zoom-in-95 duration-150"
+          style={{
+            left: tooltipPosition.left,
+            bottom: tooltipPosition.bottom,
+          }}
           dir="rtl"
         >
           <div className="bg-slate-900 text-white text-xs font-bold leading-relaxed text-right whitespace-normal break-words py-1 px-2.5 rounded-tooltip shadow-xl border border-slate-700">

@@ -170,8 +170,6 @@ export default function ExpenseEditModal({ isOpen, expense, onClose, onDone }) {
       return;
     }
 
-    const date = dateObj.toDate();
-    const expenseDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     setIsSaving(true);
     setError("");
     try {
@@ -189,7 +187,6 @@ export default function ExpenseEditModal({ isOpen, expense, onClose, onDone }) {
           paid_to: form.paid_to.trim(),
           description: form.description.trim(),
           title: form.title.trim(),
-          expense_date: expenseDate,
           shamsi_date: toEnglishDigits(dateObj.format("YYYY/MM/DD")),
         }),
       });

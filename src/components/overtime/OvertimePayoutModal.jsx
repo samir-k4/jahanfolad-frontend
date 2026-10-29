@@ -50,12 +50,9 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
     try {
       const params = new URLSearchParams({ date });
       if (branchId && branchId !== "all") params.set("branch_id", String(branchId));
-      const vaultParams = new URLSearchParams();
-      if (branchId && branchId !== "all") vaultParams.set("branch_id", String(branchId));
-      const vaultPath = `/overtime-payouts/vault-options${vaultParams.toString() ? `?${vaultParams}` : ""}`;
       const [body, vaultResponse] = await Promise.all([
         apiFetch(`/overtime-payouts/preview?${params.toString()}`),
-        apiFetch(vaultPath),
+        apiFetch("/overtime-payouts/vault-options"),
       ]);
       setPeriods(body?.periods || null);
       setReceivers(Array.isArray(body?.receivers) ? body.receivers : []);

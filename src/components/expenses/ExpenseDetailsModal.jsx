@@ -31,7 +31,6 @@ export default function ExpenseDetailsModal({ isOpen, expense, onClose }) {
     [t("table.exchangeRate"), expense.exchange_rate == null ? null : fmt(expense.exchange_rate)],
     [t("table.convertedUsd"), expense.converted_amount_usd == null ? null : `$${fmt(expense.converted_amount_usd)}`],
     [t("detailsModal.paidTo"), expense.paid_to],
-    [t("detailsModal.state"), expense.state_label],
     [t("detailsModal.createdBy"), expense.created_by],
     [t("detailsModal.paidBy"), expense.paid_by],
     [t("detailsModal.paidAt"), expense.paid_at ? formatAfghanDateTime(expense.paid_at) : null],

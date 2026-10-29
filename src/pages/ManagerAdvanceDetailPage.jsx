@@ -390,12 +390,12 @@ export default function ManagerAdvanceDetailPage() {
                     <td className="py-1.5 px-2 text-center font-mono text-gray-600 border border-gray-200 text-xs font-normal" dir="ltr">
                       {toEnglishDigits(exp.shamsi_date || "—")}
                     </td>
-                    <td className={`py-1.5 px-2.5 text-center font-mono font-medium text-xs border border-gray-200 text-nowrap ${exp.state === "reversed" ? "text-gray-500" : "text-rose-700"}`} dir="ltr">
-                      {exp.state === "reversed" ? t("detail.expenseReversed") : `−${fmt(exp.amount)} ${advance.currency}`}
+                    <td className={`py-1.5 px-2.5 text-center font-mono font-medium text-xs border border-gray-200 text-nowrap ${exp.is_reversed ? "text-gray-500" : "text-rose-700"}`} dir="ltr">
+                      {exp.is_reversed ? t("detail.expenseReversed") : `−${fmt(exp.amount)} ${advance.currency}`}
                     </td>
                     <td className="py-1.5 px-2.5 text-gray-700 border border-gray-200 whitespace-nowrap">
                       {exp.created_by || "—"}
-                      {exp.state === "reversed" && exp.reversal_reason && (
+                      {exp.is_reversed && exp.reversal_reason && (
                         <span className="block text-[10px] text-gray-500 mt-0.5" title={exp.reversal_reason}>
                           {t("detail.expenseReversed")}
                         </span>
@@ -404,7 +404,7 @@ export default function ManagerAdvanceDetailPage() {
                     {canDelete && (
                       <td className="py-1.5 px-2 text-center border border-gray-200">
                         <div className="flex items-center justify-center">
-                          {exp.state !== "reversed" && (
+                          {!exp.is_reversed && (
                             <TooltipButton
                               tooltip={t("detail.deleteExpenseTip")}
                               onClick={() => {

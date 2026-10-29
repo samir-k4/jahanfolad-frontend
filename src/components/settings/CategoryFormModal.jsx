@@ -47,6 +47,7 @@ export default function CategoryFormModal({
     expense_type_id: "",
     description: "",
     is_active: true,
+    is_locked: false,
   });
 
   const [loading, setLoading] = useState(false);
@@ -68,6 +69,7 @@ export default function CategoryFormModal({
         expense_type_id: category.expense_type_id ? String(category.expense_type_id) : "",
         description: category.description || "",
         is_active: category.is_active !== undefined ? category.is_active : true,
+        is_locked: Boolean(category.is_locked),
       });
     } else {
       setFormData({
@@ -82,6 +84,7 @@ export default function CategoryFormModal({
         expense_type_id: "",
         description: "",
         is_active: true,
+        is_locked: false,
       });
     }
     setError(null);
@@ -127,6 +130,7 @@ export default function CategoryFormModal({
 
       if (targetDomain === "expense_category") {
         payload.expense_type_id = formData.expense_type_id || null;
+        payload.is_locked = formData.is_locked;
       }
 
       const domainPath = encodeURIComponent(targetDomain);
@@ -395,6 +399,25 @@ export default function CategoryFormModal({
               وضعیت فعال (در فرم‌ها و لیست‌ها نمایش داده شود)
             </label>
           </div>
+          {formData.domain === "expense_category" && (
+            <div className="flex items-start gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="is_locked"
+                checked={formData.is_locked}
+                onChange={(e) =>
+                  setFormData({ ...formData, is_locked: e.target.checked })
+                }
+                className="w-4 h-4 mt-0.5 rounded-sm text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+              />
+              <label htmlFor="is_locked" className="text-xs font-bold text-slate-700 cursor-pointer">
+                محافظت از این سرفصل در برابر حذف
+                <span className="block text-[11px] text-slate-500 font-normal mt-0.5">
+                  سرفصل محافظت‌شده فقط با غیرفعال‌سازی قابل مدیریت است.
+                </span>
+              </label>
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
             <button

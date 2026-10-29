@@ -18,7 +18,6 @@ import {
   AlertCircle,
   Trash2,
   Info,
-  Clock,
   X,
   BarChart3,
   Pencil,
@@ -81,8 +80,6 @@ export default function ExpensesPage() {
     total_converted_usd: 0,
     total_count: 0,
     by_category: [],
-    pending_count: 0,
-    pending_total_afn: 0,
   });
   const [pagination, setPagination] = useState({
     current_page: 1,
@@ -103,7 +100,6 @@ export default function ExpensesPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
-  const [selectedStateFilter, setSelectedStateFilter] = useState("all");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [detailsTarget, setDetailsTarget] = useState(null);
@@ -145,7 +141,6 @@ export default function ExpensesPage() {
       if (expenseTypeSlug !== "all") params.append("expense_type", expenseTypeSlug);
       if (selectedCategory !== "all") params.append("category", selectedCategory);
       if (selectedSource !== "all") params.append("payment_source", selectedSource);
-      if (selectedStateFilter !== "all") params.append("state", selectedStateFilter);
       if (selectedVaultFilter !== "all") params.append("vault_id", selectedVaultFilter);
       if (selectedCurrencyFilter !== "all") params.append("currency", selectedCurrencyFilter);
       if (debouncedSearchQuery.trim()) params.append("search", debouncedSearchQuery.trim());
@@ -165,18 +160,20 @@ export default function ExpensesPage() {
         total_converted_usd: 0,
         total_count: 0,
         by_category: [],
-        pending_count: 0,
-        pending_total_afn: 0,
       });
       setPagination(json.pagination || { current_page: 1, last_page: 1, per_page: 15, total: 0 });
       setCurrentPage(json.pagination?.current_page || 1);
+      return {
+        items: json.data || [],
+        pagination: json.pagination || null,
+      };
     } catch (err) {
       console.error(err);
       notify("error", err.message || t("toast.serverError", { ns: "common" }));
     } finally {
       setLoading(false);
     }
-  }, [expenseTypeSlug, selectedCategory, selectedSource, selectedStateFilter, selectedVaultFilter, selectedCurrencyFilter, datePreset, debouncedSearchQuery, t, tx]);
+  }, [expenseTypeSlug, selectedCategory, selectedSource, selectedVaultFilter, selectedCurrencyFilter, datePreset, debouncedSearchQuery, t, tx]);
   useEffect(() => {
     fetchExpenses(1);
   }, [fetchExpenses]);
@@ -192,7 +189,10 @@ export default function ExpensesPage() {
       if (!res.ok) throw new Error(json.message || tx("toast.deleteError"));
       notify("success", json.message || tx("toast.deleteSuccess"));
       setDeleteTarget(null);
-      fetchExpenses(currentPage);
+      const refreshed = await fetchExpenses(currentPage);
+      if (refreshed?.items.length === 0 && currentPage > 1) {
+        await fetchExpenses(currentPage - 1);
+      }
     } catch (err) {
       notify("error", err.message);
     } finally {
@@ -263,24 +263,6 @@ export default function ExpensesPage() {
           )}
         </div>
       </div>
-      {summary.pending_count > 0 && selectedStateFilter !== "pending" && (
-        <div className="flex">
-          <div className="inline-flex items-center gap-2.5 bg-notice-soft border border-notice-line rounded-alert py-1.5 pr-1.5 pl-2">
-            <span className="w-6 h-6 rounded-badge bg-notice-icon text-content-inverse flex items-center justify-center shrink-0">
-              <Clock size={13} />
-            </span>
-            <span className="text-caption-text text-notice-deep">
-              {tx("queue.bannerTitle", { count: summary.pending_count })}
-            </span>
-            <span className="text-caption-text text-notice font-mono" dir="ltr">
-              {tx("queue.bannerAmount", {
-                amount: fmt(summary.pending_total_afn),
-                currency: CURRENCY_AFN,
-              })}
-            </span>
-          </div>
-        </div>
-      )}
       <div className="bg-surface rounded-card border border-line shadow-2xs overflow-hidden">
         <div className="p-3.5 border-b border-line bg-surface flex flex-wrap items-center gap-2">
           <span className="text-label-text text-content-body whitespace-nowrap ml-1">
@@ -344,27 +326,6 @@ export default function ExpensesPage() {
               width="w-48"
               usePortal
             />
-            <CustomDropdown
-              value={selectedStateFilter}
-              onChange={(val) => {
-                setSelectedStateFilter(val);
-                setCurrentPage(1);
-              }}
-              options={[
-                { value: "all", label: tx("states.all") },
-                {
-                  value: "pending",
-                  label: tx("states.pending"),
-                  badge: summary.pending_count || 0,
-                },
-                { value: "paid", label: tx("states.paid") },
-                { value: "rejected", label: tx("states.rejected") },
-                { value: "reversed", label: tx("states.reversed") },
-              ]}
-              buttonClassName={`${FILTER_CONTROL} min-w-[150px]`}
-              width="w-48"
-              usePortal
-            />
             <div className="w-48">
               <SearchableSelect
                 value={selectedVaultFilter}
@@ -408,7 +369,7 @@ export default function ExpensesPage() {
               <thead>
                 <tr className="bg-surface-muted text-content-body text-table-header-text border-b border-line select-none">
                   <th className="px-3 py-2.5 text-center border-l border-line whitespace-nowrap">
-                    {tx("queue.columnVoucher")}
+                    {tx("table.columnVoucher")}
                   </th>
                   <th className="px-3 py-2.5 border-l border-line whitespace-nowrap">{t("table.date", { ns: "common" })}</th>
                   <th className="px-3 py-2.5 border-l border-line whitespace-nowrap">{tx("table.category")}</th>
@@ -419,23 +380,20 @@ export default function ExpensesPage() {
                   <th className="px-3 py-2.5 border-l border-line text-center font-mono whitespace-nowrap">{tx("table.convertedUsd")}</th>
                   <th className="px-3 py-2.5 border-l border-line min-w-[260px]">{tx("table.description")}</th>
                   <th className="px-3 py-2.5 border-l border-line whitespace-nowrap">{tx("table.createdBy")}</th>
-                  <th className="px-3 py-2.5 text-center border-l border-line whitespace-nowrap">
-                    {tx("queue.columnState")}
-                  </th>
                   <th className="px-2 py-2.5 text-center w-28">{t("table.actions", { ns: "common" })}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line-soft text-content-body text-table-cell-text bg-surface">
                 {loading ? (
                   <tr>
-                    <td colSpan={12} className="py-12 text-center text-content-subtle">
+                    <td colSpan={11} className="py-12 text-center text-content-subtle">
                       <RotateCcw size={24} className="animate-spin mx-auto mb-2 text-accent" />
                       <span>{tx("table.loading")}</span>
                     </td>
                   </tr>
                 ) : expenses.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="py-12 text-center text-content-faint font-medium">
+                    <td colSpan={11} className="py-12 text-center text-content-faint font-medium">
                       {tx("table.empty")}
                     </td>
                   </tr>
@@ -447,7 +405,7 @@ export default function ExpensesPage() {
                           {exp.voucher_no || `#${exp.id}`}
                         </span>
                         {exp.printed_at && (
-                          <span className="block text-[10px] text-content-faint mt-0.5">{tx("queue.printed")}</span>
+                          <span className="block text-[10px] text-content-faint mt-0.5">{tx("table.printed")}</span>
                         )}
                       </td>
                       <td className="px-3 py-3 font-mono font-bold text-content-strong border-l border-line whitespace-nowrap">
@@ -506,31 +464,6 @@ export default function ExpensesPage() {
                           <span className="block text-[10px] text-content-faint mt-0.5">{exp.paid_by}</span>
                         )}
                       </td>
-                      <td className="px-3 py-3 text-center border-l border-line whitespace-nowrap">
-                        <span
-                          className={`px-2 py-0.5 rounded-badge border font-bold text-[11px] inline-block ${
-                            exp.state === "pending"
-                              ? "bg-amber-50 text-amber-800 border-amber-200"
-                              : exp.state === "rejected"
-                              ? "bg-rose-50 text-rose-700 border-rose-200"
-                              : exp.state === "reversed"
-                              ? "bg-slate-100 text-slate-800 border-slate-300"
-                              : "bg-emerald-50 text-emerald-800 border-emerald-200"
-                          }`}
-                        >
-                          {exp.state_label || tx(`states.${exp.state || "paid"}`)}
-                        </span>
-                        {exp.state === "rejected" && exp.rejection_reason && (
-                          <span className="block text-[10px] text-content-subtle mt-0.5 max-w-[140px] truncate" title={exp.rejection_reason}>
-                            {exp.rejection_reason}
-                          </span>
-                        )}
-                        {exp.state === "reversed" && exp.reversal_reason && (
-                          <span className="block text-[10px] text-content-subtle mt-0.5 max-w-[140px] truncate" title={exp.reversal_reason}>
-                            {exp.reversal_reason}
-                          </span>
-                        )}
-                      </td>
                       <td className="px-2 py-3 text-center whitespace-nowrap">
                         <div className="inline-flex items-center gap-0.5">
                           <TooltipButton
@@ -539,22 +472,33 @@ export default function ExpensesPage() {
                             onClick={() => setDetailsTarget(exp)}
                             className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-300 rounded border border-gray-200 transition-colors cursor-pointer"
                           />
-                          {canEdit && exp.can_edit !== false && (
+                          {canEdit && (
                             <TooltipButton
                               icon={<Pencil size={14} />}
-                              tooltip={tx("actions.edit")}
+                              tooltip={exp.lock_reason || (exp.can_edit === false ? tx("actions.editLocked") : tx("actions.edit"))}
+                              disabled={exp.can_edit === false}
                               onClick={() => setEditTarget(exp)}
-                              className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 rounded border border-gray-200 transition-colors cursor-pointer"
+                              className={`w-8 h-8 flex items-center justify-center rounded border transition-colors ${
+                                exp.can_edit === false
+                                  ? "bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed"
+                                  : "bg-white text-gray-400 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 border-gray-200 cursor-pointer"
+                              }`}
                             />
                           )}
-                          {canDelete && exp.can_delete !== false && exp.state !== "reversed" && exp.state !== "pending" && (
+                          {canDelete && (
                             <TooltipButton
                               icon={<Trash2 size={15} />}
-                              tooltip={tx("actions.delete")}
+                              tooltip={exp.lock_reason || (exp.can_delete === false ? tx("actions.deleteLocked") : tx("actions.delete"))}
+                              disabled={exp.can_delete === false}
                               onClick={() => {
+                                if (exp.can_delete === false) return;
                                 setDeleteTarget(exp);
                               }}
-                              className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 rounded border border-gray-200 transition-colors cursor-pointer"
+                              className={`w-8 h-8 flex items-center justify-center rounded border transition-colors ${
+                                exp.can_delete === false
+                                  ? "bg-slate-50 text-slate-300 border-slate-200 cursor-not-allowed"
+                                  : "bg-white text-gray-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 border-gray-200 cursor-pointer"
+                              }`}
                             />
                           )}
                         </div>
@@ -623,13 +567,7 @@ export default function ExpensesPage() {
         }
         title={tx("delete.title")}
         question={tx("delete.question")}
-        warning={tx(
-          deleteTarget?.state !== "paid"
-            ? "delete.warning"
-            : deleteTarget.payment_source === "manager_advance"
-            ? "delete.advanceWarning"
-            : "delete.paidWarning"
-        )}
+        warning={tx(deleteTarget?.payment_source === "manager_advance" ? "delete.advanceWarning" : "delete.paidWarning")}
         confirmLabel={tx("delete.confirm")}
         loading={isDeleting}
       />

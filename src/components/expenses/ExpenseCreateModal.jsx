@@ -201,11 +201,6 @@ export default function ExpenseCreateModal({
     }
     setSubmitting(true);
     try {
-      const gDate = dateObj.toDate();
-      const y = gDate.getFullYear();
-      const m = String(gDate.getMonth() + 1).padStart(2, "0");
-      const d = String(gDate.getDate()).padStart(2, "0");
-      const gregStr = `${y}-${m}-${d}`;
       const shamsiStr = toEnglishDigits(dateObj.format("YYYY/MM/DD"));
       const payload = {
         payment_source: formData.payment_source,
@@ -217,7 +212,6 @@ export default function ExpenseCreateModal({
         exchange_rate: effectiveRate,
         paid_to: formData.paid_to.trim(),
         shamsi_date: shamsiStr,
-        expense_date: gregStr,
         title: resolvedCategoryName,
         description: formData.description.trim(),
       };
