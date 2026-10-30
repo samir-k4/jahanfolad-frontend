@@ -21,6 +21,7 @@ export default function DocumentPreviewModal({
   icon,
   sheetWidth = 794,
   fitToWidth = false,
+  previewSheetHeight = A4_PORTRAIT_HEIGHT_PX,
   maxWidth = "max-w-4xl",
   fileName,
 }) {
@@ -44,7 +45,7 @@ export default function DocumentPreviewModal({
     });
   const [sheetHeight] = useReportFrameHeight(
     iframeRef,
-    fitToWidth ? A4_PORTRAIT_HEIGHT_PX : MIN_SHEET_HEIGHT_PX,
+    fitToWidth ? previewSheetHeight : MIN_SHEET_HEIGHT_PX,
   );
   useEffect(() => {
     if (!isOpen || !fitToWidth) {

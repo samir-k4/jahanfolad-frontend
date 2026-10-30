@@ -17,12 +17,13 @@ import { showToast } from "../../utils/toast";
 import { getCleanErrorMessage } from "../../utils/errorHandler";
 import { toEnglishDigits } from "../../utils";
 import {
-  formatDocNumber,
+  formatTransactionDocNumber,
   getCategoryName,
   getExchangeRate,
   getPartyName,
   getCreatedBy,
   isDeposit as isVaultDeposit,
+  canManageTransaction,
 } from "./treasuryHelpers";
 export default function TransactionLedger({
   transactions,
@@ -105,6 +106,7 @@ export default function TransactionLedger({
           <tbody className="bg-white">
             {transactions.map((tx, idx) => {
               const isDeposit = isVaultDeposit(tx);
+              const canManage = canManageTransaction(tx);
               const rowIndex = ((paginationMeta?.current_page || 1) - 1) * (paginationMeta?.per_page || perPage) + idx + 1;
               const categoryTitle = getCategoryName(tx, isDeposit);
               const party = getPartyName(tx, isDeposit);
@@ -118,7 +120,7 @@ export default function TransactionLedger({
                     {rowIndex}
                   </td>
                   <td className="py-1.5 px-2 text-center border border-gray-200 font-mono font-medium text-gray-800 text-xs" dir="ltr">
-                    {formatDocNumber(tx.receipt_number, tx.id)}
+                    {formatTransactionDocNumber(tx.receipt_number, tx.id)}
                   </td>
                   <td className="py-1.5 px-2 text-center font-mono text-gray-600 border border-gray-200 text-xs text-nowrap font-normal" dir="ltr">
                     {toEnglishDigits(tx.shamsi_date || "—")}
@@ -175,9 +177,14 @@ export default function TransactionLedger({
                         <Info size={15} />
                       </TooltipButton>
                       <TooltipButton
-                        tooltip={t("ledger.editTip")}
-                        onClick={() => navigate(tx.transaction_type?.startsWith("transfer_") ? `/transfers/${tx.id}/edit` : `/deposits-withdrawals/${tx.id}/edit`, { state: { tx } })}
-                        className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 rounded border border-gray-200 transition-colors cursor-pointer"
+                        tooltip={canManage ? t("ledger.editTip") : t("ledger.lockedTip")}
+                        onClick={() => canManage && navigate(tx.transaction_type?.startsWith("transfer_") ? `/transfers/${tx.id}/edit` : `/deposits-withdrawals/${tx.id}/edit`, { state: { tx } })}
+                        disabled={!canManage}
+                        className={`w-8 h-8 flex items-center justify-center bg-white rounded border border-gray-200 transition-colors ${
+                          canManage
+                            ? "text-gray-400 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 cursor-pointer"
+                            : "text-gray-300 opacity-60 cursor-not-allowed"
+                        }`}
                       >
                         <Pencil size={15} />
                       </TooltipButton>
@@ -189,9 +196,14 @@ export default function TransactionLedger({
                         <FileText size={15} />
                       </TooltipButton>
                       <TooltipButton
-                        tooltip={t("ledger.deleteTip")}
-                        onClick={() => setDeleteTx(tx)}
-                        className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 rounded border border-gray-200 transition-colors cursor-pointer"
+                        tooltip={canManage ? t("ledger.deleteTip") : t("ledger.lockedTip")}
+                        onClick={() => canManage && setDeleteTx(tx)}
+                        disabled={!canManage}
+                        className={`w-8 h-8 flex items-center justify-center bg-white rounded border border-gray-200 transition-colors ${
+                          canManage
+                            ? "text-gray-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 cursor-pointer"
+                            : "text-gray-300 opacity-60 cursor-not-allowed"
+                        }`}
                       >
                         <Trash2 size={15} />
                       </TooltipButton>
@@ -215,7 +227,7 @@ export default function TransactionLedger({
         title={t("ledger.deleteTitle")}
         question={t("ledger.deleteQuestion")}
         warning={t("ledger.deleteWarning")}
-        itemName={deleteTx ? `سند شماره ${formatDocNumber(deleteTx.receipt_number, deleteTx.id)}` : ""}
+        itemName={deleteTx ? `سند شماره ${formatTransactionDocNumber(deleteTx.receipt_number, deleteTx.id)}` : ""}
         loading={deleting}
       />
       <TablePagination

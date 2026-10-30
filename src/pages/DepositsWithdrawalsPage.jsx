@@ -13,13 +13,14 @@ import {
 import DatePicker from "react-multi-date-picker";
 import { DateObject, persian, persian_af } from "../utils/dateHelpers";
 import { toEnglishDigits } from "../utils/dariNumberFormatter";
-import { formatDocNumber } from "../utils/formatDocNumber";
+import { formatTransactionDocNumber } from "../components/treasury/treasuryHelpers";
 import { getPartyName, isDeposit as isVaultDeposit } from "../components/treasury/treasuryHelpers";
 import DepositWithdrawModal from "../components/treasury/DepositWithdrawModal";
 import TxDetailModal from "../components/treasury/TxDetailModal";
 import TransactionReportModal from "../components/treasury/TransactionReportModal";
 import useDebounce from "../hooks/useDebounce";
 import { apiUrl } from "../api";
+import { canManageTransaction } from "../components/treasury/treasuryHelpers";
 import {
   TooltipButton,
   TablePagination,
@@ -188,11 +189,7 @@ export default function DepositsWithdrawalsPage() {
     }
   };
   const renderActionButtons = (tx) => {
-    const isTransfer = tx.transaction_type?.startsWith("transfer_");
-    const isDirectCashTransaction =
-      tx.reference_type === "direct" &&
-      ["deposit", "withdrawal"].includes(tx.transaction_type);
-    const canManageTransaction = isTransfer || isDirectCashTransaction;
+    const canManage = canManageTransaction(tx);
     return (
       <div className="inline-flex items-center justify-center gap-1.5">
       <TooltipButton
@@ -202,25 +199,37 @@ export default function DepositsWithdrawalsPage() {
       >
         <Info size={15} />
       </TooltipButton>
-      {canEdit && canManageTransaction && (
+      {canEdit && (
         <TooltipButton
-          tooltip={t("actions.edit")}
+          tooltip={canManage ? t("actions.edit") : t("ledger.lockedTip")}
           onClick={() =>
-            navigate(
-              isTransfer ? `/transfers/${tx.id}/edit` : `/deposits-withdrawals/${tx.id}/edit`,
+            canManage && navigate(
+              tx.transaction_type?.startsWith("transfer_")
+                ? `/transfers/${tx.id}/edit`
+                : `/deposits-withdrawals/${tx.id}/edit`,
               { state: { tx } },
             )
           }
-          colorClass="p-1.5 bg-surface text-content-subtle border border-line-strong shadow-2xs hover:bg-notice-soft hover:text-notice-text hover:border-notice-line transition-colors"
+          disabled={!canManage}
+          colorClass={`p-1.5 bg-surface border border-line-strong shadow-2xs transition-colors ${
+            canManage
+              ? "text-content-subtle hover:bg-notice-soft hover:text-notice-text hover:border-notice-line"
+              : "text-content-faint opacity-55 cursor-not-allowed"
+          }`}
         >
           <Pencil size={15} />
         </TooltipButton>
       )}
-      {canDelete && canManageTransaction && (
+      {canDelete && (
         <TooltipButton
-          tooltip={t("actions.delete")}
-          onClick={() => setDeleteTx(tx)}
-          colorClass="p-1.5 bg-surface text-content-subtle border border-line-strong shadow-2xs hover:bg-danger-soft hover:text-danger-text hover:border-danger-line transition-colors"
+          tooltip={canManage ? t("actions.delete") : t("ledger.lockedTip")}
+          onClick={() => canManage && setDeleteTx(tx)}
+          disabled={!canManage}
+          colorClass={`p-1.5 bg-surface border border-line-strong shadow-2xs transition-colors ${
+            canManage
+              ? "text-content-subtle hover:bg-danger-soft hover:text-danger-text hover:border-danger-line"
+              : "text-content-faint opacity-55 cursor-not-allowed"
+          }`}
         >
           <Trash2 size={15} />
         </TooltipButton>
@@ -430,7 +439,7 @@ export default function DepositsWithdrawalsPage() {
                         {(paginationMeta.current_page - 1) * (paginationMeta.per_page || 10) + idx + 1}
                       </td>
                       <td className={`${TABLE_CELL} font-mono font-bold text-content`} dir="ltr">
-                        {formatDocNumber(tx.receipt_number, tx.id)}
+                        {formatTransactionDocNumber(tx.receipt_number, tx.id)}
                       </td>
                       <td className={`${TABLE_CELL} font-mono text-content-muted`} dir="ltr">
                         {toEnglishDigits(tx.shamsi_date) || t("emptyValue")}
@@ -487,7 +496,7 @@ export default function DepositsWithdrawalsPage() {
                 <div key={tx.id} className="p-3 space-y-3">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-mono font-bold text-content" dir="ltr">
-                      {formatDocNumber(tx.receipt_number, tx.id)}
+                      {formatTransactionDocNumber(tx.receipt_number, tx.id)}
                     </span>
                     {isDeposit ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-badge bg-positive-soft text-positive-text border border-positive-line font-bold text-xs">
@@ -571,7 +580,7 @@ export default function DepositsWithdrawalsPage() {
         title={t("delete.title")}
         question={t("delete.question")}
         warning={t("delete.warning")}
-        itemName={deleteTx ? t("delete.itemName", { number: formatDocNumber(deleteTx.receipt_number, deleteTx.id) }) : ""}
+        itemName={deleteTx ? t("delete.itemName", { number: formatTransactionDocNumber(deleteTx.receipt_number, deleteTx.id) }) : ""}
         loading={deleting}
         namespace="depositsWithdrawals"
       />

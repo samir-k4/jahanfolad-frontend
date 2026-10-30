@@ -610,9 +610,11 @@ export default function DepositWithdrawCreatePage() {
                 <input
                   type="text"
                   maxLength={6}
-                  required
+                  required={isEditMode}
+                  disabled={!isEditMode}
                   value={docNumber}
                   onChange={(e) => setDocNumber(toEnglishDigits(e.target.value))}
+                  placeholder={isEditMode ? "" : "T-01"}
                   className="w-full bg-white border border-gray-300 rounded-input px-3 py-2 text-body-text text-slate-900 font-mono font-bold outline-none focus:border-slate-800 text-center"
                 />
               </div>

@@ -173,7 +173,7 @@ export default function ExpenseEditModal({ isOpen, expense, onClose, onDone }) {
     setIsSaving(true);
     setError("");
     try {
-      const response = await fetch(apiUrl(`/expenses/${expense.id}`), {
+      const response = await fetch(apiUrl(expense.update_url || `/expenses/${expense.id}`), {
         method: "PUT",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { usePagePerms } from "../components/common";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -6,7 +7,6 @@ import {
   Plus,
   Search,
   Printer,
-  Info,
   RefreshCw,
   Trash2,
   CheckCircle2,
@@ -59,9 +59,10 @@ export default function SalesInvoicesPage() {
   const [createdSuccessInvoice, setCreatedSuccessInvoice] = useState(null);
   const [previewInvoice, setPreviewInvoice] = useState(null);
   const [warehouseExitInvoice, setWarehouseExitInvoice] = useState(null);
+  const [pdfInvoice, setPdfInvoice] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  useBodyScrollLock(!!viewingInvoice || !!deletingInvoice || !!createdSuccessInvoice || !!previewInvoice || !!warehouseExitInvoice);
+  useBodyScrollLock(!!viewingInvoice || !!deletingInvoice || !!createdSuccessInvoice || !!previewInvoice || !!warehouseExitInvoice || !!pdfInvoice);
 
   useEffect(() => {
     if (location.state?.justCreated && location.state?.newInvoice) {
@@ -120,6 +121,11 @@ export default function SalesInvoicesPage() {
   const handlePrintInvoice = (inv) => {
     if (!inv) return;
     setPreviewInvoice(inv);
+  };
+
+  const handleGeneratePdf = (inv) => {
+    if (!inv) return;
+    setPdfInvoice(inv);
   };
 
   return (
@@ -288,13 +294,6 @@ export default function SalesInvoicesPage() {
 
                       <td className="p-3 text-center min-w-[120px]">
                         <div className="flex items-center justify-center gap-1.5">
-                          <TooltipButton
-                            tooltip="مشاهده جزییات فاکتور"
-                            onClick={() => setViewingInvoice(inv)}
-                            icon={<Info size={14} />}
-                            colorClass="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300"
-                          />
-
                           {canEdit && (
                             <TooltipButton
                               tooltip="ویرایش فاکتور"
@@ -305,16 +304,9 @@ export default function SalesInvoicesPage() {
                           )}
 
                           <TooltipButton
-                            tooltip="چاپ فاکتور رسمی"
-                            onClick={() => handlePrintInvoice(inv)}
+                            tooltip="تولید PDF"
+                            onClick={() => handleGeneratePdf(inv)}
                             icon={<Printer size={14} />}
-                            colorClass="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300"
-                          />
-
-                          <TooltipButton
-                            tooltip="خروجی گدام (برای راننده)"
-                            onClick={() => setWarehouseExitInvoice(inv)}
-                            icon={<Truck size={14} />}
                             colorClass="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300"
                           />
 
@@ -568,6 +560,54 @@ export default function SalesInvoicesPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {pdfInvoice && createPortal(
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs" dir="rtl">
+          <div className="w-full max-w-md overflow-hidden rounded-modal border border-gray-200 bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+              <div>
+                <h3 className="text-sm font-bold text-gray-900">تولید PDF فاکتور</h3>
+                <p className="mt-1 text-xs text-gray-500">نوع سند مورد نظر را انتخاب کنید.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPdfInvoice(null)}
+                className="rounded-btn p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                aria-label="بستن"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="grid gap-3 p-5 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setPdfInvoice(null);
+                  setPreviewInvoice(pdfInvoice);
+                }}
+                className="flex flex-col items-center gap-2 rounded-card border border-emerald-200 bg-emerald-50 px-4 py-5 text-emerald-800 transition-colors hover:bg-emerald-100"
+              >
+                <FileText size={24} />
+                <span className="text-xs font-bold">فاکتور فروش</span>
+                <span className="text-[10px] text-emerald-700">سند رسمی فروش</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPdfInvoice(null);
+                  setWarehouseExitInvoice(pdfInvoice);
+                }}
+                className="flex flex-col items-center gap-2 rounded-card border border-sky-200 bg-sky-50 px-4 py-5 text-sky-800 transition-colors hover:bg-sky-100"
+              >
+                <Truck size={24} />
+                <span className="text-xs font-bold">خروجی گدام</span>
+                <span className="text-[10px] text-sky-700">سند تحویل به راننده</span>
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
       )}
 
       {previewInvoice && (

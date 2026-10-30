@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   ChevronDown,
   X,
+  Info,
 } from "lucide-react";
 import { SearchableSelect, CustomDropdown, DocumentPreviewModal, usePagePerms } from "../components/common";
 import { useTranslation } from "react-i18next";
@@ -25,7 +26,6 @@ import {
 import { showToast } from "../utils/toast";
 import { apiUrl } from "../api";
 import { formatToGregorian } from "../utils/dateHelpers";
-import useIncomeCategories from "../hooks/useIncomeCategories";
 import { INCOME_TYPE, INCOME_TYPE_IDS, INCOME_TYPE_KEYS, balanceState } from "../constants/incomeDomain";
 export default function CustomerReceiptCreatePage() {
   const { t } = useTranslation("incomes");
@@ -44,7 +44,6 @@ export default function CustomerReceiptCreatePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { categories } = useIncomeCategories(Boolean(searchParams.get("edit")));
   const editIncomeId = searchParams.get("edit");
   const isEditMode = Boolean(editIncomeId);
   const returnTo = location.state?.returnTo || "/incomes";
@@ -56,7 +55,7 @@ export default function CustomerReceiptCreatePage() {
   const [vaults, setVaults] = useState([]);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [receiptNumber, setReceiptNumber] = useState(() => String(Math.floor(1000 + Math.random() * 9000)));
+  const [receiptNumber, setReceiptNumber] = useState("");
   const [dateObj, setDateObj] = useState(() => new DateObject({ calendar: persian, locale: persian_af }));
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerSearchQuery, setCustomerSearchQuery] = useState("");
@@ -162,6 +161,11 @@ export default function CustomerReceiptCreatePage() {
     }
   }, [editIncomeId, editingIncome, isEditMode, t]);
   useEffect(() => {
+    if (isEditMode && editingIncome && String(editingIncome.id) === String(editIncomeId)) {
+      showToast.info(t("messages.editOpened"));
+    }
+  }, [editIncomeId, editingIncome, isEditMode, t]);
+  useEffect(() => {
     const handleClickOutside = (e) => {
       if (typeDropdownRef.current && !typeDropdownRef.current.contains(e.target)) {
         setIsTypeDropdownOpen(false);
@@ -258,6 +262,16 @@ export default function CustomerReceiptCreatePage() {
       active = false;
     };
   }, [selectedCustomer?.id]);
+  useEffect(() => {
+    if (!selectedCustomer?.id || isEditMode) return;
+    const loans = Array.isArray(customerLoanDetails) ? customerLoanDetails : [];
+    const customerCurrency = loans.length === 1
+      ? String(loans[0].currency || "").toUpperCase()
+      : currency;
+    if (customerCurrency === "AFN" || customerCurrency === "USD") {
+      setSettlementCurrency(customerCurrency);
+    }
+  }, [currency, customerLoanDetails, isEditMode, selectedCustomer?.id]);
   const matchingLoan = useMemo(() => {
     const loans = Array.isArray(customerLoanDetails) ? customerLoanDetails : [];
     return loans.find((l) => l.currency === settlementCurrency) || null;
@@ -304,6 +318,11 @@ export default function CustomerReceiptCreatePage() {
     }
     return 0;
   }, [isAfn, numAmount, numRate]);
+  const handleCancel = (event) => {
+    if (event) event.preventDefault();
+    if (isEditMode) showToast.info(t("messages.editCancelled"));
+    navigate(returnTo);
+  };
   const handleSubmit = async (e) => {
     if (isEditMode ? !canEdit : !canCreate) return;
     e.preventDefault();
@@ -345,8 +364,6 @@ export default function CustomerReceiptCreatePage() {
               income_date: dateObj ? formatToGregorian(dateObj) : editingIncome?.income_date,
             }
           : {
-              receipt_number:
-                receiptNumber.trim() || String(Math.floor(1000 + Math.random() * 9000)),
             }),
         shamsi_date: shamsiDateStr,
         title: isEditMode
@@ -443,6 +460,7 @@ export default function CustomerReceiptCreatePage() {
         <div className="flex items-center gap-2.5">
           <Link
             to={returnTo}
+            onClick={handleCancel}
             className="px-3.5 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-btn hover:bg-gray-50 transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
           >
             <ArrowRight size={15} />
@@ -450,6 +468,17 @@ export default function CustomerReceiptCreatePage() {
           </Link>
         </div>
       </div>
+      {isEditMode && (
+        <div className="flex items-start gap-3 rounded-card border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900 shadow-2xs" role="status">
+          <Info size={18} className="mt-0.5 shrink-0 text-amber-700" />
+          <div className="space-y-0.5">
+            <p className="text-sm font-bold">{t("messages.editModeTitle")}</p>
+            <p className="text-xs leading-5 text-amber-800">
+              {t("messages.editModeHint", { doc: receiptNumber || "—" })}
+            </p>
+          </div>
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8 space-y-6">
@@ -459,7 +488,7 @@ export default function CustomerReceiptCreatePage() {
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <span>{t("create.docNumber")}</span>
                   <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-badge border border-emerald-200">
-                    {receiptNumber}
+                    {receiptNumber || "تولید خودکار"}
                   </span>
                 </div>
               </div>
@@ -498,26 +527,6 @@ export default function CustomerReceiptCreatePage() {
                       </div>
                     )}
                   />
-                  {selectedCustomer && (
-                    <div className="mt-2 p-2.5 bg-emerald-50/70 border border-emerald-200 rounded-btn flex items-center justify-between gap-2 text-xs">
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold rounded-badge shrink-0">
-                          {selectedCustomer.customer_code || `C-${selectedCustomer.id}`}
-                        </span>
-                        <span className="font-bold text-gray-900 truncate">
-                          {selectedCustomer.name}
-                          {selectedCustomer.company_name && (
-                            <span className="text-gray-500 font-normal text-[11px] mr-1">
-                              ({selectedCustomer.company_name})
-                            </span>
-                          )}
-                        </span>
-                      </div>
-                      <span className="text-emerald-800 font-bold text-[10px] bg-white px-1.5 py-0.5 rounded border border-emerald-200 shrink-0">
-                        {selectedCustomer.loan_account || t("create.tradeReceivables")}
-                      </span>
-                    </div>
-                  )}
                 </div>
                 <div className="relative" ref={typeDropdownRef}>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">{t("create.type")}<span className="text-rose-500">*</span>
@@ -569,25 +578,6 @@ export default function CustomerReceiptCreatePage() {
                     )}
                   </div>
                 </div>
-                {isEditMode && (
-                  <div>
-                    <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                      {t("edit.category")}
-                    </label>
-                    <SearchableSelect
-                      options={categories}
-                      value={incomeCategoryId}
-                      onChange={setIncomeCategoryId}
-                      placeholder={t("edit.categoryPlaceholder")}
-                      searchPlaceholder={t("edit.categorySearch")}
-                      noResultsText={t("edit.categoryEmpty")}
-                      getOptionLabel={(category) => category.name}
-                      getOptionValue={(category) => String(category.id)}
-                      buttonClassName="h-[40px] px-3 text-xs"
-                      usePortal
-                    />
-                  </div>
-                )}
                 <div className="relative" ref={vaultDropdownRef}>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">{t("create.vault")}<span className="text-rose-500">*</span>
                   </label>
@@ -683,31 +673,6 @@ export default function CustomerReceiptCreatePage() {
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-800 mb-1.5">{t("label.currency")}<span className="text-rose-500">*</span>
-                  </label>
-                  <CustomDropdown
-                    value={currency}
-                    onChange={(val) => setCurrency(val)}
-                    options={[
-                      { value: "USD", label: t("create.usdOption") },
-                      { value: "AFN", label: t("create.afnOption") },
-                    ]}
-                    buttonClassName="w-full h-[40px] px-3 bg-white border border-gray-300 rounded-btn text-xs font-bold text-gray-800"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-800 mb-1.5">{t("create.applyCurrency")}<span className="text-rose-500">*</span></label>
-                  <CustomDropdown
-                    value={settlementCurrency}
-                    onChange={setSettlementCurrency}
-                    options={[
-                      { value: "USD", label: t("create.usdOption") },
-                      { value: "AFN", label: t("create.afnOption") },
-                    ]}
-                    buttonClassName="w-full h-[40px] px-3 bg-white border border-gray-300 rounded-btn text-xs font-bold text-gray-800"
-                  />
-                </div>
                 {needsExchangeRate && (
                   <div className="animate-in fade-in duration-200">
                     <label className="block text-xs font-bold text-emerald-800 mb-1.5">{t("create.rate")}<span className="text-rose-500">*</span>
@@ -725,25 +690,14 @@ export default function CustomerReceiptCreatePage() {
                         value={exchangeRate}
                         onChange={(e) => setExchangeRate(e.target.value)}
                         placeholder={t("create.ratePlaceholder")}
-                        className="w-full h-[40px] px-3 bg-emerald-50/50 border border-emerald-300 rounded-btn text-xs font-mono font-bold text-emerald-900 focus:outline-none focus:border-emerald-600"
+                        className="w-full h-[40px] pl-20 pr-3 bg-emerald-50/50 border border-emerald-300 rounded-btn text-xs font-mono font-bold text-emerald-900 focus:outline-none focus:border-emerald-600"
                       />
-                      <span className="absolute left-3 top-2.5 text-xs text-emerald-700 font-bold">
+                      <span className="pointer-events-none absolute left-3 top-2.5 text-xs text-emerald-700 font-bold whitespace-nowrap">
                         AFN / USD
                       </span>
                     </div>
                   </div>
                 )}
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 mb-1.5">{t("create.receiver")}</label>
-                  <input
-                    type="text"
-                    maxLength={TEXT_FIELD_MAX_LENGTH}
-                    value={receivedBy}
-                    onChange={(e) => setReceivedBy(e.target.value)}
-                    placeholder={t("create.receiverPlaceholder")}
-                    className="w-full h-[40px] px-3 bg-white border border-gray-300 rounded-btn text-xs text-gray-800 focus:outline-none focus:border-emerald-600"
-                  />
-                </div>
               </div>
             </div>
             <div className="bg-white border border-gray-200 rounded-card shadow-2xs p-5 space-y-5">
@@ -776,6 +730,19 @@ export default function CustomerReceiptCreatePage() {
                     <div className="mt-1.5 text-[11px] text-gray-500 font-medium">{t("create.amountLabel")}<span className="font-bold text-emerald-800">{fmt(numAmount)}</span> {currency === "USD" ? t("currency.USD") : t("currency.AFN")}
                     </div>
                   )}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-800 mb-1.5">{t("create.amountCurrency")}<span className="text-rose-500">*</span>
+                  </label>
+                  <CustomDropdown
+                    value={currency}
+                    onChange={(val) => setCurrency(val)}
+                    options={[
+                      { value: "USD", label: t("create.usdOption") },
+                      { value: "AFN", label: t("create.afnOption") },
+                    ]}
+                    buttonClassName="w-full h-[44px] px-3 bg-white border border-gray-300 rounded-btn text-xs font-bold text-gray-800"
+                  />
                 </div>
                 <div className="p-4 bg-gray-50 border border-gray-200 rounded-btn flex flex-col justify-center min-h-[76px]">
                   <div className="text-xs text-gray-500 font-medium flex items-center justify-between">
@@ -931,6 +898,7 @@ export default function CustomerReceiptCreatePage() {
                 </button>
                 <Link
                   to={returnTo}
+                  onClick={handleCancel}
                   className="w-full py-2 px-4 bg-white hover:bg-gray-50 text-gray-700 font-semibold text-xs border border-gray-300 rounded-btn transition-colors flex items-center justify-center gap-1.5"
                 >
                   <X size={14} />

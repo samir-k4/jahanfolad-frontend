@@ -219,10 +219,11 @@ export default function DepositWithdrawModal({
                 <Hash size={13} className="text-slate-700" />{t("depositWithdraw.docNumber")}</label>
               <input
                 type="text"
-                maxLength={4}
-                required
+                maxLength={6}
+                disabled
                 value={docNumber}
                 onChange={(e) => setDocNumber(toEnglishDigits(e.target.value))}
+                placeholder="T-01"
                 className="w-full bg-white border border-gray-300 rounded-sm px-3 py-1.5 text-xs text-slate-900 font-mono font-bold outline-none focus:border-slate-800 text-center"
               />
             </div>

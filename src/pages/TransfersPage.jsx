@@ -6,7 +6,7 @@ import DatePicker from "react-multi-date-picker";
 import { showToast as appToast } from "../utils/toast";
 import { DateObject, persian, persian_af } from "../utils/dateHelpers";
 import { toEnglishDigits } from "../utils/dariNumberFormatter";
-import { formatDocNumber } from "../utils/formatDocNumber";
+import { formatTransactionDocNumber } from "../components/treasury/treasuryHelpers";
 import { apiUrl } from "../api";
 import useDebounce from "../hooks/useDebounce";
 import TransferDetailModal from "../components/transfers/TransferDetailModal";
@@ -350,7 +350,7 @@ export default function TransfersPage() {
                       {(paginationMeta.current_page - 1) * (paginationMeta.per_page || 10) + idx + 1}
                     </td>
                     <td className={`${TABLE_CELL} font-mono font-bold text-content`} dir="ltr">
-                      {formatDocNumber(row.receipt_number, row.id)}
+                      {formatTransactionDocNumber(row.receipt_number, row.id)}
                     </td>
                     <td className={`${TABLE_CELL} font-mono text-content-muted`} dir="ltr">
                       {toEnglishDigits(row.shamsi_date) || t("emptyValue")}
@@ -381,7 +381,7 @@ export default function TransfersPage() {
             transfers.map((row) => (
               <div key={row.id} className="p-3 space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-mono font-bold text-content" dir="ltr">{formatDocNumber(row.receipt_number, row.id)}</span>
+                  <span className="font-mono font-bold text-content" dir="ltr">{formatTransactionDocNumber(row.receipt_number, row.id)}</span>
                   <span className="font-mono font-bold text-content" dir="ltr">{Number(row.amount || 0).toLocaleString("en-US")} {row.currency}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-table-cell-text">
@@ -423,7 +423,7 @@ export default function TransfersPage() {
         title={t("delete.title")}
         question={t("delete.question")}
         warning={t("delete.warning")}
-        itemName={deleteRow ? t("delete.itemName", { number: formatDocNumber(deleteRow.receipt_number, deleteRow.id) }) : ""}
+        itemName={deleteRow ? t("delete.itemName", { number: formatTransactionDocNumber(deleteRow.receipt_number, deleteRow.id) }) : ""}
         loading={deleting}
         namespace="transfers"
       />

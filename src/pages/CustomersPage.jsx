@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { showToast as appToast } from "../utils/toast";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Search, RefreshCw, Edit3, Trash2, Info, X } from "lucide-react";
+import { Plus, Search, RefreshCw, Edit3, Trash2, Info, X, FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import useBodyScrollLock from "../hooks/useBodyScrollLock";
 import useDebounce from "../hooks/useDebounce";
@@ -14,6 +14,7 @@ import {
   DeleteConfirmationModal,
   usePagePerms,
 } from "../components/common";
+import CustomersReportModal from "../components/customers/CustomersReportModal";
 const AFGHAN_PROVINCES = [
   "کابل", "هرات", "بلخ", "ننگرهار", "کندز", "کندهار", "غزنی", "بغلان",
   "تخار", "بدخشان", "فاریاب", "جوزجان", "سرپل", "سمنگان", "پروان",
@@ -64,6 +65,7 @@ export default function CustomersPage() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [deletingCustomer, setDeletingCustomer] = useState(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const createEmptyForm = (customerCode = "") => ({
     customer_code: customerCode,
@@ -80,7 +82,7 @@ export default function CustomersPage() {
   const showToast = (message, type = "success") => {
     (appToast[type] || appToast.info)(message);
   };
-  useBodyScrollLock(isFormModalOpen || !!deletingCustomer);
+  useBodyScrollLock(isFormModalOpen || !!deletingCustomer || isReportModalOpen);
   const fetchCustomers = useCallback(async (page = 1, customPerPage = perPage) => {
     setLoading(true);
     try {
@@ -247,6 +249,14 @@ export default function CustomersPage() {
           </p>
         </div>
         <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setIsReportModalOpen(true)}
+            className="px-4 py-2 text-btn-text font-bold text-content-body bg-surface border border-line-strong hover:bg-surface-muted rounded-btn transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+          >
+            <FileText size={16} />
+            <span>راپور مشتریان</span>
+          </button>
           {canCreate && (
             <Link
               to="/customers/create"
@@ -568,6 +578,10 @@ export default function CustomersPage() {
           itemName={t("delete.itemName", { name: deletingCustomer.name, code: deletingCustomer.customer_code })}
         />
       )}
+      <CustomersReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+      />
     </div>
   );
 }

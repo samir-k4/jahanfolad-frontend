@@ -8,7 +8,6 @@ import DatePicker from "react-multi-date-picker";
 import { DateObject, persian, persian_af } from "../../utils/dateHelpers";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import useVaults from "../../hooks/useVaults";
-import useExpenseCategories from "../../hooks/useExpenseCategories";
 import { usePagePerms } from "../common";
 import { apiUrl } from "../../api";
 import SearchableSelect from "../common/SearchableSelect";
@@ -26,7 +25,6 @@ export default function ManagerAdvanceCreateModal({
   const { canCreate } = usePagePerms("advances");
   useBodyScrollLock(isOpen);
   const { vaults: hookVaults } = useVaults(propVaults.length === 0);
-  const { categories: expenseCategories } = useExpenseCategories();
   const vaults = propVaults.length > 0 ? propVaults : hookVaults;
   const [internalEmployees, setInternalEmployees] = useState([]);
   const employees = propEmployees && propEmployees.length > 0 ? propEmployees : internalEmployees;
@@ -182,13 +180,6 @@ export default function ManagerAdvanceCreateModal({
       label: `${idBadge}${name} (${position})`,
     };
   });
-  const purposeOptions = [
-    { value: "", label: "انتخاب هدف برداشت..." },
-    ...expenseCategories.map((cat) => ({
-      value: cat.name,
-      label: cat.name,
-    })),
-  ];
   return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs font-sans"
@@ -196,23 +187,23 @@ export default function ManagerAdvanceCreateModal({
       onClick={onClose}
     >
       <div
-        className="bg-white w-full max-w-lg rounded-modal shadow-2xl overflow-hidden font-sans flex flex-col max-h-[92vh] border border-gray-200 animate-in fade-in zoom-in-95 duration-150"
+        className="bg-white w-full max-w-3xl rounded-modal shadow-2xl overflow-hidden font-sans flex flex-col max-h-[94vh] border border-gray-200 animate-in fade-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 py-3.5 bg-white border-b border-gray-200 shrink-0">
+        <div className="flex items-center justify-between px-7 py-5 bg-slate-50/70 border-b border-gray-200 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-btn bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
-              <ArrowDownLeft size={18} />
+            <div className="w-10 h-10 rounded-card bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+              <ArrowDownLeft size={20} />
             </div>
             <div>
-              <h3 className="text-section-title text-gray-900">{t("label.newAdvance")}</h3>
+              <h3 className="text-lg font-bold text-gray-900">{t("label.newAdvance")}</h3>
               <p className="text-caption-text text-gray-500">{t("create.subtitle")}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-btn cursor-pointer transition-colors"
+            className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-btn cursor-pointer transition-colors"
           >
             <X size={18} />
           </button>
@@ -223,7 +214,8 @@ export default function ManagerAdvanceCreateModal({
             <span>{errorMessage}</span>
           </div>
         )}
-        <form onSubmit={handleSubmit} noValidate className="p-5 space-y-4 overflow-y-auto flex-1">
+        <form onSubmit={handleSubmit} noValidate className="p-7 space-y-5 overflow-y-auto flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 rounded-card border border-gray-200 bg-white p-5">
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-label-text font-bold text-gray-700">{t("label.receiver")}<span className="text-rose-600">*</span>
@@ -272,7 +264,7 @@ export default function ManagerAdvanceCreateModal({
                 searchPlaceholder={t("create.employeeSearch")}
                 noResultsText={t("create.employeeEmpty")}
                 usePortal={true}
-                buttonClassName={`w-full border rounded-input px-3 py-2 text-body-text font-medium bg-white outline-none ${
+                buttonClassName={`w-full h-11 border rounded-input px-3 py-2 text-body-text font-medium bg-white outline-none ${
                   fieldErrors.receiver_name
                     ? "border-rose-500 bg-rose-50/30 focus:border-rose-600"
                     : "border-gray-300 focus:border-slate-800"
@@ -288,7 +280,7 @@ export default function ManagerAdvanceCreateModal({
                   setFieldErrors((prev) => ({ ...prev, receiver_name: null }));
                   setFormData((prev) => ({ ...prev, receiver_name: e.target.value }));
                 }}
-                className={`w-full border rounded-input px-3 py-2 text-body-text font-medium focus:outline-none transition-colors ${
+                className={`w-full h-11 border rounded-input px-3 py-2 text-body-text font-medium focus:outline-none transition-colors ${
                   fieldErrors.receiver_name
                     ? "border-rose-500 bg-rose-50/30 focus:border-rose-600"
                     : "border-gray-300 focus:border-slate-800"
@@ -303,7 +295,7 @@ export default function ManagerAdvanceCreateModal({
             )}
           </div>
           <div>
-            <label className="block text-label-text font-bold text-gray-700 mb-1.5">{t("create.vault")}<span className="text-rose-600">*</span>
+            <label className="flex items-center min-h-[30px] text-label-text font-bold text-gray-700 mb-1.5">{t("create.vault")}<span className="text-rose-600">*</span>
             </label>
             <SearchableSelect
               options={vaultOptions}
@@ -312,7 +304,7 @@ export default function ManagerAdvanceCreateModal({
               placeholder={t("create.vaultPlaceholder")}
               searchPlaceholder={t("create.vaultSearch")}
               usePortal={true}
-              buttonClassName={`w-full border rounded-input px-3 py-2 text-body-text font-medium bg-white outline-none ${
+              buttonClassName={`w-full h-11 border rounded-input px-3 py-2 text-body-text font-medium bg-white outline-none ${
                 fieldErrors.vault_id
                   ? "border-rose-500 bg-rose-50/30 focus:border-rose-600"
                   : "border-gray-300 focus:border-slate-800"
@@ -325,7 +317,8 @@ export default function ManagerAdvanceCreateModal({
               </p>
             )}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 rounded-card border border-gray-200 bg-slate-50/40 p-5">
             <div>
               <label className="block text-label-text font-bold text-gray-700 mb-1.5">
                 مبلغ امانت ({formData.currency}) <span className="text-rose-600">*</span>
@@ -343,7 +336,7 @@ export default function ManagerAdvanceCreateModal({
                   setFieldErrors((prev) => ({ ...prev, amount: null }));
                   setFormData({ ...formData, amount: e.target.value });
                 }}
-                className={`w-full border rounded-input px-3 py-2 text-body-text font-bold focus:outline-none font-mono transition-colors ${
+                className={`w-full h-11 border rounded-input px-3 py-2 text-body-text font-bold focus:outline-none font-mono transition-colors ${
                   fieldErrors.amount
                     ? "border-rose-500 bg-rose-50/30 focus:border-rose-600"
                     : "border-gray-300 focus:border-slate-800"
@@ -365,24 +358,23 @@ export default function ManagerAdvanceCreateModal({
                 calendar={persian}
                 locale={persian_af}
                 format="YYYY/MM/DD"
-                inputClass="w-full border border-gray-300 rounded-input px-3 py-2 text-body-text font-mono focus:outline-none focus:border-slate-800"
+                inputClass="w-full h-11 border border-gray-300 rounded-input px-3 py-2 text-body-text font-mono focus:outline-none focus:border-slate-800"
                 containerStyle={{ width: "100%" }}
               />
             </div>
           </div>
-          <div>
+          <div className="rounded-card border border-gray-200 bg-white p-5">
             <label className="block text-label-text font-bold text-gray-700 mb-1.5">{t("label.purpose")}</label>
-            <SearchableSelect
-              options={purposeOptions}
+            <input
+              type="text"
+              maxLength={TEXT_FIELD_MAX_LENGTH}
               value={formData.purpose}
-              onChange={(val) => setFormData({ ...formData, purpose: val })}
+              onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
               placeholder={t("create.purposePlaceholder")}
-              searchPlaceholder={t("create.purposeSearch")}
-              usePortal={true}
-              buttonClassName="w-full border border-gray-300 rounded-input px-3 py-2 text-body-text font-medium bg-white focus:border-slate-800"
+              className="w-full h-11 border border-gray-300 rounded-input px-3 py-2 text-body-text bg-white focus:outline-none focus:border-slate-800"
             />
           </div>
-          <div>
+          <div className="rounded-card border border-gray-200 bg-white p-5">
             <label className="block text-label-text font-bold text-gray-700 mb-1.5">{t("create.notes")}</label>
             <textarea maxLength={NOTES_MAX_LENGTH}
               value={formData.notes}
@@ -396,13 +388,13 @@ export default function ManagerAdvanceCreateModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 border border-gray-300 rounded-btn text-btn-text font-bold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+              className="flex-1 h-11 border border-gray-300 rounded-btn text-btn-text font-bold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
             >{t("create.cancel")}</button>
             <button
               type="submit"
               onClick={handleSubmit}
               disabled={submitting}
-              className="flex-1 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-btn text-btn-text font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 h-11 bg-slate-900 hover:bg-slate-800 text-white rounded-btn text-btn-text font-bold transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <>

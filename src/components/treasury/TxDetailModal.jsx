@@ -12,8 +12,9 @@ import {
   getPartyName,
   getCreatedBy,
   getExchangeRate,
-  formatDocNumber,
   isDeposit as isVaultDeposit,
+  cleanTransactionNotes,
+  formatTransactionDocNumber,
 } from "./treasuryHelpers";
 const getMember = (tx) => {
   if (tx?.member?.name) return tx.member.name;
@@ -34,7 +35,7 @@ export default function TxDetailModal({ tx, onClose, onPrint, namespace = "treas
   const partyTitle = getPartyName(tx, isDeposit);
   const memberTitle = getMember(tx);
   const createdBy = getCreatedBy(tx, isDeposit);
-  const docCode = formatDocNumber(tx.receipt_number, tx.id);
+  const docCode = formatTransactionDocNumber(tx.receipt_number, tx.id);
   return createPortal(
     <div
       className="fixed inset-0 top-0 left-0 right-0 bottom-0 m-0 mt-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs font-sans"
@@ -139,12 +140,12 @@ export default function TxDetailModal({ tx, onClose, onPrint, namespace = "treas
                     {isDeposit ? (
                       <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold px-2 py-0.5 rounded-badge">
                         <TrendingUp size={11} />
-                        <span>{t("form.depositType")}</span>
+                        <span>{t("txDetail.typeDeposit")}</span>
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 bg-rose-50 text-rose-800 border border-rose-200 text-xs font-bold px-2 py-0.5 rounded-badge">
                         <TrendingDown size={11} />
-                        <span>{t("form.withdrawType")}</span>
+                        <span>{t("txDetail.typeWithdraw")}</span>
                       </span>
                     )}
                   </td>
@@ -179,14 +180,11 @@ export default function TxDetailModal({ tx, onClose, onPrint, namespace = "treas
           <div className="bg-gray-50 border border-gray-200 rounded-card p-3.5 space-y-1">
             <span className="text-xs font-bold text-gray-600 block">{t("txDetail.notes")}</span>
             <p className="text-xs text-gray-800 leading-relaxed break-words whitespace-normal font-normal">
-              {tx.notes || "—"}
+              {cleanTransactionNotes(tx.notes) || "—"}
             </p>
           </div>
         </div>
         <div className="px-5 py-3.5 border-t border-gray-200 flex justify-between items-center bg-gray-50">
-          <div className="text-xs text-gray-400 font-mono" dir="ltr">
-            ID: #{tx.id}
-          </div>
           <div className="flex items-center gap-2">
             {onPrint && (
               <button

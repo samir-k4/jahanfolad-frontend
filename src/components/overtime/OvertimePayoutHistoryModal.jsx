@@ -76,7 +76,7 @@ export default function OvertimePayoutHistoryModal({ isOpen, onClose, branchId, 
       dir="rtl"
     >
       <div
-        className={`w-full max-w-6xl ${SHEET_HEIGHT} rounded-modal bg-surface shadow-2xl border border-line overflow-hidden flex flex-col`}
+        className={`w-full max-w-7xl ${SHEET_HEIGHT} rounded-modal bg-surface shadow-2xl border border-line overflow-hidden flex flex-col`}
       >
         <div className="px-6 py-3.5 border-b border-line flex items-center justify-between gap-3 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
@@ -123,7 +123,7 @@ export default function OvertimePayoutHistoryModal({ isOpen, onClose, branchId, 
                   <th className={`${HEAD} text-center`}>{t("table.status", { ns: "common" })}</th>
                   <th className={`${HEAD} text-center`}>{t("payout.colSource")}</th>
                   <th className={HEAD}>{t("payout.colReceiver")}</th>
-                  <th className={HEAD}>{t("createdBy", { ns: "common" })}</th>
+                  <th className={HEAD}>{t("table.createdBy", { ns: "common" })}</th>
                   <th className={`${HEAD} w-28 text-center border-l-0`}>
                     {t("table.actions", { ns: "common" })}
                   </th>

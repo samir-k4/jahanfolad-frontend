@@ -11,7 +11,8 @@ import {
   ToggleLeft,
   ToggleRight,
   AlertCircle,
-  Loader2
+  Loader2,
+  Lock,
 } from "lucide-react";
 import { SearchableSelect, CustomDropdown, SearchableInput } from "../components/common";
 import { useBranch } from "../context/BranchContext";
@@ -57,7 +58,7 @@ export default function InvoiceCreatePage() {
   const [branchInventories, setBranchInventories] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
-  const [invoiceNumber, setInvoiceNumber] = useState(() => String(Math.floor(1000 + Math.random() * 9000)));
+  const [invoiceNumber, setInvoiceNumber] = useState("F-XX");
   const [dateObj, setDateObj] = useState(() => new DateObject({ calendar: persian, locale: persian_af }));
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerId, setCustomerId] = useState("");
@@ -245,6 +246,7 @@ export default function InvoiceCreatePage() {
   }, [branchInventories]);
   useEffect(() => {
     if (!isEditMode) return;
+    showToast.info("حالت ویرایش فاکتور فعال شد.");
     let active = true;
     (async () => {
       try {
@@ -341,6 +343,11 @@ export default function InvoiceCreatePage() {
     return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editInvoiceId, isEditMode]);
+  const handleCancel = (event) => {
+    if (event) event.preventDefault();
+    if (isEditMode) showToast.info("ویرایش فاکتور لغو شد.");
+    navigate("/sales/invoices");
+  };
   const recalculateItem = (item) => {
     const qty = parseFloat(toEnglishDigits(item.quantity)) || 0;
     const pkgKg = item.first_scale_kg || parseWeightKg(item.first_scale);
@@ -607,10 +614,22 @@ export default function InvoiceCreatePage() {
           <h1 className="text-xl font-bold text-gray-900 tracking-tight">
             {isEditMode ? `ویرایش فاکتور فروش شماره ${invoiceNumber}` : "صدور فاکتور جدید فروش"}
           </h1>
+          {isEditMode && (
+            <div className="mt-2 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              <Lock size={15} className="mt-0.5 shrink-0 text-amber-700" />
+              <div>
+                <p className="font-bold">حالت ویرایش فعال است</p>
+                <p className="mt-0.5 text-amber-800">
+                  شما در حال ویرایش فاکتور شماره {invoiceNumber} هستید. تغییرات را بررسی کرده و سپس ذخیره کنید.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2.5">
           <Link
             to="/sales/invoices"
+            onClick={handleCancel}
             className="px-3.5 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
           >
             <ArrowRight size={15} />
@@ -634,15 +653,19 @@ export default function InvoiceCreatePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="col-span-1">
                 <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                  شماره فاکتور <span className="text-rose-500">*</span>
+                  شماره فاکتور <span className="text-gray-500 font-normal">(خودکار)</span>
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={invoiceNumber}
-                  onChange={(e) => setInvoiceNumber(e.target.value)}
-                  className="w-full h-[40px] px-3 bg-white border border-gray-300 rounded-lg text-xs font-mono font-bold text-gray-900 focus:outline-none focus:border-slate-800 text-center"
-                />
+                <div className="relative">
+                  <Lock size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={invoiceNumber}
+                    readOnly
+                    aria-readonly="true"
+                    className="w-full h-[40px] pr-9 pl-3 bg-gray-100 border border-gray-300 rounded-lg text-xs font-mono font-bold text-gray-600 text-center cursor-not-allowed"
+                  />
+                </div>
+                <p className="mt-1 text-[10px] text-gray-500">شماره فاکتور به‌صورت خودکار با فرمت F-01 تولید می‌شود.</p>
               </div>
               <div className="col-span-1">
                 <label className="block text-xs font-bold text-gray-800 mb-1.5">

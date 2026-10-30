@@ -14,7 +14,7 @@ import { DocumentPreviewModal, usePagePerms } from "../components/common";
 import useAbortController, { isAbortError } from "../hooks/useAbortController";
 import useDebounce from "../hooks/useDebounce";
 import { apiUrl } from "../api";
-import { formatDocNumber } from "../components/treasury/treasuryHelpers";
+import { formatTransactionDocNumber } from "../components/treasury/treasuryHelpers";
 import { useTranslation } from "react-i18next";
 export default function TreasuryVaultsPage() {
   const nextSignal = useAbortController();
@@ -246,7 +246,7 @@ export default function TreasuryVaultsPage() {
         htmlPath={voucherTx ? `/vault-transactions/${voucherTx.id}/voucher-html` : ""}
         pdfPath={voucherTx ? `/vault-transactions/${voucherTx.id}/voucher-pdf` : ""}
         title={t("common:voucher.transactionTitle")}
-        subtitle={voucherTx ? t("common:voucher.transactionMeta", { doc: formatDocNumber(voucherTx.receipt_number, voucherTx.id), vault: voucherTx.vault?.name || "" }) : ""}
+        subtitle={voucherTx ? t("common:voucher.transactionMeta", { doc: formatTransactionDocNumber(voucherTx.receipt_number, voucherTx.id), vault: voucherTx.vault?.name || "" }) : ""}
         icon={<Receipt className="w-5 h-5" />}
       />
     </div>

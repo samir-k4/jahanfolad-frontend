@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import DatePicker from "react-multi-date-picker";
 import DateObject from "react-date-object";
 import persian from "react-date-object/calendars/persian";
-import { Lock, Printer, RotateCcw, Search, Trash2 } from "lucide-react";
+import { AlertCircle, Lock, Pencil, Printer, RotateCcw, Search, Trash2 } from "lucide-react";
 import {
   BranchSelect,
   CustomDropdown,
@@ -77,7 +77,7 @@ const dash = (value, fallback) => {
   return String(value);
 };
 export default function EmployeePaymentPage() {
-  const { canCreate, canDelete } = usePagePerms("salaries");
+  const { canCreate, canEdit, canDelete } = usePagePerms("salaries");
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation("salary");
@@ -127,6 +127,7 @@ export default function EmployeePaymentPage() {
   const [pendingDelete, setPendingDelete] = useState(null);
   const [accountReloadKey, setAccountReloadKey] = useState(0);
   const [deleting, setDeleting] = useState(false);
+  const [editingPayment, setEditingPayment] = useState(null);
   const [minusAcknowledged, setMinusAcknowledged] = useState(false);
   const historyAbortRef = useRef(null);
   const debouncedSearch = useDebounce(historySearchTerm, SEARCH_DEBOUNCE_MS);
@@ -291,7 +292,7 @@ export default function EmployeePaymentPage() {
   const openMonths = useMemo(() => (account?.months || []).filter((month) => !month.is_closed), [account]);
   const exceedsAvailable = parsedAmount > available;
   const canSubmit =
-    canCreate &&
+    (editingPayment ? canEdit : canCreate) &&
     !submitting &&
     !expenseCategoriesLoading &&
     !!selectedEmployeeId &&
@@ -336,8 +337,10 @@ export default function EmployeePaymentPage() {
     }
     setSubmitting(true);
     try {
-      const res = await fetch(apiUrl("/employee-payments"), {
-        method: "POST",
+      const res = await fetch(
+        apiUrl(editingPayment ? `/employee-payments/${encodeURIComponent(editingPayment.id)}` : "/employee-payments"),
+        {
+        method: editingPayment ? "PUT" : "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
           employee_id: selectedEmployeeId,
@@ -349,10 +352,20 @@ export default function EmployeePaymentPage() {
           payment_type_id: paymentTypeId || undefined,
           notes: notes.trim().slice(0, NOTES_MAX_LENGTH),
         }),
-      });
+        },
+      );
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(getCleanErrorMessage(body, t("payment.messages.createError")));
-      showToast.success(body?.message || t("payment.messages.created"));
+      showToast.success(body?.message || t(editingPayment ? "payment.messages.updated" : "payment.messages.created"));
+      if (editingPayment) {
+        setEditingPayment(null);
+        setAmount("");
+        setNotes("");
+        setMinusAcknowledged(false);
+        setAccountReloadKey((key) => key + 1);
+        loadHistory(1);
+        return;
+      }
       const rows = Array.isArray(body?.data) ? body.data : [];
       setSavedPayment(
         rows.length > 1
@@ -372,10 +385,33 @@ export default function EmployeePaymentPage() {
       setAccountReloadKey((key) => key + 1);
       loadHistory(1);
     } catch (err) {
-      showToast.error(getCleanErrorMessage(err, t("payment.messages.createError")));
+      showToast.error(getCleanErrorMessage(err, t(editingPayment ? "payment.messages.updateError" : "payment.messages.createError")));
     } finally {
       setSubmitting(false);
     }
+  };
+  const beginEdit = (payment) => {
+    setEditingPayment(payment);
+    setSelectedEmployeeId(String(payment.employee_id || payment.employee?.id || ""));
+    setSelectedVaultId(String(payment.vault_id || payment.vault?.id || ""));
+    setAmount(String(payment.amount ?? ""));
+    setPaymentMethod(payment.payment_method || PAYMENT_METHOD.CASH);
+    setPaymentTypeId(String(payment.payment_type_id || ""));
+    setExpenseCategoryId(String(payment.expense?.expense_category_id || ""));
+    setNotes(payment.notes || "");
+    setMinusAcknowledged(false);
+    if (payment.payment_date) {
+      setSelectedDateObject(new DateObject({ date: payment.payment_date, calendar: persian, locale: persian_af }));
+    }
+    showToast.info(t("payment.messages.editStarted"));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const cancelEdit = () => {
+    setEditingPayment(null);
+    setAmount("");
+    setNotes("");
+    setMinusAcknowledged(false);
+    showToast.info(t("payment.messages.editCancelled"));
   };
   const confirmDelete = async () => {
     if (!pendingDelete) return;
@@ -423,6 +459,15 @@ export default function EmployeePaymentPage() {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         <form onSubmit={handleSubmit} className={`lg:col-span-7 min-w-0 ${PANEL} p-4 space-y-3.5`}>
+          {editingPayment && (
+            <div className="flex items-center justify-between gap-3 rounded-badge border border-amber-200 bg-amber-50 px-3 py-2 text-caption-text text-amber-900">
+              <span className="flex items-center gap-2 font-bold">
+                <AlertCircle size={15} className="text-amber-700 shrink-0" />
+                {t("payment.form.editing")}
+              </span>
+              <span className="font-mono font-bold" dir="ltr">{editingPayment.receipt_number}</span>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-2">
               <label className={LABEL}>
@@ -434,6 +479,7 @@ export default function EmployeePaymentPage() {
                 options={employeeOptions}
                 placeholder={t("payment.form.employeePlaceholder")}
                 searchPlaceholder={t("payment.form.employeeSearch")}
+                disabled={Boolean(editingPayment)}
                 buttonClassName={FIELD}
               />
             </div>
@@ -451,6 +497,7 @@ export default function EmployeePaymentPage() {
                 format="YYYY/MM/DD"
                 portal
                 zIndex={9999}
+                disabled={Boolean(editingPayment)}
                 inputClass={`${FIELD} font-mono text-center`}
                 containerClassName="w-full"
               />
@@ -596,6 +643,7 @@ export default function EmployeePaymentPage() {
                 options={vaultOptions}
                 placeholder={t("payment.form.vaultPlaceholder")}
                 searchPlaceholder={t("payment.form.vaultSearch")}
+                disabled={Boolean(editingPayment)}
                 buttonClassName={FIELD}
               />
             </div>
@@ -627,11 +675,11 @@ export default function EmployeePaymentPage() {
             className={`${FIELD} text-right leading-6 resize-none`}
           />
           <div className="flex items-center justify-end gap-2.5 border-t border-gray-200 pt-3.5">
-            <button type="button" onClick={() => navigate("/salaries")} className={BTN_SECONDARY}>
-              {t("actions.cancel", { ns: "common" })}
+            <button type="button" onClick={editingPayment ? cancelEdit : () => navigate("/salaries")} className={BTN_SECONDARY}>
+              {editingPayment ? t("payment.form.cancelEdit") : t("actions.cancel", { ns: "common" })}
             </button>
             <button type="submit" disabled={!canSubmit} className={BTN_PRIMARY}>
-              {submitting ? t("actions.saving", { ns: "common" }) : t("payment.form.submit")}
+              {submitting ? t("actions.saving", { ns: "common" }) : t(editingPayment ? "payment.form.editSubmit" : "payment.form.submit")}
             </button>
           </div>
         </form>
@@ -909,6 +957,25 @@ export default function EmployeePaymentPage() {
                         </td>
                         <td className="p-3 rounded-none">
                           <div className="flex items-center justify-center gap-1.5">
+                            {!isReversed && (
+                              <TooltipButton
+                                icon={<Pencil size={15} />}
+                                tooltip={
+                                  !canEdit
+                                    ? t("payment.history.tooltip.editNoPermission")
+                                    : fromRun
+                                      ? t("payment.history.tooltip.editLocked")
+                                      : t("payment.history.tooltip.edit")
+                                }
+                                onClick={() => canEdit && !fromRun && beginEdit(payment)}
+                                disabled={!canEdit || fromRun}
+                                colorClass={
+                                  !canEdit || fromRun
+                                    ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                                    : `${ACTION_REST} hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200`
+                                }
+                              />
+                            )}
                             {!isReversed && (
                               <TooltipButton
                                 icon={<Printer size={15} />}

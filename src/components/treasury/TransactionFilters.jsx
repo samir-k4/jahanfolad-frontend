@@ -84,14 +84,12 @@ export default function TransactionFilters({
       label: c.name,
     })),
   ];
+  const showDateRange = filterPreset === "all" || filterPreset === "custom";
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-2xs px-4 py-2.5 space-y-2.5 font-sans">
       <div className="flex items-center justify-between border-b border-gray-100 pb-2">
         <div className="flex items-center gap-2">
           <h3 className="text-xs font-bold text-gray-800 tracking-tight">{t("filters.title")}</h3>
-          <span className="text-xs text-gray-600 bg-gray-100 border border-gray-200 px-2 py-0.2 rounded font-mono font-bold">
-            ({total})
-          </span>
         </div>
         <div className="flex items-center gap-2">
           {onOpenReportModal && (
@@ -149,7 +147,7 @@ export default function TransactionFilters({
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 pt-0.5">
-        <div>
+        {showDateRange && <div>
           <label className="block text-xs font-bold text-gray-700 mb-1">{t("filters.fromDate")}</label>
           <DatePicker
             value={filterStartDate}
@@ -160,8 +158,8 @@ export default function TransactionFilters({
             inputClass="w-full bg-white border border-gray-300 hover:border-gray-400 focus:border-slate-800 rounded px-2.5 py-1.5 text-xs text-gray-900 outline-none transition-colors font-sans"
             placeholder={t("filters.fromPlaceholder")}
           />
-        </div>
-        <div>
+        </div>}
+        {showDateRange && <div>
           <label className="block text-xs font-bold text-gray-700 mb-1">{t("filters.toDate")}</label>
           <DatePicker
             value={filterEndDate}
@@ -172,7 +170,7 @@ export default function TransactionFilters({
             inputClass="w-full bg-white border border-gray-300 hover:border-gray-400 focus:border-slate-800 rounded px-2.5 py-1.5 text-xs text-gray-900 outline-none transition-colors font-sans"
             placeholder={t("filters.toPlaceholder")}
           />
-        </div>
+        </div>}
         <div>
           <label className="block text-xs font-bold text-gray-700 mb-1">{t("filters.type")}</label>
           <SearchableSelect

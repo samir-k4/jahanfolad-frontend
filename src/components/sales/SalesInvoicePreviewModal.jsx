@@ -34,6 +34,9 @@ export default function SalesInvoicePreviewModal({
   const { t } = useTranslation("sales");
   useBodyScrollLock(isOpen);
   const isExit = mode === "warehouse-exit";
+  const previewPage = isExit
+    ? { width: 148, height: 210 }
+    : { width: 148, height: 210 };
   const [isDownloading, setIsDownloading] = useState(false);
   const [isLoadingPreview, setIsLoadingPreview] = useState(true);
   const [invoiceHtml, setInvoiceHtml] = useState("");
@@ -505,8 +508,8 @@ export default function SalesInvoicePreviewModal({
           <div
             className="relative shrink-0 mx-auto shadow-2xl rounded-lg bg-white border border-gray-300 overflow-hidden"
             style={{
-              width: `${(148 * zoomScale).toFixed(2)}mm`,
-              height: `${(210 * zoomScale).toFixed(2)}mm`,
+              width: `${(previewPage.width * zoomScale).toFixed(2)}mm`,
+              height: `${(previewPage.height * zoomScale).toFixed(2)}mm`,
               transition: "width 120ms ease, height 120ms ease",
             }}
           >
@@ -517,8 +520,8 @@ export default function SalesInvoicePreviewModal({
               title={t(isDispatch ? "invoicePreviewModal.dispatchExitIframeTitle" : isExit ? "invoicePreviewModal.warehouseExitIframeTitle" : "preview.iframeTitle", { invoiceNumber, number: invoiceNumber })}
               className="bg-white border-none block"
               style={{
-                width: "148mm",
-                height: "210mm",
+                width: `${previewPage.width}mm`,
+                height: `${previewPage.height}mm`,
                 transform: `scale(${zoomScale})`,
                 transformOrigin: "0 0",
                 display: "block",

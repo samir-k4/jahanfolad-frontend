@@ -6,7 +6,6 @@ import {
   AlertCircle,
   CheckCircle2,
   Loader2,
-  Lock,
 } from "lucide-react";
 import DatePicker from "react-multi-date-picker";
 import { DateObject, persian, persian_af } from "../../utils/dateHelpers";
@@ -31,11 +30,11 @@ const EMPTY_FORM = {
 };
 function Section({ title, children }) {
   return (
-    <div className="rounded-lg border border-gray-200 overflow-hidden">
-      <div className="px-3.5 py-2 bg-gray-50 border-b border-gray-200">
-        <span className="text-[11px] font-bold text-slate-700">{title}</span>
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+        <span className="text-xs font-black text-slate-800">{title}</span>
       </div>
-      <div className="p-3.5 space-y-3">{children}</div>
+      <div className="p-4 space-y-3.5">{children}</div>
     </div>
   );
 }
@@ -252,15 +251,15 @@ export default function ExpenseCreateModal({
         if (e.target === e.currentTarget && !submitting) onClose();
       }}
     >
-      <div className="bg-white w-full max-w-3xl rounded-xl shadow-2xl border border-gray-200 overflow-hidden max-h-[92vh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
-        <div className="flex items-center justify-between px-5 py-3.5 bg-white border-b border-gray-200 shrink-0">
+      <div className="bg-white w-full max-w-5xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden max-h-[94vh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
-              <TrendingDown size={18} />
+            <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+              <TrendingDown size={19} />
             </div>
             <div>
-              <h2 className="text-base font-bold text-gray-900">{tx("createModal.title")}</h2>
-              <p className="text-xs text-gray-500">
+              <h2 className="text-lg font-black text-slate-900">{tx("createModal.title")}</h2>
+              <p className="text-xs font-medium text-slate-500">
                 {expenseType ? expenseType.name : tx("createModal.generalTitle")}
               </p>
             </div>
@@ -269,12 +268,12 @@ export default function ExpenseCreateModal({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+            className="w-9 h-9 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer flex items-center justify-center"
           >
             <X size={18} />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-3.5">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/40">
           {errorMessage && (
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-800 text-xs font-bold flex items-center gap-2">
               <AlertCircle size={16} className="shrink-0" />
@@ -300,8 +299,8 @@ export default function ExpenseCreateModal({
               <span>{tx("createModal.loading")}</span>
             </div>
           )}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="space-y-3.5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="space-y-4">
           <Section title={tx("createModal.sourceSection")}>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -389,7 +388,7 @@ export default function ExpenseCreateModal({
           </Section>
           <Section title={tx("createModal.detailsSection")}>
             <div className="grid grid-cols-2 gap-3">
-              <div>
+              <div className={needsRate ? "" : "col-span-2"}>
                 <label className="block text-xs font-bold text-gray-700 mb-1">
                   {tx("table.category")} <span className="text-rose-600">*</span>
                 </label>
@@ -466,12 +465,11 @@ export default function ExpenseCreateModal({
                   </span>
                 )}
               </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">
-                  {tx("table.exchangeRate")}
-                  {needsRate && <span className="text-rose-600"> *</span>}
-                </label>
-                {needsRate ? (
+              {needsRate && (
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    {tx("table.exchangeRate")} <span className="text-rose-600">*</span>
+                  </label>
                   <input
                     type="number"
                     min="0.0001"
@@ -486,13 +484,8 @@ export default function ExpenseCreateModal({
                       fieldErrors.exchange_rate ? "border-rose-500 bg-rose-50/40" : "border-gray-300 bg-white"
                     }`}
                   />
-                ) : (
-                  <div className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-black font-mono bg-gray-50 text-gray-500 flex items-center justify-between">
-                    <span>1</span>
-                    <Lock size={12} className="text-gray-400" />
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1">
@@ -510,7 +503,7 @@ export default function ExpenseCreateModal({
             </div>
           </Section>
           </div>
-          <div className="space-y-3.5">
+          <div className="space-y-4">
           <Section title={tx("createModal.documentSection")}>
             <div className="grid grid-cols-3 gap-2">
               <div className="px-2.5 py-2 rounded-lg bg-gray-50 border border-gray-200">
@@ -578,7 +571,7 @@ export default function ExpenseCreateModal({
           </div>
           </div>
         </form>
-        <div className="flex items-center justify-between px-5 py-3.5 bg-gray-50 border-t border-gray-200 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-slate-200 shrink-0">
           <div className="flex flex-col">
             <span className="text-[10px] font-bold text-gray-500">{tx("createModal.finalDeduction")}</span>
             <span className="text-sm font-black font-mono text-rose-700" dir="ltr">

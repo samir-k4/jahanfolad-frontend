@@ -10,16 +10,20 @@ import {
   Printer,
   ChevronLeft,
   Home,
+  Info,
+  Pencil,
 } from "lucide-react";
 import DateObject from "react-date-object";
 import persian from "react-date-object/calendars/persian";
 import persian_af from "../utils/persian_af";
 import { TooltipButton, DeleteConfirmationModal, DocumentPreviewModal, usePagePerms } from "../components/common";
 import ManagerExpenseAddModal from "../components/manager_advances/ManagerExpenseAddModal";
+import ExpenseDetailsModal from "../components/expenses/ExpenseDetailsModal";
+import ExpenseEditModal from "../components/expenses/ExpenseEditModal";
 import { useTranslation } from "react-i18next";
 import { formatDocNumber } from "../components/treasury/treasuryHelpers";
 import { apiUrl } from "../api";
-import { toEnglishDigits } from "../utils";
+import { formatTimeDari, toEnglishDigits } from "../utils";
 import { showToast } from "../utils/toast";
 import { getCleanErrorMessage } from "../utils/errorHandler";
 const fmt = (n) => Number(n || 0).toLocaleString("en-US");
@@ -35,6 +39,8 @@ export default function ManagerAdvanceDetailPage() {
   const [settleSubmitting, setSettleSubmitting] = useState(false);
   const [showVoucherModal, setShowVoucherModal] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState(null);
+  const [expenseToView, setExpenseToView] = useState(null);
+  const [expenseToEdit, setExpenseToEdit] = useState(null);
   const [expenseReversalReason, setExpenseReversalReason] = useState("");
   const [isDeletingExpense, setIsDeletingExpense] = useState(false);
   const [showDeleteAdvanceModal, setShowDeleteAdvanceModal] = useState(false);
@@ -160,17 +166,25 @@ export default function ManagerAdvanceDetailPage() {
           {t("detail.documentNumber", { number: String(advance.id).padStart(4, "0") })}
         </span>
       </nav>
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-200 pb-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">{t("detail.title")}</h1>
-            <span className="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-300 font-bold" dir="ltr">
-              #{String(advance.id).padStart(4, "0")}
-            </span>
+      <div className="rounded-card border border-gray-200 bg-white px-5 py-4 shadow-2xs">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-btn bg-slate-900 text-white flex items-center justify-center shadow-xs">
+                <Wallet size={18} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <h1 className="text-xl font-bold text-gray-900 tracking-tight">{t("detail.title")}</h1>
+                  <span className="font-mono text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-300 font-bold" dir="ltr">
+                    #{String(advance.id).padStart(4, "0")}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 font-medium mt-1">{t("detail.subtitle")}</p>
+              </div>
+            </div>
           </div>
-          <p className="text-xs text-gray-500 font-medium mt-1">{t("detail.subtitle")}</p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
             onClick={fetchAdvance}
@@ -204,13 +218,15 @@ export default function ManagerAdvanceDetailPage() {
             <ArrowRight size={15} />
             <span>{t("actions.backToList", { ns: "common" })}</span>
           </Link>
+          </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <div className="bg-white rounded-card border border-gray-200 p-4 shadow-2xs space-y-3">
-          <div className="flex items-start justify-between border-b border-gray-100 pb-3">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(250px,0.85fr)_minmax(0,2fr)] gap-4">
+        <div className="bg-white rounded-card border border-slate-200 p-5 shadow-2xs space-y-4">
+          <div className="flex items-start justify-between border-b border-gray-100 pb-4">
             <div>
-              <h2 className="text-base font-bold text-gray-900">{receiverName}</h2>
+              <p className="text-3xs font-bold text-gray-400 mb-1">گیرنده امانت</p>
+              <h2 className="text-lg font-bold text-gray-900">{receiverName}</h2>
               <div className="flex items-center gap-1.5 mt-1">
                 {advance.employee ? (
                   <span className="text-3xs font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
@@ -224,7 +240,7 @@ export default function ManagerAdvanceDetailPage() {
               </div>
             </div>
             <span
-              className={`px-2 py-0.5 text-xs font-medium rounded border ${
+              className={`px-2.5 py-1 text-xs font-bold rounded-full border ${
                 isOpen
                   ? "bg-amber-50 text-amber-700 border-amber-200"
                   : "bg-emerald-50 text-emerald-700 border-emerald-200"
@@ -233,20 +249,20 @@ export default function ManagerAdvanceDetailPage() {
               {isOpen ? t("status.open") : t("status.settled")}
             </span>
           </div>
-          <div className="space-y-2 text-xs text-gray-700 font-normal">
-            <div className="flex items-center justify-between py-1 border-b border-gray-50">
+          <div className="space-y-1.5 text-xs text-gray-700 font-normal">
+            <div className="flex items-center justify-between gap-3 py-2 px-2.5 rounded-input bg-slate-50 border border-slate-100">
               <span className="text-gray-500">{t("detail.sourceVault")}</span>
               <span className="font-bold text-gray-900">
                 {advance.vault?.name} ({advance.currency})
               </span>
             </div>
-            <div className="flex items-center justify-between py-1 border-b border-gray-50">
+            <div className="flex items-center justify-between gap-3 py-2 px-2.5 rounded-input bg-slate-50 border border-slate-100">
               <span className="text-gray-500">{t("detail.paymentDate")}</span>
               <span className="font-bold font-mono text-gray-900" dir="ltr">
                 {toEnglishDigits(advance.shamsi_date || "—")}
               </span>
             </div>
-            <div className="flex items-center justify-between py-1 border-b border-gray-50">
+            <div className="flex items-center justify-between gap-3 py-2 px-2.5 rounded-input bg-slate-50 border border-slate-100">
               <span className="text-gray-500">{t("detail.purpose")}</span>
               <span className="font-bold text-slate-800">
                 {advance.purpose || t("detail.defaultPurpose")}
@@ -255,15 +271,15 @@ export default function ManagerAdvanceDetailPage() {
             {advance.notes && (
               <div className="pt-1">
                 <span className="text-gray-500 block mb-1">{t("detail.notes")}</span>
-                <p className="p-2 bg-gray-50 border border-gray-200 rounded text-gray-800 text-xs leading-relaxed">
+                <p className="p-3 bg-gray-50 border border-gray-200 rounded-input text-gray-800 text-xs leading-relaxed">
                   {advance.notes}
                 </p>
               </div>
             )}
           </div>
         </div>
-        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="bg-white rounded-card border border-gray-200 p-3.5 shadow-2xs flex flex-col justify-between">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-white rounded-card border border-gray-200 p-4 shadow-2xs flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-gray-600">{t("detail.amountReceived")}</span>
               <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-700 border border-gray-200 text-3xs font-mono font-bold">
@@ -277,7 +293,7 @@ export default function ManagerAdvanceDetailPage() {
             </div>
             <div className="mt-2 pt-2 border-t border-gray-100 text-3xs text-gray-400">{t("detail.initialWithdraw")}</div>
           </div>
-          <div className="bg-white rounded-card border border-gray-200 p-3.5 shadow-2xs flex flex-col justify-between">
+          <div className="bg-white rounded-card border border-gray-200 p-4 shadow-2xs flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-gray-600">{t("detail.totalSpent")}</span>
               <span className="px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-3xs font-mono font-bold">
@@ -296,7 +312,7 @@ export default function ManagerAdvanceDetailPage() {
               </span>
             </div>
           </div>
-          <div className="bg-white rounded-card border border-gray-200 p-3.5 shadow-2xs flex flex-col justify-between">
+          <div className="bg-white rounded-card border border-gray-200 p-4 shadow-2xs flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-gray-600">
                 {isOpen ? t("detail.remainingOpen") : t("detail.remainingReturned")}
@@ -314,7 +330,7 @@ export default function ManagerAdvanceDetailPage() {
               <span>{isOpen ? t("detail.inProgress") : t("detail.settledDeposited")}</span>
             </div>
           </div>
-          <div className="sm:col-span-3 bg-white p-3 rounded-card border border-gray-200 shadow-2xs">
+          <div className="sm:col-span-3 bg-white p-4 rounded-card border border-gray-200 shadow-2xs">
             <div className="flex items-center justify-between text-xs font-bold text-gray-700 mb-1.5">
               <span>{t("detail.progress")}</span>
               <span className="font-mono">{spentPercent}%</span>
@@ -335,18 +351,18 @@ export default function ManagerAdvanceDetailPage() {
         </div>
       </div>
       <div className="bg-white rounded-table border border-gray-200 shadow-2xs overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-200 bg-white flex items-center justify-between flex-wrap gap-2">
+        <div className="px-5 py-4 border-b border-gray-200 bg-white flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold text-gray-900">{t("detail.expensesTitle")}</h3>
-            <span className="text-xs bg-gray-100 font-mono font-bold text-gray-700 px-2 py-0.5 rounded border border-gray-200">
-              {t("detail.expenseCount", { count: advance.expenses?.length || 0 })}
-            </span>
+            <div>
+              <h3 className="text-base font-bold text-gray-900">{t("detail.expensesTitle")}</h3>
+              <p className="text-caption-text text-gray-500 mt-0.5">ریز مصرف‌های ثبت‌شده از این امانت</p>
+            </div>
           </div>
           {canCreate && isOpen && (
             <button
               type="button"
               onClick={() => setShowExpenseForm(true)}
-              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-btn text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
+              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-btn text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
             >
               <Plus size={15} />
               <span>{t("page.addExpense")}</span>
@@ -354,66 +370,104 @@ export default function ManagerAdvanceDetailPage() {
           )}
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-right border-collapse">
+          <table className="w-full text-right border-collapse text-sm">
             <thead>
-              <tr className="bg-slate-50 text-slate-600 font-semibold select-none text-xs border-b border-gray-200">
+              <tr className="bg-slate-100/80 text-slate-600 font-bold select-none text-sm border-b border-gray-200">
                 <th className="py-1.5 px-1.5 text-center w-10 border border-gray-200">#</th>
+                <th className="py-1.5 px-2 text-center border border-gray-200 min-w-[90px]">سند</th>
                 <th className="py-1.5 px-2.5 text-right border border-gray-200 min-w-[130px]">{t("detail.expenseCategory")}</th>
                 <th className="py-1.5 px-2.5 text-right border border-gray-200">{t("detail.expenseDescription")}</th>
                 <th className="py-1.5 px-2.5 text-right border border-gray-200 min-w-[120px]">{t("detail.expensePaidTo")}</th>
                 <th className="py-1.5 px-2 text-center border border-gray-200 min-w-[90px]">{t("detail.expenseDate")}</th>
+                <th className="py-1.5 px-2 text-center border border-gray-200 min-w-[75px]">{t("detail.expenseTime")}</th>
                 <th className="py-1.5 px-2.5 text-center border border-gray-200 min-w-[100px]">{t("detail.expenseAmount")}</th>
                 <th className="py-1.5 px-2.5 text-right border border-gray-200">{t("table.createdBy", { ns: "common" })}</th>
-                {canDelete && <th className="py-1.5 px-2 text-center w-16 border border-gray-200">{t("table.actions")}</th>}
+                {(canEdit || canDelete) && <th className="py-1.5 px-2 text-center w-28 border border-gray-200">{t("table.actions")}</th>}
               </tr>
             </thead>
             <tbody className="bg-white">
               {(advance.expenses?.length || 0) === 0 ? (
                 <tr>
-                  <td colSpan={canDelete ? 8 : 7} className="p-10 text-center text-gray-400 text-xs">{t("detail.noExpenses")}</td>
+                  <td colSpan={(canEdit || canDelete) ? 10 : 9} className="p-10 text-center text-gray-400 text-sm">{t("detail.noExpenses")}</td>
                 </tr>
               ) : (
                 advance.expenses.map((exp, idx) => (
                   <tr key={exp.id} className="hover:bg-amber-50/40 transition-colors even:bg-slate-50/40">
-                    <td className="py-1.5 px-1.5 text-center text-gray-400 border border-gray-200 font-mono text-xs font-normal">
+                    <td className="py-2 px-1.5 text-center text-gray-400 border border-gray-200 font-mono text-sm font-normal">
                       {idx + 1}
                     </td>
-                    <td className="py-1.5 px-2.5 text-xs text-gray-800 border border-gray-200 font-medium">
+                    <td className="py-2 px-2 text-center border border-gray-200 font-mono text-sm font-bold text-slate-700" dir="ltr">
+                      {exp.voucher_no || "—"}
+                    </td>
+                    <td className="py-2 px-2.5 text-gray-800 border border-gray-200 font-medium">
                       {exp.category?.name || exp.category_name || (typeof exp.category === "string" ? exp.category : "") || t("expenseModal.defaultCategory")}
                     </td>
-                    <td className="py-1.5 px-2.5 text-xs text-gray-700 border border-gray-200 font-normal">
+                    <td className="py-2 px-2.5 text-gray-700 border border-gray-200 font-normal">
                       {exp.description || "—"}
                     </td>
-                    <td className="py-1.5 px-2.5 text-xs text-gray-700 border border-gray-200 font-medium">
+                    <td className="py-2 px-2.5 text-gray-700 border border-gray-200 font-medium">
                       {exp.receiver_name || "—"}
                     </td>
-                    <td className="py-1.5 px-2 text-center font-mono text-gray-600 border border-gray-200 text-xs font-normal" dir="ltr">
+                    <td className="py-2 px-2 text-center font-mono text-gray-600 border border-gray-200 text-sm font-normal" dir="ltr">
                       {toEnglishDigits(exp.shamsi_date || "—")}
                     </td>
-                    <td className={`py-1.5 px-2.5 text-center font-mono font-medium text-xs border border-gray-200 text-nowrap ${exp.is_reversed ? "text-gray-500" : "text-rose-700"}`} dir="ltr">
+                    <td className="py-2 px-2 text-center font-mono text-gray-500 border border-gray-200 text-sm font-normal whitespace-nowrap" dir="ltr">
+                      {exp.expense_time_display || formatTimeDari(exp.expense_time || exp.created_at)}
+                    </td>
+                    <td className={`py-2 px-2.5 text-center font-mono font-medium text-sm border border-gray-200 text-nowrap ${exp.is_reversed ? "text-gray-500" : "text-rose-700"}`} dir="ltr">
                       {exp.is_reversed ? t("detail.expenseReversed") : `−${fmt(exp.amount)} ${advance.currency}`}
                     </td>
-                    <td className="py-1.5 px-2.5 text-gray-700 border border-gray-200 whitespace-nowrap">
+                    <td className="py-2 px-2.5 text-gray-700 border border-gray-200 whitespace-nowrap text-sm">
                       {exp.created_by || "—"}
                       {exp.is_reversed && exp.reversal_reason && (
-                        <span className="block text-[10px] text-gray-500 mt-0.5" title={exp.reversal_reason}>
+                        <span className="block text-sm text-gray-500 mt-0.5" title={exp.reversal_reason}>
                           {t("detail.expenseReversed")}
                         </span>
                       )}
                     </td>
-                    {canDelete && (
+                    {(canEdit || canDelete) && (
                       <td className="py-1.5 px-2 text-center border border-gray-200">
-                        <div className="flex items-center justify-center">
-                          {!exp.is_reversed && (
+                        <div className="flex items-center justify-center gap-1">
+                          <TooltipButton
+                            tooltip={t("detail.viewExpense")}
+                            onClick={() => setExpenseToView({
+                              ...exp,
+                              voucher_no: exp.voucher_no,
+                              category_title: exp.category?.name || exp.category_name,
+                              paid_to: exp.paid_to || exp.receiver_name,
+                              created_by: exp.created_by,
+                              source_title: `امانت مدیریت — ${advance.receiver_name || "—"}`,
+                            })}
+                            className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-300 rounded border border-gray-200 transition-colors cursor-pointer"
+                          >
+                            <Info size={17} />
+                          </TooltipButton>
+                          {canEdit && (
+                            <TooltipButton
+                              tooltip={isOpen && !exp.is_reversed ? t("detail.editExpense") : t("detail.editExpenseDisabled")}
+                              onClick={() => setExpenseToEdit({
+                                ...exp,
+                                category_id: exp.category_id || exp.expense_category_id,
+                                paid_to: exp.paid_to || exp.receiver_name,
+                                transaction_date: exp.transaction_date || exp.shamsi_date,
+                                update_url: `/manager-advances/${id}/expenses/${exp.id}`,
+                              })}
+                              disabled={!isOpen || exp.is_reversed}
+                              className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 rounded border border-gray-200 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                            >
+                              <Pencil size={15} />
+                            </TooltipButton>
+                          )}
+                          {canDelete && !exp.is_reversed && (
                             <TooltipButton
                               tooltip={t("detail.deleteExpenseTip")}
                               onClick={() => {
                                 setExpenseReversalReason("");
                                 setExpenseToDelete(exp);
                               }}
-                              className="w-6 h-6 flex items-center justify-center bg-white text-gray-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 rounded border border-gray-200 transition-colors cursor-pointer"
+                              className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 rounded border border-gray-200 transition-colors cursor-pointer"
                             >
-                              <Trash2 size={13} />
+                              <Trash2 size={15} />
                             </TooltipButton>
                           )}
                         </div>
@@ -425,12 +479,12 @@ export default function ManagerAdvanceDetailPage() {
             </tbody>
             {(advance.expenses?.length || 0) > 0 && (
               <tfoot>
-                <tr className="bg-slate-50 border-t border-gray-200 font-bold text-xs">
-                  <td colSpan={6} className="py-2 px-3 text-gray-800 border border-gray-200">{t("detail.expensesTotal")}</td>
-                  <td className="py-2 px-3 text-center font-mono font-bold text-rose-700 text-xs border border-gray-200" dir="ltr">
+                <tr className="bg-slate-50 border-t border-gray-200 font-bold text-sm">
+                  <td colSpan={7} className="py-2 px-3 text-gray-800 border border-gray-200">{t("detail.expensesTotal")}</td>
+                  <td className="py-2 px-3 text-center font-mono font-bold text-rose-700 text-sm border border-gray-200" dir="ltr">
                     −{fmt(advance.total_spent)} {advance.currency}
                   </td>
-                  {canDelete && <td className="border border-gray-200" />}
+                  <td colSpan={(canEdit || canDelete) ? 2 : 1} className="border border-gray-200" />
                 </tr>
               </tfoot>
             )}
@@ -500,6 +554,10 @@ export default function ManagerAdvanceDetailPage() {
         title={t("common:voucher.advanceTitle")}
         subtitle={t("common:voucher.advanceMeta", { doc: formatDocNumber(advance.doc_code || advance.id, advance.id), receiver: receiverName })}
         icon={<Wallet className="w-5 h-5" />}
+        sheetWidth={1123}
+        previewSheetHeight={794}
+        fitToWidth
+        maxWidth="max-w-[95vw]"
       />
       <DeleteConfirmationModal
         isOpen={Boolean(expenseToDelete)}
@@ -531,6 +589,20 @@ export default function ManagerAdvanceDetailPage() {
         initialAdvanceId={advance.id}
         onSuccess={() => {
           setShowExpenseForm(false);
+          fetchAdvance();
+        }}
+      />
+      <ExpenseDetailsModal
+        isOpen={Boolean(expenseToView)}
+        expense={expenseToView}
+        onClose={() => setExpenseToView(null)}
+      />
+      <ExpenseEditModal
+        isOpen={Boolean(expenseToEdit)}
+        expense={expenseToEdit}
+        onClose={() => setExpenseToEdit(null)}
+        onDone={() => {
+          setExpenseToEdit(null);
           fetchAdvance();
         }}
       />

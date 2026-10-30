@@ -39,8 +39,22 @@ const fromNotes = (notes, key) => {
   const matched = notes.match(new RegExp(`${key}:\\s*([^-]+)`));
   return matched?.[1]?.trim() || null;
 };
+export const cleanTransactionNotes = (notes) =>
+  String(notes || "")
+    .replace(/(?:دسته‌بندی|طرف معامله|ثبت‌کننده):\s*[^-]+(?:\s*-\s*|$)/gu, "")
+    .trim();
 export const isDeposit = (tx) => DEPOSIT_TYPES.includes(tx?.transaction_type);
 export { formatDocNumber } from "../../utils/formatDocNumber";
+export const formatTransactionDocNumber = (receiptNumber) => receiptNumber || "—";
+const MANAGEABLE_REFERENCE_TYPES = new Set([
+  "direct",
+  "income",
+  "sales_invoice",
+  "manual_transfer",
+  "inter_vault_transfer",
+]);
+export const canManageTransaction = (tx) =>
+  MANAGEABLE_REFERENCE_TYPES.has(tx?.reference_type);
 export const getCategoryName = (tx, deposit) =>
   tx?.category?.name ||
   fromNotes(tx?.notes, NOTE_KEY.CATEGORY) ||

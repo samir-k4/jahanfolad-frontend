@@ -65,6 +65,7 @@ export default function TransactionReportModal({
   const [selectedType, setSelectedType] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [categories, setCategories] = useState([]);
+  const showDateRange = activePreset === "all" || activePreset === "custom";
   const [reportHtml, setReportHtml] = useState("");
   const [reportQueryParams, setReportQueryParams] = useState("");
   const [loading, setLoading] = useState(false);
@@ -128,6 +129,7 @@ export default function TransactionReportModal({
     try {
       setLoading(true);
       const params = new URLSearchParams();
+      params.append("preset", activePreset);
       if (startDate) {
         params.append("from_date", toEnglishDigits(startDate.format("YYYY/MM/DD")));
       }
@@ -264,7 +266,7 @@ export default function TransactionReportModal({
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3.5">
+            {showDateRange && <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">{t("report.fromDate")}</label>
                 <DatePicker
@@ -293,9 +295,10 @@ export default function TransactionReportModal({
                   inputClass="w-full bg-white border border-gray-300 rounded-btn px-3 py-1.5 text-xs text-gray-900 font-mono outline-none focus:border-slate-800"
                 />
               </div>
-            </div>
+            </div>}
             <div className="border-t border-gray-100 pt-4 space-y-3.5">
-              <div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+              <div className="min-w-0">
                 <label className="block text-xs font-medium text-gray-700 mb-1">{t("report.vault")}</label>
                 <SearchableSelect
                   options={vaultOptions}
@@ -307,8 +310,7 @@ export default function TransactionReportModal({
                   usePortal={true}
                 />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
+                <div className="min-w-0">
                   <label className="block text-xs font-medium text-gray-700 mb-1">{t("vaultCreate.currencyLabel")}</label>
                   <CustomDropdown
                     options={currencyOptions}
@@ -317,7 +319,7 @@ export default function TransactionReportModal({
                     buttonClassName="w-full px-3 py-2 text-xs font-normal"
                   />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <label className="block text-xs font-medium text-gray-700 mb-1">{t("report.type")}</label>
                   <CustomDropdown
                     options={typeOptions}
@@ -326,7 +328,7 @@ export default function TransactionReportModal({
                     buttonClassName="w-full px-3 py-2 text-xs font-normal"
                   />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <label className="block text-xs font-medium text-gray-700 mb-1">{t("report.category")}</label>
                   <CustomDropdown
                     options={categoryOptions}
@@ -365,15 +367,15 @@ export default function TransactionReportModal({
           </div>
         </div>
       ) : (
-        <div className="bg-white w-[98vw] max-w-[1450px] h-[95vh] rounded-modal shadow-2xl overflow-hidden flex flex-col border border-gray-200 animate-in fade-in zoom-in-95 duration-150">
-          <div className="bg-slate-900 text-white px-5 py-3 flex items-center justify-between shadow-md select-none shrink-0">
+        <div className="bg-white w-[98vw] max-w-[1450px] h-[95vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white text-slate-900 px-5 py-3 flex items-center justify-between border-b border-slate-200 select-none shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-btn bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
                 <FileText size={17} />
               </div>
               <div>
-                <h3 className="text-section-title font-bold text-white tracking-wide">{t("report.officialPreview")}</h3>
-                <span className="text-[11px] text-slate-300">{t("report.format")}</span>
+                <h3 className="text-section-title font-bold text-slate-900 tracking-wide">{t("report.officialPreview")}</h3>
+                <span className="text-[11px] text-slate-500">{t("report.format")}</span>
               </div>
             </div>
             <div className="flex items-center gap-2">

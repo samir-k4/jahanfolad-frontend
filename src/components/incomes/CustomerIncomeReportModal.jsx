@@ -128,18 +128,18 @@ export default function CustomerIncomeReportModal({
         className={`bg-white border border-gray-200 rounded-modal shadow-2xl overflow-hidden flex flex-col transition-all duration-200 ${
           isExpanded
             ? "w-full max-w-[1300px] h-[95vh]"
-            : "w-full max-w-xl max-h-[92vh]"
+            : "w-full max-w-3xl max-h-[92vh]"
         }`}
       >
         {!isExpanded ? (
           <>
-            <div className="bg-white px-5 py-3.5 flex justify-between items-center border-b border-gray-200">
+            <div className="bg-slate-50/70 px-6 py-5 flex justify-between items-center border-b border-gray-200">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-btn bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200 shadow-2xs">
-                  <Printer size={18} />
+                <div className="w-10 h-10 rounded-card bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200 shadow-2xs">
+                  <Printer size={20} />
                 </div>
                 <div>
-                  <h3 className="text-section-title font-bold text-gray-900">{t("report.filterTitle")}</h3>
+                  <h3 className="text-lg font-bold text-gray-900">{t("report.filterTitle")}</h3>
                 </div>
               </div>
               <button
@@ -151,18 +151,18 @@ export default function CustomerIncomeReportModal({
                 <X size={18} />
               </button>
             </div>
-            <div className="p-5 overflow-y-auto space-y-4 flex-1">
-              <div>
-                <label className="block text-label-text font-bold text-gray-700 mb-1.5">{t("report.headingLabel")}</label>
+            <div className="p-6 overflow-y-auto space-y-5 flex-1 bg-slate-50/40">
+              <div className="bg-white border border-gray-200 rounded-card p-5">
+                <label className="block text-label-text font-bold text-gray-700 mb-2">{t("report.headingLabel")}</label>
                 <input
                   type="text"
                   maxLength={TEXT_FIELD_MAX_LENGTH}
                   value={reportTitle}
                   onChange={(e) => setReportTitle(e.target.value)}
-                  className="w-full border border-gray-300 rounded-input px-3 py-2 text-body-text font-semibold text-gray-800 focus:outline-none focus:border-emerald-600 bg-white shadow-2xs"
+                  className="w-full h-11 border border-gray-300 rounded-input px-3 text-body-text font-semibold text-gray-800 focus:outline-none focus:border-emerald-600 bg-white"
                 />
               </div>
-              <div className="p-3.5 bg-gray-50 border border-gray-200/70 rounded-card space-y-3">
+              <div className="bg-white border border-gray-200 rounded-card p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-label-text font-bold text-gray-800 flex items-center gap-1.5">
                     <Calendar size={14} className="text-emerald-700" />
@@ -173,8 +173,8 @@ export default function CustomerIncomeReportModal({
                   presets={presets}
                   activeKey={activePreset}
                   onChange={applyPreset}
-                  className="grid grid-cols-3 sm:grid-cols-6 gap-1.5"
-                  buttonClassName="py-1.5 px-1 text-center rounded-pill text-caption-text"
+                  className="grid grid-cols-2 sm:grid-cols-6 gap-2"
+                  buttonClassName="h-9 px-2 text-center rounded-btn text-caption-text"
                 />
                 {activePreset === "all" ? (
                   <div className="p-2.5 bg-white border border-gray-200 rounded-card text-center text-caption-text text-gray-500 font-medium">{t("report.rangeHint")}</div>
@@ -213,14 +213,7 @@ export default function CustomerIncomeReportModal({
                   </div>
                 )}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-label-text font-bold text-gray-700 mb-1.5">{t("report.type")}</label>
-                  <div className="h-[38px] px-3 flex items-center justify-between bg-emerald-50/70 border border-emerald-200 rounded-input text-body-text font-bold text-emerald-800 select-none">
-                    <span>{t("navigation.pages.incomes", { ns: "common" })}</span>
-                    <span className="text-caption-text font-normal text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-badge">{t("report.typeAll")}</span>
-                  </div>
-                </div>
+              <div className="bg-white border border-gray-200 rounded-card p-5 grid grid-cols-1 md:grid-cols-3 gap-5 items-end">
                 <div>
                   <label className="block text-label-text font-bold text-gray-700 mb-1.5">{t("label.currencyLabel")}</label>
                   <CustomDropdown
@@ -236,32 +229,38 @@ export default function CustomerIncomeReportModal({
                     usePortal={true}
                   />
                 </div>
-              </div>
-              <div>
-                <label className="block text-label-text font-bold text-gray-700 mb-1.5">{t("report.payerLabel")}</label>
-                <div className="relative">
-                  <Search size={14} className="absolute right-3 top-3 text-gray-400" />
-                  <input
-                    type="text"
-                    maxLength={TEXT_FIELD_MAX_LENGTH}
-                    value={filterCustomer}
-                    onChange={(e) => setFilterCustomer(e.target.value)}
-                    placeholder={t("report.payerPlaceholder")}
-                    className="w-full border border-gray-300 rounded-input pr-8 pl-3 py-2 text-body-text text-gray-800 focus:outline-none focus:border-emerald-600 bg-white shadow-2xs"
-                  />
+                <div>
+                  <label className="block text-label-text font-bold text-gray-700 mb-1.5">{t("report.type")}</label>
+                  <div className="h-10 px-3 flex items-center bg-emerald-50/70 border border-emerald-200 rounded-input text-body-text font-bold text-emerald-800 select-none">
+                    {t("report.typeAll")}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-label-text font-bold text-gray-700 mb-1.5">{t("report.payerLabel")}</label>
+                  <div className="relative">
+                    <Search size={14} className="absolute right-3 top-3.5 text-gray-400" />
+                    <input
+                      type="text"
+                      maxLength={TEXT_FIELD_MAX_LENGTH}
+                      value={filterCustomer}
+                      onChange={(e) => setFilterCustomer(e.target.value)}
+                      placeholder={t("report.payerPlaceholder")}
+                      className="w-full h-10 border border-gray-300 rounded-input pr-8 pl-3 text-body-text text-gray-800 focus:outline-none focus:border-emerald-600 bg-white"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="px-5 py-3.5 border-t border-gray-200 bg-gray-50 flex items-center justify-end gap-2.5">
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-btn-text font-bold text-gray-700 bg-white border border-gray-300 rounded-btn hover:bg-gray-100 transition-colors cursor-pointer"
+                className="h-10 px-5 text-btn-text font-bold text-gray-700 bg-white border border-gray-300 rounded-btn hover:bg-gray-100 transition-colors cursor-pointer"
               >{t("label.cancel")}</button>
               <button
                 type="button"
                 onClick={handleOpenPreview}
-                className="px-5 py-2 text-btn-text font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-btn transition-colors shadow-xs flex items-center gap-2 cursor-pointer"
+                className="h-10 px-5 text-btn-text font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-btn transition-colors shadow-xs flex items-center gap-2 cursor-pointer"
               >
                 <Eye size={16} />
                 <span>{t("report.showPreview")}</span>

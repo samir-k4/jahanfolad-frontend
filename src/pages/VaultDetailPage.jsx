@@ -29,11 +29,11 @@ import { toEnglishDigits } from "../utils";
 import { showToast } from "../utils/toast";
 import { getCleanErrorMessage } from "../utils/errorHandler";
 import {
-  formatDocNumber,
+  formatTransactionDocNumber,
   getPartyName,
   getCategoryName,
   getCreatedBy,
-  getExchangeRate,
+  cleanTransactionNotes,
   CURRENCY_OPTIONS,
   VAULT_TYPE_OPTIONS,
   VAULT_TYPE_LABELS,
@@ -424,9 +424,6 @@ export default function VaultDetailPage() {
           <div className="flex items-center gap-2">
             <Landmark size={16} className="text-slate-800" />
             <span className="text-base font-bold text-gray-800">{t("filters.title")}</span>
-            <span className="text-xs font-mono font-bold text-slate-800 bg-white border border-gray-300 px-2 py-0.5 rounded-badge">
-              {paginationMeta.total}
-            </span>
           </div>
           <button
             type="button"
@@ -458,7 +455,6 @@ export default function VaultDetailPage() {
                   <th className="py-1.5 px-2.5 text-center border border-gray-200 min-w-[95px]">{t("ledger.amount")}</th>
                   <th className="py-1.5 px-1.5 text-center border border-gray-200 min-w-[55px]">{t("label.currency")}</th>
                   <th className="py-1.5 px-2 text-center border border-gray-200 min-w-[95px]">{t("vaultDetail.balanceColumn")}</th>
-                  <th className="py-1.5 px-1.5 text-center border border-gray-200 min-w-[70px]">{t("label.exchangeRate")}</th>
                   <th className="py-1.5 px-2.5 text-right border border-gray-200 min-w-[100px]">{t("label.createdBy")}</th>
                   <th className="py-1.5 px-2.5 text-right border border-gray-200 min-w-[160px]">{t("ledger.notes")}</th>
                   <th className="py-1.5 px-2 text-center min-w-[100px] border border-gray-200">{t("label.actions")}</th>
@@ -487,7 +483,7 @@ export default function VaultDetailPage() {
                         className="py-1.5 px-2 text-center border border-gray-200 font-mono font-medium text-gray-800 text-xs"
                         dir="ltr"
                       >
-                        {formatDocNumber(tx.receipt_number, tx.id)}
+                        {formatTransactionDocNumber(tx.receipt_number, tx.id)}
                       </td>
                       <td
                         className="py-1.5 px-2 text-center font-mono text-gray-600 border border-gray-200 text-xs text-nowrap font-normal"
@@ -537,20 +533,14 @@ export default function VaultDetailPage() {
                         {Number(tx.balance_after || 0).toLocaleString("en-US")}
                       </td>
                       <td
-                        className="py-1.5 px-1.5 text-center border border-gray-200 font-mono text-gray-600 text-xs text-nowrap font-normal"
-                        dir="ltr"
-                      >
-                        {getExchangeRate(tx)}
-                      </td>
-                      <td
                         className="py-1.5 px-2.5 border border-gray-200 text-gray-700 text-xs truncate max-w-[115px] font-normal"
                         title={createdBy}
                       >
                         {createdBy}
                       </td>
                       <td className="py-1.5 px-2.5 text-gray-700 border border-gray-200 text-xs leading-relaxed whitespace-normal break-words min-w-[160px] max-w-[320px] font-normal">
-                        {tx.notes ? (
-                          <span className="block">{tx.notes}</span>
+                        {cleanTransactionNotes(tx.notes) ? (
+                          <span className="block">{cleanTransactionNotes(tx.notes)}</span>
                         ) : (
                           <span className="text-gray-400">—</span>
                         )}
@@ -603,7 +593,7 @@ export default function VaultDetailPage() {
         htmlPath={voucherTx ? `/vault-transactions/${voucherTx.id}/voucher-html` : ""}
         pdfPath={voucherTx ? `/vault-transactions/${voucherTx.id}/voucher-pdf` : ""}
         title={t("common:voucher.transactionTitle")}
-        subtitle={voucherTx ? t("common:voucher.transactionMeta", { doc: formatDocNumber(voucherTx.receipt_number, voucherTx.id), vault: voucherTx.vault?.name || vault?.name || "" }) : ""}
+        subtitle={voucherTx ? t("common:voucher.transactionMeta", { doc: formatTransactionDocNumber(voucherTx.receipt_number, voucherTx.id), vault: voucherTx.vault?.name || vault?.name || "" }) : ""}
         icon={<Landmark className="w-5 h-5" />}
       />
       <DeleteConfirmationModal
@@ -613,7 +603,7 @@ export default function VaultDetailPage() {
         title={t("ledger.deleteTitle")}
         question={t("ledger.deleteQuestion")}
         warning={t("ledger.deleteWarning")}
-        itemName={deleteTx ? `سند شماره ${formatDocNumber(deleteTx.receipt_number, deleteTx.id)}` : ""}
+        itemName={deleteTx ? `سند شماره ${formatTransactionDocNumber(deleteTx.receipt_number, deleteTx.id)}` : ""}
         loading={deleting}
       />
       {!txLoading && transactions.length > 0 && (
