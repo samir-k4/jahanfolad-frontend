@@ -13,6 +13,7 @@ import {
   ChevronDown,
   X,
   Info,
+  Plus,
 } from "lucide-react";
 import { SearchableSelect, CustomDropdown, DocumentPreviewModal, usePagePerms } from "../components/common";
 import { useTranslation } from "react-i18next";
@@ -322,6 +323,26 @@ export default function CustomerReceiptCreatePage() {
     if (event) event.preventDefault();
     if (isEditMode) showToast.info(t("messages.editCancelled"));
     navigate(returnTo);
+  };
+  const handleCreateNewReceipt = () => {
+    setIsSuccessModalOpen(false);
+    setCreatedReceiptData(null);
+    setVoucherReceipt(null);
+    setReceiptNumber("");
+    setDateObj(new DateObject({ calendar: persian, locale: persian_af }));
+    setSelectedCustomer(null);
+    setCustomerSearchQuery("");
+    setCustomerLoanDetails(null);
+    setSelectedType(INCOME_TYPE.INVOICE);
+    setIncomeCategoryId("");
+    setSelectedVaultId("");
+    setVaultSearchQuery("");
+    setCurrency("USD");
+    setSettlementCurrency("USD");
+    setExchangeRate("70.00");
+    setAmount("");
+    setDescription("");
+    setReceivedBy(t("create.defaultReceiver"));
   };
   const handleSubmit = async (e) => {
     if (isEditMode ? !canEdit : !canCreate) return;
@@ -947,7 +968,15 @@ export default function CustomerReceiptCreatePage() {
                 <span className="font-medium text-gray-800">{createdReceiptData.vaultName}</span>
               </div>
             </div>
-            <div className="flex items-center gap-2 pt-2">
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <button
+                type="button"
+                onClick={handleCreateNewReceipt}
+                className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-btn transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+              >
+                <Plus size={15} />
+                <span>تمام و ثبت جدید</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setVoucherReceipt(createdReceiptData)}
@@ -964,6 +993,13 @@ export default function CustomerReceiptCreatePage() {
                 }}
                 className="py-2 px-4 bg-white hover:bg-gray-100 text-gray-800 font-semibold text-xs rounded-btn border border-gray-300 transition-colors cursor-pointer"
               >{t("create.viewList")}</button>
+              <button
+                type="button"
+                onClick={() => setIsSuccessModalOpen(false)}
+                className="py-2 px-4 bg-white hover:bg-gray-100 text-gray-800 font-semibold text-xs rounded-btn border border-gray-300 transition-colors cursor-pointer"
+              >
+                بستن
+              </button>
             </div>
           </div>
         </div>
