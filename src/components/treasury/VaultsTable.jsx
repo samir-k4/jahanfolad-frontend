@@ -7,6 +7,7 @@ import TooltipButton from "../common/TooltipButton";
 import DeleteConfirmationModal from "../common/DeleteConfirmationModal";
 import { apiUrl } from "../../api";
 import { showToast } from "../../utils/toast";
+import { formatCurrencyAmount } from "../../utils/dariNumberFormatter";
 export default function VaultsTable({
   vaults,
   loading,
@@ -136,7 +137,7 @@ export default function VaultsTable({
                       </td>
                       <td className={`py-1.5 px-3 text-left border border-gray-200 font-bold font-mono text-xs ${Number(vault.current_balance) < 0 ? "text-rose-600" : "text-gray-900"}`} dir="ltr">
                         {isAfn ? "" : "$"}
-                        {Number(vault.current_balance || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {formatCurrencyAmount(vault.current_balance, vault.currency)}
                         {isAfn ? " AFN" : " USD"}
                       </td>
                       <td className="py-1.5 px-3 text-gray-700 border border-gray-200">
@@ -189,7 +190,7 @@ export default function VaultsTable({
                       {managerAdvancesSummary?.total_open_usd > 0 ? "AFN - USD" : "AFN"}
                     </td>
                     <td className="py-1.5 px-3 text-left border border-gray-200 font-bold font-mono text-xs text-gray-900" dir="ltr">
-                      {Number(managerAdvancesSummary?.total_open_afn || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} AFN
+                      {formatCurrencyAmount(managerAdvancesSummary?.total_open_afn, "AFN")} AFN
                     </td>
                     <td className="py-1.5 px-3 text-gray-400 border border-gray-200">—</td>
                     <td className="py-1.5 px-2 text-center border border-gray-200">

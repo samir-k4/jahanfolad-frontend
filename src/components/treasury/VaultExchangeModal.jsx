@@ -189,7 +189,7 @@ export default function VaultExchangeModal({
                 value={fromVaultId}
                 onChange={(val) => setFromVaultId(val)}
                 options={vaults}
-                getOptionLabel={(v) => `${v.name} (${v.currency}) — موجودی: ${Number(v.current_balance || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                getOptionLabel={(v) => `${v.name} (${v.currency}) — موجودی: ${Number(v.current_balance || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`}
                 getOptionValue={(v) => String(v.id)}
                 placeholder={t("transfer.fromPlaceholder")}
                 searchPlaceholder={t("label.vaultSearch")}

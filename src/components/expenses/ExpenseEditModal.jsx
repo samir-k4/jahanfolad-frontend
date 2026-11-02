@@ -19,7 +19,7 @@ const currencyOptions = (t) => [
 ];
 
 const formatAmount = (value) => Number(value || 0).toLocaleString("en-US", {
-  minimumFractionDigits: 2,
+  minimumFractionDigits: 0,
   maximumFractionDigits: 2,
 });
 

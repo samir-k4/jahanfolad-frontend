@@ -62,7 +62,7 @@ export default function CustomersReportModal({ isOpen, onClose }) {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `راپور_مشتریان_${Date.now()}.pdf`;
+      link.download = "راپور مشتریان.pdf";
       document.body.appendChild(link);
       link.click();
       link.remove();

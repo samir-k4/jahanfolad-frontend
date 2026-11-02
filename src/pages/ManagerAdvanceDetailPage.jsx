@@ -27,7 +27,7 @@ import { formatTimeDari, toEnglishDigits } from "../utils";
 import { showToast } from "../utils/toast";
 import { getCleanErrorMessage } from "../utils/errorHandler";
 const fmt = (n) => Number(n || 0).toLocaleString("en-US", {
-  minimumFractionDigits: 2,
+  minimumFractionDigits: 0,
   maximumFractionDigits: 2,
 });
 export default function ManagerAdvanceDetailPage() {

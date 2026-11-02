@@ -5,13 +5,9 @@ import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import { numberToWordsDari } from "../../utils/numberToWordsDari";
 import { formatDocNumber } from "../../utils/formatDocNumber";
 import { formatTimeDari } from "../../utils/timeHelpers";
-import { formatShamsiDate } from "../../utils";
+import { formatCurrencyAmount, formatShamsiDate } from "../../utils";
 import { usePagePerms } from "../common";
-const fmt = (n) =>
-  Number(n || 0).toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+const fmt = (n, currency) => formatCurrencyAmount(n, currency);
 function DetailCard({ label, value, subValue, extra, badge, dir = "rtl" }) {
   return (
     <div className="bg-gray-50 p-3.5 rounded-card border border-gray-200/60 flex flex-col justify-between space-y-1">
@@ -99,7 +95,7 @@ export default function CustomerIncomeDetailModal({
                   className="text-2xl sm:text-3xl font-black text-emerald-700 font-mono tracking-tight"
                   dir="ltr"
                 >
-                  {fmt(amount)}
+                  {fmt(amount, currency)}
                 </span>
                 <span className="text-caption-text font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-badge border border-emerald-200">
                   {currency}
@@ -116,7 +112,7 @@ export default function CustomerIncomeDetailModal({
               >
                 <div className="text-caption-text text-gray-500 font-medium">{t("detail.usdEquivalent")}</div>
                 <div className="text-body-text font-bold text-emerald-700 font-mono">
-                  ${fmt(convertedUsd)} USD
+                  ${fmt(convertedUsd, "USD")} USD
                 </div>
                 <div className="text-caption-text text-gray-400 font-mono">
                   Rate: {exchangeRate} AFN

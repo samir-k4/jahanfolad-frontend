@@ -19,6 +19,7 @@ export default function DocumentPreviewModal({
   title,
   subtitle,
   icon,
+  headerActions,
   sheetWidth = 794,
   fitToWidth = false,
   previewSheetHeight = A4_PORTRAIT_HEIGHT_PX,
@@ -82,7 +83,7 @@ export default function DocumentPreviewModal({
     >
       <div className={`w-full ${maxWidth} rounded-modal bg-white shadow-2xl border border-gray-200 overflow-hidden max-h-[92vh] flex flex-col animate-in fade-in zoom-in-95 duration-150`}>
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-3 bg-white shrink-0">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             {icon && (
               <span className="w-10 h-10 rounded-card bg-slate-100 text-slate-700 flex items-center justify-center shadow-xs">
                 {icon}
@@ -93,14 +94,17 @@ export default function DocumentPreviewModal({
               {subtitle && <p className="text-caption-text text-gray-500 font-medium">{subtitle}</p>}
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t("actions.close")}
-            className="w-8 h-8 rounded-btn flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {headerActions}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t("actions.close")}
+              className="w-8 h-8 rounded-btn flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
         <div ref={previewAreaRef} className="flex-1 overflow-auto bg-gray-100 p-4 flex justify-center">
           {isLoadingPreview ? (

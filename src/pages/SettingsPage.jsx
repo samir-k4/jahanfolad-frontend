@@ -943,7 +943,7 @@ export default function SettingsPage() {
                                     cat.account_number,
                                     cat.currency,
                                     cat.current_balance != null
-                                      ? Number(cat.current_balance).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                      ? Number(cat.current_balance).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })
                                       : null,
                                   ]
                                     .filter(Boolean)

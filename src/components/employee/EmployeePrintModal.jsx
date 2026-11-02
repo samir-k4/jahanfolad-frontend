@@ -32,8 +32,7 @@ const downloadPdf = async (url, branches, selectedBranch, t) => {
       ? t("filters.allBranches", { ns: "common" })
       : branches.find((b) => String(b.id) === String(selectedBranch))?.name ||
         t("printModal.fallbackBranch");
-  const cleanBranch = branchName.replace(/\s+/g, "_");
-  link.download = t("printModal.listFilename", { branchName: cleanBranch });
+  link.download = t("printModal.listFilename", { branchName });
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

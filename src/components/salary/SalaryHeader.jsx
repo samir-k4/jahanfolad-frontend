@@ -1,16 +1,16 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Building2, Calendar, CheckCheck, Printer, Wallet } from "lucide-react";
+import { Calendar, Building2, CheckCheck, Printer, Wallet } from "lucide-react";
 import DatePicker from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import { BranchSelect } from "../common";
 import persian_af from "../../utils/persian_af";
 import { DEFAULT_MONTH_DAYS } from "../../constants/salaryDomain";
 const CONTROL_SHELL =
-  "flex items-center gap-1.5 bg-white border border-gray-300 rounded-input px-2.5 py-1.5 shadow-2xs";
+  "flex items-center gap-1 bg-white border border-gray-300 rounded-input px-2 py-1";
 const ACTION_BASE =
-  "inline-flex items-center gap-1.5 px-3.5 py-2 rounded-btn text-btn-text font-bold transition-colors cursor-pointer";
+  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-btn text-xs font-semibold transition-colors cursor-pointer";
 export default function SalaryHeader({
   selectedBranch,
   onBranchChange,
@@ -62,7 +62,7 @@ export default function SalaryHeader({
               format="YYYY/MM/DD"
               portal
               zIndex={9999}
-              inputClass="bg-transparent text-label-text font-bold text-gray-800 outline-none cursor-pointer w-24 text-center font-sans border-0 shadow-none focus:ring-0 p-0"
+              inputClass="bg-transparent text-caption-text font-bold text-gray-800 outline-none cursor-pointer w-20 text-center font-sans border-0 shadow-none focus:ring-0 p-0"
               containerClassName="w-auto"
               placeholder={t("header.selectDate")}
             />
@@ -73,8 +73,8 @@ export default function SalaryHeader({
             includeAll
             allLabel={t("filters.allBranches", { ns: "common" })}
             icon={<Building2 size={14} className="text-gray-500" />}
-            buttonClassName="px-3 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-input text-label-text font-bold shadow-2xs min-w-[150px]"
-            width="w-48"
+            buttonClassName="px-2.5 py-1.5 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-input text-caption-text font-bold shadow-2xs min-w-[135px]"
+            width="w-44"
             align="right"
           />
         </div>

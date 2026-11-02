@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { escapeHtml as esc } from "../utils/escapeHtml";
 import { showToast as appToast } from "../utils/toast";
@@ -13,11 +14,16 @@ import {
   X,
   Trash2,
   Wallet,
+  Calendar,
+  Eye,
 } from "lucide-react";
+import DatePicker from "react-multi-date-picker";
+import { persian, persian_af, formatToGregorian } from "../utils/dateHelpers";
 import useBodyScrollLock from "../hooks/useBodyScrollLock";
 import useDebounce from "../hooks/useDebounce";
+import useDatePresets from "../hooks/useDatePresets";
 import { apiUrl } from "../api";
-import { TooltipButton, SearchableSelect, DeleteConfirmationModal, DocumentPreviewModal, usePagePerms } from "../components/common";
+import { TooltipButton, SearchableSelect, CustomDropdown, DeleteConfirmationModal, DocumentPreviewModal, usePagePerms } from "../components/common";
 import SalesInvoicePreviewModal from "../components/sales/SalesInvoicePreviewModal";
 import CustomerIncomeDetailModal from "../components/incomes/CustomerIncomeDetailModal";
 import CustomerOpeningBalanceModal from "../components/customers/CustomerOpeningBalanceModal";
@@ -36,7 +42,7 @@ const creatorName = (creator) =>
 
 const formatMoney = (value) =>
   Number(value || 0).toLocaleString("en-US", {
-    minimumFractionDigits: 2,
+    minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   });
 
@@ -75,6 +81,30 @@ export default function CustomerProfilePage() {
   const [selectedIncomeForVoucher, setSelectedIncomeForVoucher] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [showStatementPdf, setShowStatementPdf] = useState(false);
+  const [showStatementFilter, setShowStatementFilter] = useState(false);
+  const [statementFilter, setStatementFilter] = useState({
+    period: "all",
+    from: "",
+    to: "",
+    transaction_type: "all",
+    currency: "all",
+  });
+  const [appliedStatementFilter, setAppliedStatementFilter] = useState({
+    period: "all",
+    from: "",
+    to: "",
+    transaction_type: "all",
+    currency: "all",
+  });
+  const {
+    activePreset: statementDatePreset,
+    setActivePreset: setStatementDatePreset,
+    fromDate: statementFromDate,
+    setFromDate: setStatementFromDate,
+    toDate: statementToDate,
+    setToDate: setStatementToDate,
+    applyPreset: applyStatementDatePreset,
+  } = useDatePresets("this_month");
   const [showOpeningBalanceModal, setShowOpeningBalanceModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -92,7 +122,7 @@ export default function CustomerProfilePage() {
     (appToast[type] || appToast.info)(message);
   };
 
-  useBodyScrollLock(editing || !!viewingInvoice || showOpeningBalanceModal);
+  useBodyScrollLock(editing || !!viewingInvoice || showOpeningBalanceModal || showStatementFilter);
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
@@ -209,6 +239,26 @@ export default function CustomerProfilePage() {
     );
   });
 
+  const statementReportQuery = `?${new URLSearchParams(
+    Object.entries(appliedStatementFilter).filter(([, value]) => value),
+  ).toString()}`;
+
+  const openStatementFilter = () => {
+    setShowStatementFilter(true);
+  };
+
+  const applyStatementFilter = (event) => {
+    event.preventDefault();
+    setAppliedStatementFilter({
+      ...statementFilter,
+      period: statementDatePreset,
+      from: statementDatePreset === "all" ? "" : formatToGregorian(statementFromDate),
+      to: statementDatePreset === "all" ? "" : formatToGregorian(statementToDate),
+    });
+    setShowStatementFilter(false);
+    setShowStatementPdf(true);
+  };
+
   const filteredInvoices = invoices.filter((inv) => {
     if (!debouncedSearchQuery) return true;
     return (
@@ -266,7 +316,7 @@ export default function CustomerProfilePage() {
           <div class="info-row"><strong>نوعیت:</strong> <span>${esc(item.type || "—")}</span></div>
           <div class="info-row"><strong>توضیحات:</strong> <span>${esc(item.description || "—")}</span></div>
         </div>
-        <div class="amount-box" dir="ltr">${isLoan ? "+" : "-"} ${esc(rawAmt.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }))} ${esc(isDollar ? "$" : "؋")}</div>
+        <div class="amount-box" dir="ltr">${isLoan ? "+" : "-"} ${esc(rawAmt.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }))} ${esc(isDollar ? "$" : "؋")}</div>
         <script>window.onload=function(){window.print();}<\/script>
       </body>
       </html>
@@ -326,7 +376,7 @@ export default function CustomerProfilePage() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setShowStatementPdf(true)}
+              onClick={openStatementFilter}
               className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-btn text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
             >
               <Printer size={14} className="text-slate-600" />
@@ -501,7 +551,7 @@ export default function CustomerProfilePage() {
           <TooltipButton
             icon={<Printer size={14} />}
             tooltip="چاپ کارکرد"
-            onClick={() => setShowStatementPdf(true)}
+            onClick={openStatementFilter}
             colorClass="bg-gray-100 hover:bg-slate-800 hover:text-white text-gray-700 border border-gray-300"
           />
         </div>
@@ -916,7 +966,7 @@ export default function CustomerProfilePage() {
                           {it.sales_scale === "تن"
                             ? Number(it.billable_quantity || it.quantity).toFixed(3)
                             : Number(it.billable_quantity || it.quantity).toLocaleString("en-US", {
-                              minimumFractionDigits: 2,
+                              minimumFractionDigits: 0,
                               maximumFractionDigits: 2,
                             })}{" "}
                           {it.sales_scale || "تن"}
@@ -998,6 +1048,155 @@ export default function CustomerProfilePage() {
         }}
       />
 
+      {showStatementFilter && createPortal((
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 p-3 sm:p-4 backdrop-blur-xs" dir="rtl">
+          <div className="w-full max-w-3xl max-h-[92vh] overflow-hidden rounded-modal border border-gray-200 bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-200 bg-slate-50/70 px-6 py-5">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-card border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-2xs">
+                  <Printer size={20} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">فیلتر و استخراج صورت حساب تفصیلی مشتری</h2>
+                  <p className="mt-1 text-xs font-medium text-gray-500">بازه زمانی، نوع معامله و واحد پول را مشخص کنید.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowStatementFilter(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-btn text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                aria-label="بستن"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={applyStatementFilter} className="max-h-[calc(92vh-92px)] space-y-4 overflow-y-auto bg-slate-50/40 p-6">
+              <section className="space-y-3 border-b border-gray-200 pb-5">
+                <div className="flex items-center gap-1.5 text-sm font-bold text-gray-800">
+                  <Calendar size={20} className="text-slate-700" />
+                  <span>محدوده زمانی گزارش:</span>
+                </div>
+                <div className="flex flex-wrap justify-start gap-2">
+                  {[
+                    ["today", "امروز"],
+                    ["last_7_days", "۷ روز اخیر"],
+                    ["this_month", "ماه جاری"],
+                    ["last_30_days", "۳۰ روز اخیر"],
+                    ["all", "کل اسناد"],
+                    ["custom", "انتخاب تاریخ"],
+                  ].map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => {
+                        setStatementDatePreset(value);
+                        applyStatementDatePreset(value);
+                      }}
+                      className={`h-10 rounded-btn border px-4 text-sm font-bold transition-colors ${
+                        statementDatePreset === value
+                          ? "border-slate-800 bg-slate-800 text-white"
+                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {statementDatePreset === "custom" && (
+                  <div className="grid grid-cols-1 gap-3 pt-1 sm:grid-cols-2">
+                    <label className="space-y-1.5">
+                      <span className="block text-xs font-bold text-gray-600">از تاریخ</span>
+                      <DatePicker
+                        value={statementFromDate}
+                        onChange={(value) => {
+                          setStatementDatePreset("custom");
+                          setStatementFromDate(value);
+                        }}
+                        calendar={persian}
+                        locale={persian_af}
+                        calendarPosition="bottom-right"
+                        inputClass="w-full h-10 rounded-input border border-gray-300 bg-white px-3 text-sm font-bold text-gray-800 outline-none focus:border-emerald-600"
+                        format="YYYY/MM/DD"
+                      />
+                    </label>
+                    <label className="space-y-1.5">
+                      <span className="block text-xs font-bold text-gray-600">تا تاریخ</span>
+                      <DatePicker
+                        value={statementToDate}
+                        onChange={(value) => {
+                          setStatementDatePreset("custom");
+                          setStatementToDate(value);
+                        }}
+                        calendar={persian}
+                        locale={persian_af}
+                        calendarPosition="bottom-right"
+                        inputClass="w-full h-10 rounded-input border border-gray-300 bg-white px-3 text-sm font-bold text-gray-800 outline-none focus:border-emerald-600"
+                        format="YYYY/MM/DD"
+                      />
+                    </label>
+                  </div>
+                )}
+              </section>
+
+              <section className="grid grid-cols-1 gap-3 rounded-card border border-gray-200 bg-white p-5 sm:grid-cols-2">
+                <label className="space-y-1.5">
+                  <span className="block text-xs font-bold text-gray-700">نوع معامله</span>
+                  <CustomDropdown
+                    value={statementFilter.transaction_type}
+                    onChange={(value) => setStatementFilter((current) => ({ ...current, transaction_type: value }))}
+                    options={[
+                      { value: "all", label: "همه معاملات" },
+                      { value: "debit", label: "طلبات / فروش" },
+                      { value: "credit", label: "پرداختی‌ها" },
+                    ]}
+                    buttonClassName="w-full border-gray-300 bg-white px-3 py-2 text-sm font-bold"
+                    width="w-full"
+                    align="right"
+                    className="w-full"
+                    menuPlacement="bottom"
+                  />
+                </label>
+                <label className="space-y-1.5">
+                  <span className="block text-xs font-bold text-gray-700">واحد پول</span>
+                  <CustomDropdown
+                    value={statementFilter.currency}
+                    onChange={(value) => setStatementFilter((current) => ({ ...current, currency: value }))}
+                    options={[
+                      { value: "all", label: "همه واحدها" },
+                      { value: "AFN", label: "افغانی" },
+                      { value: "USD", label: "دالر" },
+                    ]}
+                    buttonClassName="w-full border-gray-300 bg-white px-3 py-2 text-sm font-bold"
+                    width="w-full"
+                    align="right"
+                    className="w-full"
+                    menuPlacement="bottom"
+                  />
+                </label>
+              </section>
+
+              <div className="flex items-center justify-end gap-2 border-t border-gray-200 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowStatementFilter(false)}
+                  className="rounded-btn border border-gray-300 bg-white px-4 py-2 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-100"
+                >
+                  انصراف
+                </button>
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-2 rounded-btn bg-emerald-600 px-5 py-2 text-xs font-bold text-white transition-colors hover:bg-emerald-700"
+                >
+                  <Eye size={16} />
+                  نمایش صورت حساب
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ), document.body)}
+
       <DocumentPreviewModal
         isOpen={!!selectedIncomeForVoucher}
         onClose={() => setSelectedIncomeForVoucher(null)}
@@ -1005,6 +1204,7 @@ export default function CustomerProfilePage() {
         pdfPath={selectedIncomeForVoucher ? `/incomes/${selectedIncomeForVoucher.id}/voucher-pdf` : ""}
         title="رسید دریافتی"
         subtitle={selectedIncomeForVoucher ? `#${selectedIncomeForVoucher.receipt_number || selectedIncomeForVoucher.id}` : ""}
+        fileName={selectedIncomeForVoucher ? `سند رسید ${selectedIncomeForVoucher.payer_name || "مشتری"} ${selectedIncomeForVoucher.receipt_number || selectedIncomeForVoucher.id}.pdf` : ""}
         icon={<FileText size={18} />}
         sheetWidth={560}
       />
@@ -1012,12 +1212,14 @@ export default function CustomerProfilePage() {
       <DocumentPreviewModal
         isOpen={showStatementPdf}
         onClose={() => setShowStatementPdf(false)}
-        htmlPath={`/customers/${id}/statement-html`}
-        pdfPath={`/customers/${id}/statement-pdf`}
+        htmlPath={`/customers/${id}/statement-html${statementReportQuery}`}
+        pdfPath={`/customers/${id}/statement-pdf${statementReportQuery}`}
         title="صورت حساب تفصیلی مشتری"
         subtitle={customer?.name || ""}
         icon={<Printer size={18} />}
-        sheetWidth={794}
+        sheetWidth={1123}
+        previewSheetHeight={794}
+        maxWidth="max-w-6xl"
         fitToWidth
       />
 

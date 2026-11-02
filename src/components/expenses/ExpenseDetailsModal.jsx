@@ -7,7 +7,7 @@ import { formatAfghanDateTime } from "../../utils/dateHelpers";
 import { formatShamsiDate } from "../../utils";
 import DocumentPreviewModal from "../common/DocumentPreviewModal";
 const fmt = (n) =>
-  Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 const LANDSCAPE_SHEET_WIDTH_PX = 1123;
 const PORTRAIT_SHEET_WIDTH_PX = 794;
 const orDash = (value) => (value === null || value === undefined || value === "" ? "—" : value);

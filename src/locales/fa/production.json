@@ -102,7 +102,7 @@
     "errorTitle": "خطا در دریافت پیش‌نمایش راپور از سرور",
     "errorDescription": "خطا در بارگذاری پیش‌نمایش راپور. لطفاً اتصال اینترنت خود را بررسی نموده و مجدداً تلاش نمایید.",
     "generationError": "خطا در تولید فایل PDF از سرور",
-    "filenamePrefix": "راپور_تولید"
+    "filenamePrefix": "راپور تولید"
   },
   "successModal": {
     "title": "ثبت موفقانه تولیدات",
@@ -131,7 +131,7 @@
     "noPreview": "پیش‌نمایشی برای نمایش موجود نیست.",
     "fetchError": "خطا در دریافت پیش‌نمایش راپور دوره‌ای از سرور",
     "pdfDownloadError": "خطا در ایجاد و دانلود فایل PDF راپور دوره‌ای",
-    "filenamePrefix": "راپور_مجموعی_تولید",
+    "filenamePrefix": "راپور مجموعی تولید",
     "generatingPdf": "در حال تولید PDF...",
     "downloadPdfBtn": "دانلود PDF",
     "presetMonth": "ماه جاری",

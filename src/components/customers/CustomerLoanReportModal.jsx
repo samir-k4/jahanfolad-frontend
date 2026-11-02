@@ -162,7 +162,7 @@ export default function CustomerLoanReportModal({ isOpen, onClose }) {
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = downloadUrl;
-      link.download = `گزارش_قرضداری_مشتریان_${Date.now()}.pdf`;
+      link.download = "گزارش قرضداری مشتریان.pdf";
       document.body.appendChild(link);
       link.click();
       link.remove();

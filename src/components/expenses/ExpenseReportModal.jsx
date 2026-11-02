@@ -194,7 +194,7 @@ export default function ExpenseReportModal({ isOpen, onClose, expenseType = null
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = downloadUrl;
-      link.download = `${(reportTitle.trim() || defaultTitle).replace(/\s+/g, "_")}_${Date.now()}.pdf`;
+      link.download = `${reportTitle.trim() || defaultTitle}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();

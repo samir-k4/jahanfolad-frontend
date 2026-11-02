@@ -124,9 +124,9 @@
     "errorDesc": "امکان بارگذاری محتوای راپور پرسونل وجود ندارد. لطفاً مجدداً تلاش نمایید.",
     "errorPdfDownload": "خطا در ایجاد و دانلود فایل PDF راپور کارمندان.",
     "downloading": "در حال ایجاد PDF...",
-    "blankFormFilename": "فورم_شمولیت_کارمند_جهان_فولاد_{{branchName}}.pdf",
+    "blankFormFilename": "فورم شمولیت کارمند جهان فولاد {{branchName}}.pdf",
     "fallbackBranch": "نمایندگی",
-    "listFilename": "لیست_کارمندان_جهان_فولاد_{{branchName}}.pdf"
+    "listFilename": "لیست کارمندان جهان فولاد {{branchName}}.pdf"
   },
   "deleteModal": {
     "title": "حذف دائمی کارمند",

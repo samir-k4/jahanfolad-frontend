@@ -94,9 +94,7 @@ export default function WarehouseReportModal({
   );
   const fallbackFilename = useCallback(
     () =>
-      `${t("reportModal.filenamePrefix")}_${new Date()
-        .toISOString()
-        .slice(0, 10)}.pdf`,
+      `${t("reportModal.filenamePrefix")}.pdf`,
     [],
   );
   const onError = useCallback((err) => {

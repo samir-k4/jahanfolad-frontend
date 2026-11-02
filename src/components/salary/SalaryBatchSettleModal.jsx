@@ -10,7 +10,7 @@ import { getCleanErrorMessage } from "../../utils/errorHandler";
 import { ALL_BRANCHES, RUN_STATE, defaultVaultId, vaultOption } from "../../constants/salaryDomain";
 import CustomDropdown from "../common/CustomDropdown";
 const TILE = "bg-gray-50 border border-gray-200 rounded-card p-3";
-const money = (value) => Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = (value) => Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 export default function SalaryBatchSettleModal({
   isOpen,
   onClose,

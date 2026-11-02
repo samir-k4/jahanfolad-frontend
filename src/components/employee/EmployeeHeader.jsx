@@ -14,7 +14,7 @@ const StatBadge = ({ label, value, unit, color = "gray" }) => {
   return (
     <div className={`inline-flex items-center gap-1.5 ${bgColor} ${textColor} px-2.5 py-1 rounded-badge border ${borderColor} font-medium`}>
       <span className={`${labelColor} text-[11px]`}>{label}</span>
-      <span className="font-mono font-bold text-gray-900" dir="ltr">{value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+      <span className="font-mono font-bold text-gray-900" dir="ltr">{Number(value || 0).toLocaleString("en-US")}</span>
       <span className={`${unitColor} text-[10px]`}>{unit}</span>
     </div>
   );

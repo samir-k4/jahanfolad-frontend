@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { CustomDropdown, TooltipButton } from "../components/common";
 import { apiFetch, apiList } from "../api";
 import { showToast } from "../utils/toast";
+import { formatCurrencyAmount } from "../utils/dariNumberFormatter";
 
 export default function SupplierPaymentsPage() {
   const { t } = useTranslation("supplierPayments");
@@ -132,9 +133,9 @@ export default function SupplierPaymentsPage() {
                   <td className="border-l border-gray-200 px-3.5 py-2.5 font-mono font-bold">{account.code}</td>
                   <td className="border-l border-gray-200 px-3.5 py-2.5 font-bold">{account.name}</td>
                   <td className="border-l border-gray-200 px-3.5 py-2.5" dir="ltr">{account.phone || "—"}</td>
-                  <td className="border-l border-gray-200 px-3.5 py-2.5 font-mono" dir="ltr">{Number(account.total || 0).toFixed(2)}</td>
-                  <td className="border-l border-gray-200 px-3.5 py-2.5 font-mono" dir="ltr">{Number(account.paid || 0).toFixed(2)}</td>
-                  <td className="border-l border-gray-200 px-3.5 py-2.5 font-mono font-bold text-rose-700" dir="ltr">{Number(account.remaining || 0).toFixed(2)}</td>
+                  <td className="border-l border-gray-200 px-3.5 py-2.5 font-mono" dir="ltr">{formatCurrencyAmount(account.total, account.currency)}</td>
+                  <td className="border-l border-gray-200 px-3.5 py-2.5 font-mono" dir="ltr">{formatCurrencyAmount(account.paid, account.currency)}</td>
+                  <td className="border-l border-gray-200 px-3.5 py-2.5 font-mono font-bold text-rose-700" dir="ltr">{formatCurrencyAmount(account.remaining, account.currency)}</td>
                   <td className="border-l border-gray-200 px-3.5 py-2.5 text-center">{account.currency}</td>
                   <td className="px-3.5 py-2.5 text-center">{Number(account.remaining || 0) > 0 ? t("filters.status.owed") : t("filters.status.settled")}</td>
                 </tr>

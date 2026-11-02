@@ -108,7 +108,7 @@ export default function CustomerIncomeReportModal({
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = downloadUrl;
-      link.download = `گزارش_دریافتی_های_مشتریان_${Date.now()}.pdf`;
+      link.download = "گزارش دریافتی های مشتریان.pdf";
       document.body.appendChild(link);
       link.click();
       link.remove();

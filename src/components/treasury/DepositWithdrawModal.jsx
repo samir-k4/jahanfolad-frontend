@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { SearchableSelect, CustomDropdown, usePagePerms } from "../common";
 import { toEnglishDigits } from "../../utils";
+import { formatCurrencyAmount } from "../../utils/dariNumberFormatter";
 import { parseTimeParts } from "../../utils/timeHelpers";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import { apiUrl } from "../../api";
@@ -269,7 +270,7 @@ export default function DepositWithdrawModal({
               value={selectedVaultId}
               onChange={(val) => setSelectedVaultId(val)}
               options={vaults}
-              getOptionLabel={(v) => t("depositWithdraw.vaultOption", { account: v.account_number || `00${v.id}`, name: v.name, balance: Number(v.current_balance || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), currency: v.currency })}
+              getOptionLabel={(v) => t("depositWithdraw.vaultOption", { account: v.account_number || `00${v.id}`, name: v.name, balance: formatCurrencyAmount(v.current_balance, v.currency), currency: v.currency })}
               getOptionValue={(v) => String(v.id)}
               placeholder={t("depositWithdraw.vaultPlaceholder")}
               searchPlaceholder={t("depositWithdraw.vaultSearch")}
@@ -279,7 +280,7 @@ export default function DepositWithdrawModal({
             <div className="flex items-center justify-between text-3xs mt-1 px-1 text-gray-600">
               <span>{t("depositWithdraw.currentBalance")}</span>
               <span className="font-mono font-bold text-slate-800" dir="ltr">
-                {vaultBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {vaultCurrency}
+                {formatCurrencyAmount(vaultBalance, vaultCurrency)} {vaultCurrency}
               </span>
             </div>
           </div>

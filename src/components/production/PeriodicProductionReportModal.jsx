@@ -55,9 +55,7 @@ export default function PeriodicProductionReportModal({
   );
   const fallbackFilename = useCallback(
     () =>
-      `${t("periodicModal.filenamePrefix")}_${new Date()
-        .toISOString()
-        .slice(0, 10)}.pdf`,
+      `${t("periodicModal.filenamePrefix")}.pdf`,
     [t],
   );
   const onError = useCallback(

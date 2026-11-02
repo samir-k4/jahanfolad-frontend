@@ -27,7 +27,7 @@ import {
 import { showToast, formatProductName, formatShamsiDate } from "../utils";
 
 const fmt = (n) => Number(n || 0).toLocaleString("en-US", {
-  minimumFractionDigits: 2,
+  minimumFractionDigits: 0,
   maximumFractionDigits: 2,
 });
 const currencySign = (currency) => currency === "AFN" ? "؋" : "$";
@@ -416,7 +416,7 @@ export default function SalesInvoicesPage() {
                           {it.sales_scale === "تن"
                             ? Number(it.billable_quantity || it.quantity).toFixed(3)
                             : Number(it.billable_quantity || it.quantity).toLocaleString("en-US", {
-                              minimumFractionDigits: 2,
+                              minimumFractionDigits: 0,
                               maximumFractionDigits: 2,
                             })}{" "}
                           {it.sales_scale || "تن"}

@@ -10,6 +10,7 @@ export default function useAnchoredMenuPosition({
   align = "left",
   minWidth = 0,
   preferredHeight = 320,
+  placement = "auto",
 }) {
   const [coords, setCoords] = useState(null);
 
@@ -38,7 +39,9 @@ export default function useAnchoredMenuPosition({
       viewportHeight - rect.bottom - MENU_GAP - VIEWPORT_PADDING,
     );
     const openUp =
-      spaceBelow < preferredHeight && spaceAbove > spaceBelow;
+      placement !== "bottom" &&
+      spaceBelow < preferredHeight &&
+      spaceAbove > spaceBelow;
     const availableHeight = openUp ? spaceAbove : spaceBelow;
 
     const nextCoords = {
@@ -64,7 +67,7 @@ export default function useAnchoredMenuPosition({
       }
       return nextCoords;
     });
-  }, [align, anchorRef, minWidth, preferredHeight]);
+  }, [align, anchorRef, minWidth, placement, preferredHeight]);
 
   useLayoutEffect(() => {
     if (isOpen) updatePosition();

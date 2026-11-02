@@ -16,7 +16,7 @@ const formatDateValue = (value) => {
 };
 
 const formatAmount = (value) => Number(value || 0).toLocaleString("en-US", {
-  minimumFractionDigits: 2,
+  minimumFractionDigits: 0,
   maximumFractionDigits: 2,
 });
 
@@ -283,7 +283,7 @@ export default function TransferCreatePage() {
             {fromGoesNegative && (
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-badge flex items-start gap-2 text-amber-800 text-caption-text font-medium">
                 <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-                <span>{t("messages.willGoNegative", { balance: fromAfter.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), currency })}</span>
+                <span>{t("messages.willGoNegative", { balance: fromAfter.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }), currency })}</span>
               </div>
             )}
             {insufficient && (

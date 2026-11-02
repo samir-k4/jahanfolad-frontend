@@ -71,7 +71,7 @@ const BTN_SECONDARY =
 const ACTION_REST = "bg-white text-gray-500 border border-gray-300";
 const SECTION_TITLE = "text-base sm:text-lg font-bold text-gray-900";
 const money = (value) => Number(value || 0).toLocaleString("en-US", {
-  minimumFractionDigits: 2,
+  minimumFractionDigits: 0,
   maximumFractionDigits: 2,
 });
 const dash = (value, fallback) => {
@@ -707,7 +707,7 @@ export default function EmployeePaymentPage() {
                   </span>
                   {" / "}
                   <span className="font-mono" dir="ltr">
-                    {Number(account?.daily_rate || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {Number(account?.daily_rate || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                   </span>
                 </p>
                 {account?.account_start ? (
@@ -770,7 +770,14 @@ export default function EmployeePaymentPage() {
                           }`}
                           dir="ltr"
                         >
-                          {month.overpaid > 0 ? `-${money(month.overpaid)}` : money(month.remaining)}
+                          <span className="inline-flex flex-col items-center">
+                            <span>{month.overpaid > 0 ? `-${money(month.overpaid)}` : money(month.remaining)}</span>
+                            {month.overpaid > 0 && (
+                              <span className="font-sans text-[10px] font-bold text-rose-700">
+                                {t("account.debtor", { defaultValue: "قرضدار" })}
+                              </span>
+                            )}
+                          </span>
                         </td>
                       </tr>
                     ))

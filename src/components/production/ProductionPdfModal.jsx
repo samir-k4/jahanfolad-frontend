@@ -68,9 +68,7 @@ export default function ProductionPdfModal({
     };
   }, [dailyData, dateString, rawItems, selectedProduct]);
   const fallbackFilename = useCallback(() => {
-    const branch = (branchName || "report").replace(/\s+/g, "_");
-    const date = (dateString || "date").replace(/[/-]/g, "-");
-    return `${t("pdfModal.filenamePrefix")}_${branch}_${date}.pdf`;
+    return `${t("pdfModal.filenamePrefix")}.pdf`;
   }, [branchName, dateString, t]);
   const onError = useCallback(
     (err) => {

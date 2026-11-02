@@ -561,7 +561,7 @@ export default function App() {
         </select>
       </div>
       <main
-        className={`flex-1 overflow-y-auto w-full ${
+        className={`flex-1 overflow-visible w-full ${
           isFluidPage
             ? "px-6 pt-20 md:pt-24 pb-14 md:pb-16"
             : "px-[1px] max-w-7xl mx-auto pt-20 md:pt-24 pb-16"

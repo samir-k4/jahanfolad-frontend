@@ -229,7 +229,7 @@ export default function VaultDetailPage() {
               <div className="text-left" dir="ltr">
                 <p className="text-xs text-gray-500 mb-0.5">{t("vaultDetail.currentBalance")}</p>
                 <p className={`font-mono text-base font-bold leading-none ${Number(vault.current_balance) < 0 ? "text-rose-600" : "text-slate-900"}`}>
-                  {Number(vault.current_balance || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {Number(vault.current_balance || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                   <span className="text-xs text-gray-500 ml-1">
                     {vault.currency}
                   </span>
@@ -519,7 +519,7 @@ export default function VaultDetailPage() {
                         }`}
                         dir="ltr"
                       >
-                        {isDeposit ? "+" : "−"}{Number(tx.amount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {isDeposit ? "+" : "−"}{Number(tx.amount || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                       </td>
                       <td className="py-1.5 px-1.5 text-center border border-gray-200 text-nowrap">
                         <span className="font-mono text-gray-700 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded text-xs font-medium">
@@ -530,7 +530,7 @@ export default function VaultDetailPage() {
                         className="py-1.5 px-2 text-center border border-gray-200 font-mono font-medium text-xs text-gray-800 text-nowrap"
                         dir="ltr"
                       >
-                        {Number(tx.balance_after || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {Number(tx.balance_after || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                       </td>
                       <td
                         className="py-1.5 px-2.5 border border-gray-200 text-gray-700 text-xs truncate max-w-[115px] font-normal"

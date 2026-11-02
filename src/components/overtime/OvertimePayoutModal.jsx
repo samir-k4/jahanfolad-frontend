@@ -19,7 +19,7 @@ const HEAD =
 const CELL = "px-2 py-1.5 rounded-none border-l border-line text-caption-text align-middle";
 const NUM = `${CELL} text-center font-mono whitespace-nowrap`;
 const STEP = "text-caption-text font-bold text-content-subtle";
-const money = (value) => Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = (value) => Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 const dash = (value) => (value === null || value === undefined || value === "" ? "—" : value);
 export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, onRequested }) {
   useBodyScrollLock(isOpen);

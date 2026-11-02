@@ -16,7 +16,7 @@ import CustomerLoanReportModal from "../components/customers/CustomerLoanReportM
 import { useTranslation } from "react-i18next";
 
 const fmt = (n) => Number(n || 0).toLocaleString("en-US", {
-  minimumFractionDigits: 2,
+  minimumFractionDigits: 0,
   maximumFractionDigits: 2,
 });
 const currSymbol = (c) => (c === "USD" ? "$" : "؋");

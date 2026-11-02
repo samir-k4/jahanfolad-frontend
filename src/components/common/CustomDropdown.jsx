@@ -19,6 +19,7 @@ export default function CustomDropdown({
   buttonClassName = "",
   menuClassName = "",
   usePortal = true,
+  menuPlacement = "auto",
   children,
 }) {
   const { t } = useTranslation("common");
@@ -31,6 +32,7 @@ export default function CustomDropdown({
     isOpen: isOpen && usePortal,
     align,
     minWidth: 224,
+    placement: menuPlacement,
   });
 
   useEffect(() => {

@@ -159,7 +159,7 @@
     "modalSubtitle": "مجموع مصارف پرداخت‌شده، گروه‌بندی شده بر اساس نوعیت و سرفصل",
     "loading": "در حال تهیه خلاصه...",
     "loadError": "خطا در دریافت خلاصه مصارف",
-    "fallbackFile": "خلاصه-مصارف.pdf",
+    "fallbackFile": "خلاصه مصارف.pdf",
     "downloading": "در حال تولید PDF...",
     "downloadPdf": "دانلود PDF",
     "print": "چاپ",
@@ -203,7 +203,7 @@
       "employee_payment": "رسید پرداخت کارمند"
     },
     "sourceSubtitle": "شماره: {{reference}}",
-    "sourceFile": "سند-منبع-مصرف.pdf"
+    "sourceFile": "سند منبع مصرف.pdf"
   },
   "reportModal": {
     "generalTitle": "راپور جامع مصارف شرکت",

@@ -24,7 +24,7 @@ import { formatProductName } from "../../utils/productFormat";
 import { formatShamsiDate } from "../../utils";
 
 const fmt = (n) => Number(n || 0).toLocaleString("en-US", {
-  minimumFractionDigits: 2,
+  minimumFractionDigits: 0,
   maximumFractionDigits: 2,
 });
 
@@ -158,10 +158,12 @@ export default function SalesInvoicePreviewModal({
       const link = document.createElement("a");
       link.href = downloadUrl;
 
-      const customer = (invoice.customer_name || t("invoicePreviewModal.defaultCustomer")).replace(/\s+/g, "_");
-      const dateStr = (formatShamsiDate(invoice.shamsi_date) || "date").replace(/\//g, "-");
+      const customer = (invoice.customer_name || t("invoicePreviewModal.defaultCustomer"))
+        .replace(/[\\/:*?"<>|]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
       const filenamePrefix = t(isDispatch ? "invoicePreviewModal.dispatchExitFilenamePrefix" : isExit ? "invoicePreviewModal.warehouseExitFilenamePrefix" : "invoicePreviewModal.filenamePrefix");
-      link.download = `${filenamePrefix}_${customer}_${invoiceNumber}_${dateStr}.pdf`;
+      link.download = `${filenamePrefix} ${customer} ${invoiceNumber}.pdf`;
 
       document.body.appendChild(link);
       link.click();

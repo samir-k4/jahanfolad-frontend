@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { CalendarCheck, FileText, Search, Wallet } from "lucide-react";
+import { CalendarCheck, FileText, Wallet } from "lucide-react";
 import { CustomDropdown, TablePagination, TooltipButton, BranchEmptyState } from "../common";
 import { JOB_CATEGORY } from "../../constants/attendanceDomain";
 import useDebounce from "../../hooks/useDebounce";
@@ -41,12 +41,12 @@ const COMPARATORS = {
     }),
   default: (a, b) => (a.order || 0) - (b.order || 0),
 };
-const CELL = "p-3 border-l border-gray-100";
-const HEAD = "p-3 border-l border-gray-200";
+const CELL = "p-1.5 border-l border-gray-100";
+const HEAD = "p-1.5 border-l border-gray-200";
 const ACTION_TONE = "bg-white hover:bg-gray-50 text-gray-600 border border-gray-300";
 const FILTER_BUTTON =
   "px-3 py-1.5 text-label-text font-medium text-gray-700 bg-white rounded-input border border-gray-300 min-w-[150px]";
-const money = (value) => Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = (value) => Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 export default function SalaryTable({
   payrollList = [],
   isLoading = false,
@@ -136,13 +136,12 @@ export default function SalaryTable({
       <div className="p-3.5 border-b border-gray-200 bg-white">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           <div className="relative flex-1 max-w-lg">
-            <Search size={15} className="text-gray-400 absolute right-3 top-2.5" />
             <input
               type="text"
               value={searchTerm}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder={t("table.searchPlaceholder")}
-              className="w-full border border-gray-300 rounded-input pr-9 pl-8 py-1.5 text-label-text text-gray-800 bg-white outline-none focus:border-slate-800"
+              className="w-full border border-gray-300 rounded-input px-3 py-1.5 text-label-text text-gray-800 bg-white outline-none focus:border-slate-800"
             />
             {searchTerm && (
               <button
@@ -206,7 +205,7 @@ export default function SalaryTable({
         <div className="overflow-x-auto bg-white">
           <table className="salary-payroll-table w-full border-collapse bg-white">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-gray-700 text-table-header-text font-bold">
+              <tr className="bg-gray-50 border-b border-gray-200 text-gray-700 text-caption-text font-bold">
                 <th className={`${HEAD} text-center w-12`}>{t("table.rowIndex", { ns: "common" })}</th>
                 <th className={`${HEAD} text-center`}>{t("table.columns.code")}</th>
                 <th className={HEAD}>{t("table.fullName", { ns: "common" })}</th>
@@ -229,7 +228,7 @@ export default function SalaryTable({
                     {(page - 1) * perPage + index + 1}
                   </td>
                   <td className={`${CELL} text-center`} dir="ltr">
-                    <span className="bg-gray-100 text-gray-700 border border-gray-200 rounded-badge px-2 py-0.5 font-mono font-bold">
+                    <span className="font-mono font-bold text-gray-700">
                       {row.employee_ID}
                     </span>
                   </td>
@@ -257,7 +256,7 @@ export default function SalaryTable({
                     <button
                       type="button"
                       onClick={() => openAttendance(row)}
-                      className="w-full p-3 font-mono font-bold text-emerald-700 hover:bg-emerald-100/60 hover:underline transition-colors cursor-pointer"
+                      className="w-full p-2 font-mono font-bold text-emerald-700 hover:bg-emerald-100/60 hover:underline transition-colors cursor-pointer"
                       dir="ltr"
                     >
                       {row.presentDays}
@@ -267,7 +266,7 @@ export default function SalaryTable({
                     <button
                       type="button"
                       onClick={() => openAttendance(row)}
-                      className="w-full p-3 font-mono font-bold text-rose-600 hover:bg-rose-100/60 hover:underline transition-colors cursor-pointer"
+                      className="w-full p-2 font-mono font-bold text-rose-600 hover:bg-rose-100/60 hover:underline transition-colors cursor-pointer"
                       dir="ltr"
                     >
                       {row.absentDays}
@@ -291,30 +290,29 @@ export default function SalaryTable({
                       <span className="text-gray-400 font-medium">{zero}</span>
                     )}
                   </td>
-                  <td className={`${CELL} text-center bg-emerald-50/30`} dir="ltr">
-                    <span
-                      className={`inline-block px-2.5 py-0.5 rounded-badge border font-mono font-bold ${
-                        row.isPaidUp
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          : "bg-white text-emerald-900 border-emerald-300"
-                      }`}
-                    >
-                      {money(row.remaining)}{" "}
-                      <span className="font-sans font-medium text-emerald-700">{currency}</span>
+                  <td className={`${CELL} text-center`} dir="ltr">
+                    <span className="font-mono font-bold text-gray-800">
+                      {row.overpaid > 0 ? `-${money(row.overpaid)}` : money(row.remaining)} {currency}
                     </span>
                   </td>
                   <td className={`${CELL} text-center`}>
                     <span
-                      className={`inline-flex items-center justify-center px-2.5 py-1 rounded-badge font-bold border ${
-                        row.isPaidUp
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          : "bg-rose-50 text-rose-700 border-rose-200"
+                      className={`inline-flex flex-col items-center justify-center font-bold text-caption-text leading-tight ${
+                        row.overpaid > 0
+                          ? "text-rose-700"
+                          : row.isPaidUp
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-badge"
+                          : "bg-rose-50 text-rose-700 border border-rose-200 px-2 py-0.5 rounded-badge"
                       }`}
                     >
-                      {t(row.isPaidUp ? "table.badge.paid" : "table.badge.unpaid")}
+                      <span>
+                        {t(row.overpaid > 0 ? "table.debtor" : row.isPaidUp ? "table.badge.paid" : "table.badge.unpaid", {
+                          defaultValue: row.overpaid > 0 ? "قرضدار" : undefined,
+                        })}
+                      </span>
                     </span>
                   </td>
-                  <td className="p-3 text-center">
+                  <td className="p-1.5 text-center">
                     <div className="flex items-center justify-center gap-1.5">
                       <TooltipButton
                         tooltip={t("table.tooltip.payment")}

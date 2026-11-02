@@ -14,7 +14,7 @@ import SearchableSelect from "../common/SearchableSelect";
 import { toEnglishDigits } from "../../utils";
 import { exceedsBalance } from "../../utils/vaultBalance";
 const fmt = (n) => Number(n || 0).toLocaleString("en-US", {
-  minimumFractionDigits: 2,
+  minimumFractionDigits: 0,
   maximumFractionDigits: 2,
 });
 export default function ManagerAdvanceCreateModal({

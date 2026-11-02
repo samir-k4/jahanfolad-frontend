@@ -439,7 +439,7 @@ export default function OvertimeBatchModal({
                     {totals.hours} {t("table.hoursUnit")}
                   </span>
                   <span className="bg-positive-soft border border-positive-line text-positive-deep font-mono font-bold text-caption-text px-3 py-1 rounded-badge" dir="ltr">
-                    {totals.amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
+                    {totals.amount.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}{" "}
                     <span className="text-caption-text font-sans text-positive-strong">AFN</span>
                   </span>
                 </div>

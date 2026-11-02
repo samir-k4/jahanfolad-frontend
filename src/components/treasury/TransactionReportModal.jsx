@@ -176,7 +176,7 @@ export default function TransactionReportModal({
       const link = document.createElement("a");
       link.href = downloadUrl;
       const dateStr = startDate ? startDate.format("YYYY-MM-DD") : "all";
-      link.download = t("report.fileName", { date: dateStr }) + ".pdf";
+      link.download = `${t("report.fileName")}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();

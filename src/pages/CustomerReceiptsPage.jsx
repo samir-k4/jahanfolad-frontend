@@ -350,6 +350,7 @@ export default function CustomerReceiptsPage() {
         pdfPath={selectedIncomeForVoucher ? `/incomes/${selectedIncomeForVoucher.id}/voucher-pdf` : ""}
         title={t("common:voucher.receiptTitle")}
         subtitle={selectedIncomeForVoucher ? t("common:voucher.receiptMeta", { doc: formatDocNumber(selectedIncomeForVoucher.receipt_number, selectedIncomeForVoucher.id), payer: selectedIncomeForVoucher.payer_name || "" }) : ""}
+        fileName={selectedIncomeForVoucher ? `سند رسید ${selectedIncomeForVoucher.payer_name || "مشتری"} ${formatDocNumber(selectedIncomeForVoucher.receipt_number, selectedIncomeForVoucher.id)}.pdf` : ""}
         icon={<Receipt className="w-5 h-5" />}
         sheetWidth={560}
       />

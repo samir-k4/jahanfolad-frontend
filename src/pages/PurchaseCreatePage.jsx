@@ -11,7 +11,7 @@ import { showToast } from "../utils/toast";
 
 const UNITS = ["کیلوگرم", "تن", "سیر", "خروار", "دانه", "متر", "لیتر", "بسته", "سایر"];
 const EMPTY_ITEM = { name: "", quantity: "", unit: "کیلوگرم", unit_price: "", raw_material: false, note: "" };
-const money = (value) => Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = (value) => Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
 export default function PurchaseCreatePage() {
   const navigate = useNavigate();

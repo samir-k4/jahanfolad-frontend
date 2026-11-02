@@ -39,7 +39,7 @@ const STATUS_BADGE_TONE = {
   inactive: "bg-danger-soft text-danger-text border-danger-line",
 };
 const fmt = (n) => Number(n || 0).toLocaleString("en-US", {
-  minimumFractionDigits: 2,
+  minimumFractionDigits: 0,
   maximumFractionDigits: 2,
 });
 const MobileField = ({ label, children }) => (

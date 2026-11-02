@@ -17,7 +17,7 @@ import { formatTimeDari, toEnglishDigits } from "../../utils";
 import { exceedsBalance } from "../../utils/vaultBalance";
 import { useTranslation } from "react-i18next";
 const fmt = (n) => Number(n || 0).toLocaleString("en-US", {
-  minimumFractionDigits: 2,
+  minimumFractionDigits: 0,
   maximumFractionDigits: 2,
 });
 const EMPTY_FORM = {
