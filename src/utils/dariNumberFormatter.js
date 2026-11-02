@@ -34,3 +34,15 @@ export const formatNumber = (value, options = {}) => {
 export const formatDariNumber = (value, options = {}) => {
   return formatNumber(value, { ...options, toDari: true });
 };
+
+export const formatCurrencyAmount = (value, currency, options = {}) => {
+  const normalizedCurrency = String(currency || "").toUpperCase();
+  const maximumFractionDigits =
+    options.maximumFractionDigits ?? (normalizedCurrency === "AFN" ? 0 : 2);
+
+  return formatNumber(value, {
+    ...options,
+    minimumFractionDigits: 0,
+    maximumFractionDigits,
+  });
+};

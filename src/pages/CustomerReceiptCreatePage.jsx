@@ -22,12 +22,15 @@ import useDebounce from "../hooks/useDebounce";
 import { getCleanErrorMessage } from "../utils/errorHandler";
 import {
   toEnglishDigits,
-  formatNumber as fmt,
+  formatCurrencyAmount,
 } from "../utils/dariNumberFormatter";
 import { showToast } from "../utils/toast";
 import { apiUrl } from "../api";
 import { formatToGregorian } from "../utils/dateHelpers";
 import { INCOME_TYPE, INCOME_TYPE_IDS, INCOME_TYPE_KEYS, balanceState } from "../constants/incomeDomain";
+
+const fmt = (value, currency) => formatCurrencyAmount(value, currency);
+
 export default function CustomerReceiptCreatePage() {
   const { t } = useTranslation("incomes");
   const incomeTypes = useMemo(
@@ -666,7 +669,7 @@ export default function CustomerReceiptCreatePage() {
                                   </div>
                                   <div className="flex items-center gap-2 shrink-0">
                                     <span className="font-mono text-[11px] text-gray-500">
-                                      موجودی: {fmt(v.current_balance)} {v.currency === 'USD' ? '$' : '؋'}
+                                      موجودی: {fmt(v.current_balance, v.currency)} {v.currency === 'USD' ? '$' : '؋'}
                                     </span>
                                     {isSelected && <Check size={14} className="text-emerald-600" />}
                                   </div>
@@ -731,15 +734,19 @@ export default function CustomerReceiptCreatePage() {
                   </label>
                   <div className="relative">
                     <input
-                      type="number"
-                      step="any"
-                      min="0.01"
+                      type="text"
+                      inputMode="decimal"
                       required
                       dir="ltr"
                       onFocus={(e) => e.target.select()}
                       onWheel={(e) => e.target.blur()}
                       value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
+                      onChange={(e) => {
+                        const value = toEnglishDigits(e.target.value.replace(/,/g, ""));
+                        if (/^\d*\.?\d*$/.test(value)) {
+                          setAmount(value);
+                        }
+                      }}
                       placeholder="0.00"
                       className="w-full h-[44px] px-3 bg-white border-2 border-emerald-600 rounded-btn text-sm font-mono font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-200 text-left"
                     />
@@ -748,7 +755,7 @@ export default function CustomerReceiptCreatePage() {
                     </span>
                   </div>
                   {numAmount > 0 && (
-                    <div className="mt-1.5 text-[11px] text-gray-500 font-medium">{t("create.amountLabel")}<span className="font-bold text-emerald-800">{fmt(numAmount)}</span> {currency === "USD" ? t("currency.USD") : t("currency.AFN")}
+                    <div className="mt-1.5 text-[11px] text-gray-500 font-medium">{t("create.amountLabel")}<span className="font-bold text-emerald-800">{fmt(numAmount, currency)}</span> {currency === "USD" ? t("currency.USD") : t("currency.AFN")}
                     </div>
                   )}
                 </div>
@@ -774,17 +781,17 @@ export default function CustomerReceiptCreatePage() {
                   </div>
                   <div className="text-lg font-mono font-bold text-emerald-700 mt-1 flex items-center gap-1">
                     <span>$</span>
-                    <span>{fmt(calculatedUsd)}</span>
+                    <span>{fmt(calculatedUsd, "USD")}</span>
                     <span className="text-xs text-gray-500 font-normal">USD</span>
                   </div>
                   {selectedCustomer && (
                     <div className="mt-2 text-[11px] text-gray-600">
-                      {t("create.appliedAmount")}: <strong className="font-mono text-slate-800">{fmt(settlementAmount)} {settlementCurrency}</strong>
+                      {t("create.appliedAmount")}: <strong className="font-mono text-slate-800">{fmt(settlementAmount, settlementCurrency)} {settlementCurrency}</strong>
                     </div>
                   )}
                   {currentVault && vaultCurrency !== currency && (
                     <div className="mt-1 text-[11px] text-gray-600">
-                      {t("create.vaultConversion")}: <strong className="font-mono text-slate-800">{fmt(vaultAmount)} {vaultCurrency}</strong>
+                      {t("create.vaultConversion")}: <strong className="font-mono text-slate-800">{fmt(vaultAmount, vaultCurrency)} {vaultCurrency}</strong>
                     </div>
                   )}
                 </div>
@@ -832,7 +839,7 @@ export default function CustomerReceiptCreatePage() {
                     </div>
                     <div className="flex items-baseline justify-between pt-1">
                       <span className="text-lg font-mono font-bold text-amber-900">
-                        {loadingCustomerLoan ? "..." : fmt(Math.abs(customerBalance))}
+                        {loadingCustomerLoan ? "..." : fmt(Math.abs(customerBalance), customerLoanDetails?.currency)}
                       </span>
                       <span className="font-bold text-xs text-amber-800 font-mono">
                         {accountCurrencySymbol} {accountCurrency}
@@ -887,13 +894,13 @@ export default function CustomerReceiptCreatePage() {
                   <div className="flex items-center justify-between text-xs text-emerald-900 font-bold">
                     <span>{t("create.summaryAmount")}</span>
                     <span className="font-mono text-sm">
-                      {fmt(numAmount)} {currency === "USD" ? "$" : "؋"}
+                      {fmt(numAmount, currency)} {currency === "USD" ? "$" : "؋"}
                     </span>
                   </div>
                   {isAfn && (
                     <div className="flex items-center justify-between text-[11px] text-emerald-700">
                       <span>{t("create.summaryUsd")}</span>
-                      <span className="font-mono font-bold">${fmt(calculatedUsd)} USD</span>
+                      <span className="font-mono font-bold">${fmt(calculatedUsd, "USD")} USD</span>
                     </div>
                   )}
                 </div>
@@ -952,14 +959,14 @@ export default function CustomerReceiptCreatePage() {
               <div className="flex justify-between">
                 <span className="text-gray-500">{t("create.successAmount")}</span>
                 <span className="font-bold text-emerald-700 font-mono text-sm">
-                  {fmt(createdReceiptData.amount)} {createdReceiptData.currency === 'USD' ? '$' : '؋'}
+                  {fmt(createdReceiptData.amount, createdReceiptData.currency)} {createdReceiptData.currency === 'USD' ? '$' : '؋'}
                 </span>
               </div>
               {createdReceiptData.settlement_currency && (
                 <div className="flex justify-between">
                   <span className="text-gray-500">{t("create.successAppliedAmount")}</span>
                   <span className="font-bold text-slate-700 font-mono text-sm">
-                    {fmt(createdReceiptData.settlementAmount)} {createdReceiptData.settlement_currency}
+                    {fmt(createdReceiptData.settlementAmount, createdReceiptData.settlement_currency)} {createdReceiptData.settlement_currency}
                   </span>
                 </div>
               )}

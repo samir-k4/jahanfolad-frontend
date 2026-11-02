@@ -356,15 +356,20 @@ export default function DepositWithdrawModal({
               </label>
               <div className="relative">
                 <input
-                  type="number"
-                  step="any"
-                  min="1"
+                  type="text"
+                  inputMode="decimal"
+                  minLength={1}
                   required
                   dir="ltr"
                   onFocus={(e) => e.target.select()}
                   onWheel={(e) => e.target.blur()}
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => {
+                    const value = toEnglishDigits(e.target.value.replace(/,/g, ""));
+                    if (/^\d*\.?\d*$/.test(value)) {
+                      setAmount(value);
+                    }
+                  }}
                   className="w-full bg-white border border-gray-300 rounded-sm px-3 py-2 text-base text-gray-900 font-mono font-bold outline-none focus:border-slate-800"
                 />
                 <span className="absolute left-3 top-2.5 text-xs font-bold text-gray-500 font-mono">

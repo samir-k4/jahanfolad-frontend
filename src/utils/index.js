@@ -4,6 +4,7 @@ export {
   formatShamsiDate,
   formatNumber,
   formatDariNumber,
+  formatCurrencyAmount,
 } from "./dariNumberFormatter";
 export {
   formatProductName,
