@@ -58,7 +58,7 @@ export default function InvoiceCreatePage() {
   const [branchInventories, setBranchInventories] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
-  const [invoiceNumber, setInvoiceNumber] = useState("F-XX");
+  const [invoiceNumber, setInvoiceNumber] = useState("1001");
   const [dateObj, setDateObj] = useState(() => new DateObject({ calendar: persian, locale: persian_af }));
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerId, setCustomerId] = useState("");
@@ -665,7 +665,7 @@ export default function InvoiceCreatePage() {
                     className="w-full h-[40px] pr-9 pl-3 bg-gray-100 border border-gray-300 rounded-lg text-xs font-mono font-bold text-gray-600 text-center cursor-not-allowed"
                   />
                 </div>
-                <p className="mt-1 text-[10px] text-gray-500">شماره فاکتور به‌صورت خودکار با فرمت F-01 تولید می‌شود.</p>
+                <p className="mt-1 text-[10px] text-gray-500">شماره فاکتور به‌صورت خودکار از ۱۰۰۱ به بالا تولید می‌شود.</p>
               </div>
               <div className="col-span-1">
                 <label className="block text-xs font-bold text-gray-800 mb-1.5">

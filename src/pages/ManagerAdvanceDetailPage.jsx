@@ -26,7 +26,10 @@ import { apiUrl } from "../api";
 import { formatTimeDari, toEnglishDigits } from "../utils";
 import { showToast } from "../utils/toast";
 import { getCleanErrorMessage } from "../utils/errorHandler";
-const fmt = (n) => Number(n || 0).toLocaleString("en-US");
+const fmt = (n) => Number(n || 0).toLocaleString("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 export default function ManagerAdvanceDetailPage() {
   const { id } = useParams();
   const { t } = useTranslation("advances");

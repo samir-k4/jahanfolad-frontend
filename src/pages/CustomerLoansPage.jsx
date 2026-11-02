@@ -15,7 +15,10 @@ import { TooltipButton, TablePagination, CustomDropdown } from "../components/co
 import CustomerLoanReportModal from "../components/customers/CustomerLoanReportModal";
 import { useTranslation } from "react-i18next";
 
-const fmt = (n) => Number(n || 0).toLocaleString("en-US");
+const fmt = (n) => Number(n || 0).toLocaleString("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 const currSymbol = (c) => (c === "USD" ? "$" : "؋");
 
 export default function CustomerLoansPage() {

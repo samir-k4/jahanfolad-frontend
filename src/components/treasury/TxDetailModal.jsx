@@ -96,7 +96,7 @@ export default function TxDetailModal({ tx, onClose, onPrint, namespace = "treas
                     isDeposit ? "text-emerald-700" : "text-rose-700"
                   }`}
                 >
-                  {Number(tx.amount || 0).toLocaleString("en-US")}
+                  {Number(tx.amount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
                 <span className="text-xs font-bold font-mono px-2 py-0.5 rounded bg-white/80 border border-gray-200 text-gray-700">
                   {tx.currency}
@@ -110,7 +110,7 @@ export default function TxDetailModal({ tx, onClose, onPrint, namespace = "treas
               </div>
               <div className="flex items-baseline gap-2" dir="ltr">
                 <span className="text-2xl font-black font-mono tracking-tight text-slate-900">
-                  {Number(tx.balance_after || 0).toLocaleString("en-US")}
+                  {Number(tx.balance_after || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
                 <span className="text-xs font-bold font-mono px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-700">
                   {tx.vault?.currency || tx.currency}

@@ -78,6 +78,12 @@ export function AuthProvider({ children }) {
       method: "POST",
       body: { email, password, device_name: "web" },
     });
+    const authenticatedUser = result?.user;
+    if (!authenticatedUser) {
+      throw new Error(
+        "پاسخ ورود از سرور نامعتبر است. لطفاً سرویس backend را بررسی کنید.",
+      );
+    }
 
     markActivity();
     try {
@@ -85,10 +91,10 @@ export function AuthProvider({ children }) {
     } catch {
       // Branch selection is reset by the provider when this login completes.
     }
-    setUser(result.user);
+    setUser(authenticatedUser);
     setSession(result.session ?? null);
     setLoginRevision((revision) => revision + 1);
-    return result.user;
+    return authenticatedUser;
   }, []);
 
   const logout = useCallback(

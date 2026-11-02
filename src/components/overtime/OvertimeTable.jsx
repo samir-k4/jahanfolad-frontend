@@ -419,7 +419,7 @@ export default function OvertimeTable({
                       <span className="text-caption-text text-notice/80 font-normal font-sans">{t("table.hoursUnit")}</span>
                     </td>
                     <td className="px-4 py-3 text-center font-mono font-bold text-positive-text bg-positive-soft/40 text-table-cell-text rounded-none" dir="ltr">
-                      {Number(calculatedWeeklyPay).toLocaleString("en-US")}{" "}
+                      {Number(calculatedWeeklyPay).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
                       <span className="text-caption-text text-positive font-normal font-sans">AFN</span>
                     </td>
                     <td className="px-4 py-3 text-center text-content-body whitespace-nowrap">
@@ -442,7 +442,7 @@ export default function OvertimeTable({
             </div>
             <div className="bg-positive-soft border border-positive-line px-3.5 py-1 rounded-card text-positive-deep text-body-text font-medium">
               {t("table.weeklyPayable")}{" "}
-              <span className="font-bold font-mono text-positive-deepest" dir="ltr">{totalWeeklyPay.toLocaleString("en-US")}</span> AFN
+              <span className="font-bold font-mono text-positive-deepest" dir="ltr">{totalWeeklyPay.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> AFN
             </div>
           </div>
           <button

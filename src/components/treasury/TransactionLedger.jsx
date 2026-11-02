@@ -147,7 +147,7 @@ export default function TransactionLedger({
                     }`}
                     dir="ltr"
                   >
-                    {isDeposit ? "+" : "−"}{Number(tx.amount || 0).toLocaleString("en-US")}
+                    {isDeposit ? "+" : "−"}{Number(tx.amount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="py-1.5 px-1.5 text-center border border-gray-200 text-nowrap">
                     <span className="font-mono text-gray-700 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded text-xs font-medium">

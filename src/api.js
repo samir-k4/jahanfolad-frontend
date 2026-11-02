@@ -13,7 +13,10 @@ export function apiUrl(path) {
  */
 export class ApiError extends Error {
   constructor(message, status, data) {
-    super(message ?? '');
+    const validationMessage = data?.errors
+      ? Object.values(data.errors).flat().find((value) => typeof value === "string")
+      : null;
+    super(validationMessage || message || 'درخواست انجام نشد.');
     this.name = 'ApiError';
     this.status = status;
     this.data = data;

@@ -15,7 +15,10 @@ const formatDateValue = (value) => {
   return new DateObject({ calendar: persian, locale: persian_af, year: parts[0], month: parts[1], day: parts[2] });
 };
 
-const formatAmount = (value) => Number(value || 0).toLocaleString("en-US");
+const formatAmount = (value) => Number(value || 0).toLocaleString("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
 export default function TransferCreatePage() {
   const { t } = useTranslation("transfers");
@@ -280,7 +283,7 @@ export default function TransferCreatePage() {
             {fromGoesNegative && (
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-badge flex items-start gap-2 text-amber-800 text-caption-text font-medium">
                 <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-                <span>{t("messages.willGoNegative", { balance: fromAfter.toLocaleString("en-US"), currency })}</span>
+                <span>{t("messages.willGoNegative", { balance: fromAfter.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), currency })}</span>
               </div>
             )}
             {insufficient && (

@@ -323,7 +323,7 @@ export default function EmployeeTable({
                     </td>
 
                     <td className="py-2.5 px-3 text-center font-mono font-bold text-emerald-700 text-xs border-l border-gray-100 rounded-none" dir="ltr">
-                      {Number(emp.salary || 0).toLocaleString("en-US")} {t("company.currency", { ns: "common" })}
+                      {Number(emp.salary || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {t("company.currency", { ns: "common" })}
                     </td>
 
                     <td className="py-2.5 px-3 text-center text-gray-700 font-medium border-l border-gray-100 rounded-none">

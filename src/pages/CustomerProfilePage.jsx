@@ -34,6 +34,12 @@ const AFGHAN_PROVINCES = [
 const creatorName = (creator) =>
   typeof creator === "string" ? creator : creator?.name || creator?.username || "—";
 
+const formatMoney = (value) =>
+  Number(value || 0).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
 export default function CustomerProfilePage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -260,7 +266,7 @@ export default function CustomerProfilePage() {
           <div class="info-row"><strong>نوعیت:</strong> <span>${esc(item.type || "—")}</span></div>
           <div class="info-row"><strong>توضیحات:</strong> <span>${esc(item.description || "—")}</span></div>
         </div>
-        <div class="amount-box" dir="ltr">${isLoan ? "+" : "-"} ${esc(rawAmt.toLocaleString())} ${esc(isDollar ? "$" : "؋")}</div>
+        <div class="amount-box" dir="ltr">${isLoan ? "+" : "-"} ${esc(rawAmt.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }))} ${esc(isDollar ? "$" : "؋")}</div>
         <script>window.onload=function(){window.print();}<\/script>
       </body>
       </html>
@@ -396,13 +402,13 @@ export default function CustomerProfilePage() {
                     <tr key={loan.currency} className="divide-x divide-x-reverse divide-gray-200 font-mono font-bold text-sm bg-gray-50/50">
                       <td className="py-2 px-3 text-slate-900 font-bold">{loan.currency}</td>
                       <td className={`py-2 px-3 font-black ${Number(loan.current_balance || 0) > 0 ? "text-rose-700" : "text-emerald-700"}`}>
-                        <div>{Math.abs(Number(loan.current_balance || 0)).toLocaleString()}</div>
+                        <div>{formatMoney(Math.abs(Number(loan.current_balance || 0)))}</div>
                         <span className="text-[10px] font-sans">
                           {Number(loan.current_balance || 0) > 0 ? "بدهکار" : Number(loan.current_balance || 0) < 0 ? "بستانکار / پیش‌پرداخت" : "تسویه"}
                         </span>
                       </td>
                       <td className="py-2 px-3 text-emerald-700 font-black">
-                        {Number(loan.total_paid || 0).toLocaleString()}
+                        {formatMoney(loan.total_paid)}
                       </td>
                     </tr>
                   )) : (
@@ -580,7 +586,7 @@ export default function CustomerProfilePage() {
                               isLoan ? "text-rose-700" : "text-emerald-700"
                             }`}
                           >
-                            <span>{isLoan ? "+" : "-"} {rawAmt.toLocaleString()}</span>
+                            <span>{isLoan ? "+" : "-"} {formatMoney(rawAmt)}</span>
                             <span className="text-xs font-bold font-sans">
                               {currSign}
                             </span>
@@ -730,7 +736,7 @@ export default function CustomerProfilePage() {
 
                         <td className="px-3.5 py-2.5 text-center font-mono font-black text-gray-900 border-l border-gray-200" dir="ltr">
                           <span className="inline-flex items-center justify-center gap-1">
-                            <span>{Number(inv.total_amount).toLocaleString()}</span>
+                            <span>{formatMoney(inv.total_amount)}</span>
                             <span className={`text-xs font-bold ${
                               inv.currency === "USD" || inv.currency === "$" || inv.currency === "دالر"
                                 ? "text-emerald-700 font-sans"
@@ -822,7 +828,7 @@ export default function CustomerProfilePage() {
                         </span>
                       </td>
                       <td className="px-3.5 py-2.5 text-left font-mono font-bold text-emerald-700 text-sm border-l border-gray-200" dir="ltr">
-                        {Number(rcp.amount).toLocaleString()} {rcp.currency}
+                        {formatMoney(rcp.amount)} {rcp.currency}
                       </td>
                       <td className="px-3 py-2.5 text-center text-gray-700 border-l border-gray-200 whitespace-nowrap">
                         {creatorName(rcp.created_by || rcp.creator)}
@@ -907,10 +913,16 @@ export default function CustomerProfilePage() {
                       <tr key={i}>
                         <td className="p-2 font-medium text-gray-900">{formatProductName(it.product_name)}</td>
                         <td className="p-2 text-center text-gray-700" dir="ltr">
-                          {Number(it.billable_quantity || it.quantity).toLocaleString()} {it.sales_scale || "تن"}
+                          {it.sales_scale === "تن"
+                            ? Number(it.billable_quantity || it.quantity).toFixed(3)
+                            : Number(it.billable_quantity || it.quantity).toLocaleString("en-US", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}{" "}
+                          {it.sales_scale || "تن"}
                         </td>
                         <td className="p-2 text-left font-mono font-bold text-gray-900" dir="ltr">
-                          {Number(it.total_price).toLocaleString()}
+                          {formatMoney(it.total_price)}
                         </td>
                       </tr>
                     ))}
@@ -921,15 +933,15 @@ export default function CustomerProfilePage() {
               <div className="bg-gray-50 p-3 rounded-card border border-gray-200 space-y-1.5">
                 <div className="flex justify-between font-bold text-gray-900">
                   <span>مجموع کل فاکتور:</span>
-                  <span className="font-mono" dir="ltr">{Number(viewingInvoice.total_amount).toLocaleString()} {viewingInvoice.currency}</span>
+                  <span className="font-mono" dir="ltr">{formatMoney(viewingInvoice.total_amount)} {viewingInvoice.currency}</span>
                 </div>
                 <div className="flex justify-between font-semibold text-emerald-700">
                   <span>مبلغ پرداخت شده:</span>
-                  <span className="font-mono" dir="ltr">{Number(viewingInvoice.paid_amount).toLocaleString()} {viewingInvoice.currency}</span>
+                  <span className="font-mono" dir="ltr">{formatMoney(viewingInvoice.paid_amount)} {viewingInvoice.currency}</span>
                 </div>
                 <div className="flex justify-between font-bold text-rose-700 border-t border-gray-200 pt-1.5">
                   <span>مانده حساب طلب:</span>
-                  <span className="font-mono" dir="ltr">{Number(viewingInvoice.remaining_amount).toLocaleString()} {viewingInvoice.currency}</span>
+                  <span className="font-mono" dir="ltr">{formatMoney(viewingInvoice.remaining_amount)} {viewingInvoice.currency}</span>
                 </div>
               </div>
 

@@ -766,7 +766,7 @@ export default function DepositWithdrawCreatePage() {
             <div className="flex items-center justify-between text-xs pt-1 px-1 text-gray-600 border-t border-gray-100">
               <span>{t("form.currentBalance")}</span>
               <span className="font-mono font-bold text-slate-800" dir="ltr">
-                {currentBalance.toLocaleString("en-US")} {vaultCurrency}
+                {currentBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {vaultCurrency}
               </span>
             </div>
           </div>
@@ -799,7 +799,7 @@ export default function DepositWithdrawCreatePage() {
                     type="text"
                     required
                     placeholder="0"
-                    value={amount ? Number(amount).toLocaleString("en-US") : ""}
+                    value={amount ? Number(amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}
                     onChange={handleAmountChange}
                     className="w-full bg-white border border-gray-300 rounded-input pr-3 pl-14 py-2.5 text-base font-bold font-mono text-gray-900 outline-none focus:border-slate-800"
                   />
@@ -832,7 +832,7 @@ export default function DepositWithdrawCreatePage() {
                     <div className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
                       <span>{t("form.equivalentInVault")}</span>
                       <span className="font-mono text-sm font-black text-amber-900" dir="ltr">
-                        {convertedVaultAmount.toLocaleString("en-US")} {vaultCurrency}
+                        {convertedVaultAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {vaultCurrency}
                       </span>
                     </div>
                   </div>
@@ -895,7 +895,7 @@ export default function DepositWithdrawCreatePage() {
               <div className="flex justify-between items-center text-xs">
                 <span className="text-gray-500 font-medium">{t("form.currentBalanceShort")}</span>
                 <span className="font-mono font-bold text-slate-800" dir="ltr">
-                  {currentBalance.toLocaleString("en-US")} {vaultCurrency}
+                  {currentBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {vaultCurrency}
                 </span>
               </div>
               <div className="flex justify-between items-center text-xs">
@@ -923,14 +923,14 @@ export default function DepositWithdrawCreatePage() {
               <div className="flex justify-between items-center text-xs">
                 <span className="text-gray-500 font-medium">{t("form.amountShort")}</span>
                 <span className="font-mono font-bold text-slate-800" dir="ltr">
-                  {numAmount.toLocaleString("en-US")} {currency}
+                  {numAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}
                 </span>
               </div>
               {isCurrencyMismatch && (
                 <div className="flex justify-between items-center text-xs bg-amber-50 p-1.5 rounded border border-amber-200">
                   <span className="text-amber-800 font-medium">{t("form.equivalentInVault")}</span>
                   <span className="font-mono font-bold text-amber-900" dir="ltr">
-                    {convertedVaultAmount.toLocaleString("en-US")} {vaultCurrency}
+                    {convertedVaultAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {vaultCurrency}
                   </span>
                 </div>
               )}
@@ -944,7 +944,7 @@ export default function DepositWithdrawCreatePage() {
                   }`}
                   dir="ltr"
                 >
-                  {convertedVaultAmount.toLocaleString("en-US")} {vaultCurrency}
+                  {convertedVaultAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {vaultCurrency}
                 </span>
               </div>
               <div className="flex justify-between items-center text-xs border-t border-slate-200 pt-2 bg-white p-2 rounded-md border">
@@ -955,21 +955,21 @@ export default function DepositWithdrawCreatePage() {
                   }`}
                   dir="ltr"
                 >
-                  {expectedNewBalance.toLocaleString("en-US")} {vaultCurrency}
+                  {expectedNewBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {vaultCurrency}
                 </span>
               </div>
             </div>
             {goesNegative && (
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2 text-amber-800 text-xs font-medium">
                 <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
-                <span>{t("form.willGoNegative", { balance: expectedNewBalance.toLocaleString("en-US"), currency: vaultCurrency })}</span>
+                <span>{t("form.willGoNegative", { balance: expectedNewBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), currency: vaultCurrency })}</span>
               </div>
             )}
             {isInsufficientFunds && (
               <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-start gap-2 text-rose-800 text-xs font-medium">
                 <AlertTriangle size={16} className="text-rose-600 shrink-0 mt-0.5" />
                 <span>
-                  {t("form.insufficientFunds", { amount: convertedVaultAmount.toLocaleString("en-US"), currency: vaultCurrency, balance: currentBalance.toLocaleString("en-US") })}
+                  {t("form.insufficientFunds", { amount: convertedVaultAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), currency: vaultCurrency, balance: currentBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })}
                 </span>
               </div>
             )}

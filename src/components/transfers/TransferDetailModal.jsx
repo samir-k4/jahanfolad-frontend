@@ -17,7 +17,7 @@ export default function TransferDetailModal({ transfer, onClose }) {
     [t("detail.time"), formatTimeDari(transfer.transaction_time)],
     [t("detail.from"), transfer.from_vault?.name || t("emptyValue")],
     [t("detail.to"), transfer.to_vault?.name || t("emptyValue")],
-    [t("detail.amount"), `${Number(transfer.amount || 0).toLocaleString("en-US")} ${transfer.currency}`],
+    [t("detail.amount"), `${Number(transfer.amount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${transfer.currency}`],
     [t("detail.createdBy"), transfer.created_by || t("emptyValue")],
     [t("detail.notes"), transfer.notes || t("emptyValue")],
   ];

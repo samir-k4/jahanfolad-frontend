@@ -32,8 +32,8 @@ import {
   SearchableSelect,
   FilterPresetButtons,
 } from "../components/common";
-const fmt = (n) => Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-const fmt1 = (n) => Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const fmt = (n) => Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt1 = fmt;
 const CURRENCY_AFN = "AFN";
 const FILTER_CONTROL = "h-10 px-3 text-xs font-medium text-content-body bg-surface";
 const HEADER_ACTION =

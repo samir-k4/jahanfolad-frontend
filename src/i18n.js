@@ -19,6 +19,7 @@ import depositsWithdrawalsFa from "./locales/fa/depositsWithdrawals.json";
 import transfersFa from "./locales/fa/transfers.json";
 import customersFa from "./locales/fa/customers.json";
 import systemTransactionsFa from "./locales/fa/systemTransactions.json";
+import supplierPaymentsFa from "./locales/fa/supplierPayments.json";
 
 i18n.use(initReactI18next).init({
   resources: {
@@ -41,13 +42,14 @@ i18n.use(initReactI18next).init({
       transfers: transfersFa,
       customers: customersFa,
       systemTransactions: systemTransactionsFa,
+      supplierPayments: supplierPaymentsFa,
     },
   },
   lng: "fa",
   fallbackLng: "fa",
   fallbackNS: "common",
   defaultNS: "common",
-  ns: ["common", "attendance", "employee", "production", "warehouse", "products", "sales", "overtime", "salary", "treasury", "advances", "incomes", "settings", "expenses", "depositsWithdrawals", "transfers", "customers", "systemTransactions"],
+  ns: ["common", "attendance", "employee", "production", "warehouse", "products", "sales", "overtime", "salary", "treasury", "advances", "incomes", "settings", "expenses", "depositsWithdrawals", "transfers", "customers", "systemTransactions", "supplierPayments"],
   interpolation: {
     escapeValue: false,
   },

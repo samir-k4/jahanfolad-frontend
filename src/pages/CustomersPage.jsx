@@ -38,7 +38,10 @@ const STATUS_BADGE_TONE = {
   active: "bg-positive-soft text-positive-text border-positive-line",
   inactive: "bg-danger-soft text-danger-text border-danger-line",
 };
-const fmt = (n) => Number(n || 0).toLocaleString("en-US");
+const fmt = (n) => Number(n || 0).toLocaleString("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 const MobileField = ({ label, children }) => (
   <div className="min-w-0">
     <p className="text-caption-text text-content-subtle mb-0.5">{label}</p>

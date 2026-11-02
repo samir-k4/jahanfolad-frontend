@@ -26,7 +26,10 @@ import {
 } from "../components/common";
 import { showToast, formatProductName, formatShamsiDate } from "../utils";
 
-const fmt = (n) => Number(n || 0).toLocaleString("en-US");
+const fmt = (n) => Number(n || 0).toLocaleString("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 const currencySign = (currency) => currency === "AFN" ? "؋" : "$";
 const transportAmountInInvoiceCurrency = (invoice) => {
   const amountAfn = Number(invoice?.transport_amount_afn || 0);
@@ -410,7 +413,13 @@ export default function SalesInvoicesPage() {
                       <tr key={i}>
                         <td className="p-2.5 font-medium text-gray-900">{formatProductName(it.product_name)}</td>
                         <td className="p-2.5 text-center text-gray-700" dir="ltr">
-                          {Number(it.billable_quantity || it.quantity).toLocaleString()} {it.sales_scale || "تن"}
+                          {it.sales_scale === "تن"
+                            ? Number(it.billable_quantity || it.quantity).toFixed(3)
+                            : Number(it.billable_quantity || it.quantity).toLocaleString("en-US", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}{" "}
+                          {it.sales_scale || "تن"}
                         </td>
                         <td className="p-2.5 text-left font-mono font-bold text-gray-900" dir="ltr">
                           {currencySign(viewingInvoice.currency)}{fmt(it.total_price)}

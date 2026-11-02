@@ -32,7 +32,7 @@ const AFGHAN_PROVINCES = [
   ["laghman", "لغمان"], ["nuristan", "نورستان"],
 ];
 
-export default function CustomerCreatePage() {
+export default function CustomerCreatePage({ sellerMode = false }) {
   const navigate = useNavigate();
   const { t } = useTranslation("customers");
 
@@ -55,9 +55,13 @@ export default function CustomerCreatePage() {
 
   useEffect(() => {
     const fetchNextCode = async () => {
+      if (sellerMode) {
+        setLoadingCode(false);
+        return;
+      }
       setLoadingCode(true);
       try {
-        const res = await fetch(apiUrl("/customers/next-code"));
+        const res = await fetch(apiUrl(sellerMode ? "/suppliers/next-code" : "/customers/next-code"));
         if (res.ok) {
           const data = await res.json();
           if (data.next_code) {
@@ -72,7 +76,7 @@ export default function CustomerCreatePage() {
     };
 
     fetchNextCode();
-  }, []);
+  }, [sellerMode]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -87,13 +91,13 @@ export default function CustomerCreatePage() {
 
     try {
       const payload = {
-        customer_code: customerCode.trim(),
+        ...(sellerMode ? { code: customerCode.trim() } : { customer_code: customerCode.trim() }),
         name: name.trim(),
         phone: toEnglishDigits(phone.trim()),
-        phone2: phone2.trim() ? toEnglishDigits(phone2.trim()) : null,
+        ...(sellerMode ? {} : { phone2: phone2.trim() ? toEnglishDigits(phone2.trim()) : null }),
         province: province,
         address: address.trim() || null,
-        credit_limit: creditLimit ? parseFloat(toEnglishDigits(creditLimit)) : 0.00,
+        ...(!sellerMode ? { credit_limit: creditLimit ? parseFloat(toEnglishDigits(creditLimit)) : 0.00 } : {}),
         opening_balance_direction: openingBalanceDirection,
         opening_balance_currency: openingBalanceCurrency,
         opening_balance_afn: openingBalanceCurrency !== "USD" && openingBalanceAfn
@@ -106,7 +110,7 @@ export default function CustomerCreatePage() {
         notes: notes.trim() || null,
       };
 
-      const res = await fetch(apiUrl("/customers"), {
+      const res = await fetch(apiUrl(sellerMode ? "/suppliers" : "/customers"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -121,13 +125,13 @@ export default function CustomerCreatePage() {
         throw new Error(resData.message || t("messages.saveFailed"));
       }
 
-      showToast(t("messages.created"));
+      showToast(sellerMode ? "فروشنده با موفقیت ثبت شد." : t("messages.created"));
 
       setTimeout(() => {
-        navigate("/customers");
+        navigate(sellerMode ? "/sellers" : "/customers");
       }, 1000);
     } catch (err) {
-      console.error("Submit customer error:", err);
+      console.error(sellerMode ? "Submit seller error:" : "Submit customer error:", err);
       showToast(err.message || t("createPage.connectionError"), "error");
     } finally {
       setSubmitting(false);
@@ -144,10 +148,10 @@ export default function CustomerCreatePage() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900 tracking-tight">
-                {t("createPage.title")}
+                {sellerMode ? "ثبت فروشنده جدید" : t("createPage.title")}
               </h1>
               <p className="text-xs text-gray-500">
-                {t("createPage.subtitle")}
+                {sellerMode ? "مشخصات فروشنده و طرف حساب شرکت را ثبت کنید" : t("createPage.subtitle")}
               </p>
             </div>
           </div>
@@ -155,11 +159,11 @@ export default function CustomerCreatePage() {
 
         <div className="flex items-center gap-2.5">
           <Link
-            to="/customers"
+            to={sellerMode ? "/sellers" : "/customers"}
             className="px-3.5 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
           >
             <ArrowRight size={15} />
-            <span>{t("createPage.backToList")}</span>
+            <span>{sellerMode ? "بازگشت به فهرست فروشندگان" : t("createPage.backToList")}</span>
           </Link>
         </div>
       </div>
@@ -184,7 +188,7 @@ export default function CustomerCreatePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">
-                    {t("createPage.customerCode")} <span className="text-rose-500">*</span>
+                    {sellerMode ? "کد فروشنده" : t("createPage.customerCode")} <span className="text-rose-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -192,7 +196,7 @@ export default function CustomerCreatePage() {
                       required
                       value={customerCode}
                       onChange={(e) => setCustomerCode(e.target.value)}
-                      placeholder={t("createPage.customerCodePlaceholder")}
+                      placeholder={sellerMode ? "کد فروشنده" : t("createPage.customerCodePlaceholder")}
                       className="w-full h-[40px] px-3 bg-emerald-50/50 border border-emerald-300 rounded text-xs font-mono font-bold text-emerald-900 focus:outline-none focus:border-emerald-600"
                     />
                     <Hash size={15} className="absolute left-3 top-2.5 text-emerald-600" />
@@ -318,7 +322,7 @@ export default function CustomerCreatePage() {
               </div>
 
               <div className="space-y-4 text-xs">
-                <div>
+                {!sellerMode && <div>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">
                     {t("form.creditLimit")}
                   </label>
@@ -338,7 +342,7 @@ export default function CustomerCreatePage() {
                     <span className="absolute right-3 top-2.5 text-xs text-gray-400 font-bold">$ USD</span>
                   </div>
                   <p className="text-[10.5px] text-gray-400 mt-1">{t("createPage.creditLimitHint")}</p>
-                </div>
+                </div>}
 
                 <div className="border-t border-gray-100 pt-4 space-y-3">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

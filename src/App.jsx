@@ -40,6 +40,13 @@ const ManagerAdvancesPage = lazy(() => import("./pages/ManagerAdvancesPage"));
 const ManagerAdvanceDetailPage = lazy(() => import("./pages/ManagerAdvanceDetailPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const SystemTransactionsPage = lazy(() => import("./pages/SystemTransactionsPage"));
+const PurchasesPage = lazy(() => import("./pages/PurchasesPage"));
+const SellersPage = lazy(() => import("./pages/SellersPage"));
+const SupplierPaymentsPage = lazy(() => import("./pages/SupplierPaymentsPage"));
+const SupplierPaymentListPage = lazy(() => import("./pages/SupplierPaymentListPage"));
+const SupplierPaymentCreatePage = lazy(() => import("./pages/SupplierPaymentCreatePage"));
+const SellerCreatePage = lazy(() => import("./pages/SellerCreatePage"));
+const PurchaseCreatePage = lazy(() => import("./pages/PurchaseCreatePage"));
 const Login = lazy(() => import("./pages/Login"));
 const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
 import { NavGroup, PageLink, RequirePage, BranchGate, PasswordChangeModal } from "./components/common";
@@ -87,6 +94,10 @@ export default function App() {
     "/salaries",
     "/customer-receipts",
     "/incomes",
+    "/seller-payments",
+    "/seller-payables",
+    "/purchases",
+    "/sellers",
     "/manager-advances",
     "/expenses",
     "/deposits-withdrawals",
@@ -103,7 +114,7 @@ export default function App() {
         location.pathname === path || location.pathname.startsWith(`${path}/`),
     );
   const getNavItemClass = (isActive) =>
-    `inline-flex items-center transition-all duration-200 ease-out origin-center py-1.5 ${
+    `inline-flex items-center whitespace-nowrap transition-all duration-200 ease-out origin-center py-1 ${
       isActive
         ? "text-white font-bold scale-105 brightness-125"
         : "text-slate-300 hover:text-white hover:scale-105"
@@ -153,7 +164,7 @@ export default function App() {
     >
       <AppToaster />
       <nav className="bg-slate-900 text-white px-6 py-2.5 flex justify-between items-center shadow-xs fixed top-0 w-full z-40 border-b border-slate-800">
-        <div className="hidden md:flex items-center space-x-6 space-x-reverse text-base font-medium pr-1">
+        <div className="hidden md:flex items-center space-x-6 space-x-reverse text-sm font-medium pr-1">
           <Link
             to="/"
             className={getNavItemClass(activeTab === "/")}
@@ -229,10 +240,10 @@ export default function App() {
             </div>
           </div>
           </NavGroup>
-          <NavGroup pages={["treasury", "advances", "incomes"]}>
+          <NavGroup pages={["treasury", "advances"]}>
           <div className="relative group cursor-pointer">
-            <div className={`${getNavItemClass(isRouteActive(["/treasury", "/vault", "/vaults", "/manager-advances", "/incomes", "/customer-receipts"]))} space-x-1 space-x-reverse`}>
-              <span>{t("navigation.groups.accounts")}</span>
+            <div className={`${getNavItemClass(isRouteActive(["/treasury", "/vault", "/vaults", "/manager-advances", "/deposits-withdrawals", "/transfers", "/transactions/deposits-withdrawals"]))} space-x-1 space-x-reverse`}>
+              <span>{t("navigation.groups.accountingTools")}</span>
               <ChevronDown size={14} />
             </div>
             <div className="absolute right-0 w-48 bg-white text-gray-800 rounded-card shadow-xl hidden group-hover:block border border-gray-200 overflow-hidden z-50">
@@ -251,23 +262,6 @@ export default function App() {
                 {t("navigation.pages.advances")}
               </PageLink>
               <PageLink
-                page="incomes"
-                to="/incomes"
-                className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
-              >
-                {t("navigation.pages.incomes")}
-              </PageLink>
-            </div>
-          </div>
-          </NavGroup>
-          <NavGroup pages={["treasury"]}>
-          <div className="relative group cursor-pointer">
-            <div className={`${getNavItemClass(isRouteActive(["/deposits-withdrawals", "/transfers", "/transactions/deposits-withdrawals"]))} space-x-1 space-x-reverse`}>
-              <span>{t("navigation.groups.transactions")}</span>
-              <ChevronDown size={14} />
-            </div>
-            <div className="absolute right-0 w-48 bg-white text-gray-800 rounded-card shadow-xl hidden group-hover:block border border-gray-200 overflow-hidden z-50">
-              <PageLink
                 page="treasury"
                 to="/deposits-withdrawals"
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
@@ -283,6 +277,100 @@ export default function App() {
               </PageLink>
             </div>
           </div>
+          </NavGroup>
+          <NavGroup pages={["incomes"]}>
+            <PageLink page="incomes" to="/incomes" className={getNavItemClass(isRouteActive(["/incomes"]))}>
+              {t("navigation.groups.customerIncome")}
+            </PageLink>
+          </NavGroup>
+          <NavGroup pages={["incomes"]}>
+            <PageLink page="incomes" to="/seller-payments" className={getNavItemClass(isRouteActive(["/seller-payments"]))}>
+              {t("navigation.groups.payments")}
+            </PageLink>
+          </NavGroup>
+          <NavGroup pages={["customers"]}>
+            <div className="relative group cursor-pointer">
+              <div className={`${getNavItemClass(isRouteActive(["/customers", "/customer-loans"]))} space-x-1 space-x-reverse`}>
+                <span>{t("navigation.groups.customers")}</span>
+                <ChevronDown size={14} />
+              </div>
+              <div className="absolute right-0 w-52 bg-white text-gray-800 rounded-card shadow-xl hidden group-hover:block border border-gray-200 overflow-hidden z-50">
+                <PageLink
+                  page="customers"
+                  to="/customers"
+                  className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
+                >
+                  {t("navigation.pages.customers")}
+                </PageLink>
+                <PageLink
+                  page="customers"
+                  to="/customer-loans"
+                  className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
+                >
+                  {t("navigation.pages.customerLoans")}
+                </PageLink>
+              </div>
+            </div>
+          </NavGroup>
+          <NavGroup pages={["customers"]}>
+            <div className="relative group cursor-pointer">
+              <div className={`${getNavItemClass(isRouteActive(["/sellers", "/seller-payments"]))} space-x-1 space-x-reverse`}>
+                <span>{t("navigation.groups.sellers")}</span>
+                <ChevronDown size={14} />
+              </div>
+              <div className="absolute right-0 w-52 bg-white text-gray-800 rounded-card shadow-xl hidden group-hover:block border border-gray-200 overflow-hidden z-50">
+                <PageLink
+                  page="customers"
+                  to="/sellers"
+                  className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
+                >
+                  {t("navigation.pages.sellers")}
+                </PageLink>
+                <PageLink
+                  page="incomes"
+                  to="/seller-payments"
+                  className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
+                >
+                  {t("navigation.pages.sellerPayments")}
+                </PageLink>
+                <PageLink
+                  page="incomes"
+                  to="/seller-payables"
+                  className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
+                >
+                  حساب پرداختنی
+                </PageLink>
+              </div>
+            </div>
+          </NavGroup>
+          <NavGroup pages={["sales"]}>
+            <div className="relative group cursor-pointer">
+              <div className={`${getNavItemClass(isRouteActive(["/sales"]))} space-x-1 space-x-reverse`}>
+                <span>{t("navigation.groups.sales")}</span>
+                <ChevronDown size={14} />
+              </div>
+              <div className="absolute right-0 w-52 bg-white text-gray-800 rounded-card shadow-xl hidden group-hover:block border border-gray-200 overflow-hidden z-50">
+                <PageLink
+                  page="sales"
+                  to="/sales/invoices"
+                  className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
+                >
+                  {t("navigation.pages.invoices")}
+                </PageLink>
+                <PageLink
+                  page="sales"
+                  to="/sales/scrap"
+                  className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
+                >
+                  {t("sales.scrapCategory")}
+                </PageLink>
+              </div>
+            </div>
+          </NavGroup>
+          <NavGroup pages={["sales"]}>
+            <PageLink page="sales" to="/purchases" className={getNavItemClass(isRouteActive(["/purchases"]))}>
+              {t("navigation.groups.purchases")}
+            </PageLink>
           </NavGroup>
           <NavGroup pages={["expenses", "settings"]}>
           <div className="relative group cursor-pointer">
@@ -314,56 +402,6 @@ export default function App() {
                 className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
               >
                 {t("navigation.pages.expenseTypes")}
-              </PageLink>
-            </div>
-          </div>
-          </NavGroup>
-          <NavGroup pages={["customers"]}>
-          <div className="relative group cursor-pointer">
-            <div
-              className={`${getNavItemClass(isRouteActive(["/customers", "/customer-loans"]))} space-x-1 space-x-reverse`}
-            >
-              <span>{t("navigation.groups.customers")}</span>
-              <ChevronDown size={14} />
-            </div>
-            <div className="absolute right-0 w-48 bg-white text-gray-800 rounded-card shadow-xl hidden group-hover:block border border-gray-200 overflow-hidden z-50">
-              <PageLink
-                page="customers"
-                to="/customers"
-                className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
-              >
-                {t("navigation.pages.customers")}
-              </PageLink>
-              <PageLink
-                page="customers"
-                to="/customer-loans"
-                className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
-              >
-                {t("navigation.pages.customerLoans")}
-              </PageLink>
-            </div>
-          </div>
-          </NavGroup>
-          <NavGroup pages={["sales"]}>
-          <div className="relative group cursor-pointer">
-            <div className={`${getNavItemClass(isRouteActive(["/sales"]))} space-x-1 space-x-reverse`}>
-              <span>{t("navigation.groups.sales")}</span>
-              <ChevronDown size={14} />
-            </div>
-            <div className="absolute right-0 w-48 bg-white text-gray-800 rounded-card shadow-xl hidden group-hover:block border border-gray-200 overflow-hidden z-50">
-              <PageLink
-                page="sales"
-                to="/sales/invoices"
-                className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
-              >
-                {t("navigation.pages.invoices")}
-              </PageLink>
-              <PageLink
-                page="sales"
-                to="/sales/scrap"
-                className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
-              >
-                {t("sales.scrapCategory")}
               </PageLink>
             </div>
           </div>
@@ -483,14 +521,29 @@ export default function App() {
           {can("advances") && (
             <option value="/manager-advances">{t("navigation.pages.advancesMobile")}</option>
           )}
+          {can("treasury") && (
+            <option value="/deposits-withdrawals">{t("navigation.pages.depositsWithdrawals")}</option>
+          )}
+          {can("treasury") && (
+            <option value="/transfers">{t("navigation.pages.transfers")}</option>
+          )}
           {can("incomes") && (
             <option value="/incomes">{t("navigation.pages.incomesMobile")}</option>
+          )}
+          {can("incomes") && (
+            <option value="/seller-payments">{t("navigation.pages.sellerPayments")}</option>
+          )}
+          {can("sales") && (
+            <option value="/purchases">{t("navigation.pages.purchases")}</option>
           )}
           {can("customers") && (
             <option value="/customers">{t("navigation.pages.customers")}</option>
           )}
           {can("customers") && (
             <option value="/customer-loans">{t("navigation.pages.customerLoansMobile")}</option>
+          )}
+          {can("customers") && (
+            <option value="/sellers">{t("navigation.pages.sellers")}</option>
           )}
           {can("expenses") && (
             <option value="/expenses">{t("navigation.pages.expensesMobile")}</option>
@@ -781,6 +834,30 @@ export default function App() {
             }
           />
           <Route
+            path="/seller-payments"
+            element={
+              <RequirePage page={pageForPath("/seller-payments")}>
+                <SupplierPaymentListPage />
+              </RequirePage>
+            }
+          />
+          <Route
+            path="/seller-payments/create"
+            element={
+              <RequirePage page={pageForPath("/seller-payments/create")}>
+                <SupplierPaymentCreatePage />
+              </RequirePage>
+            }
+          />
+          <Route
+            path="/seller-payables"
+            element={
+              <RequirePage page={pageForPath("/seller-payables")}>
+                <SupplierPaymentsPage />
+              </RequirePage>
+            }
+          />
+          <Route
             path="/customer-receipts"
             element={
               <RequirePage page={pageForPath("/customer-receipts")}>
@@ -833,6 +910,38 @@ export default function App() {
             element={
               <RequirePage page={pageForPath("/customers/:id")}>
                 <CustomerProfilePage />
+              </RequirePage>
+            }
+          />
+          <Route
+            path="/sellers"
+            element={
+              <RequirePage page={pageForPath("/sellers")}>
+                <SellersPage />
+              </RequirePage>
+            }
+          />
+          <Route
+            path="/sellers/create"
+            element={
+              <RequirePage page={pageForPath("/sellers/create")}>
+                <SellerCreatePage />
+              </RequirePage>
+            }
+          />
+          <Route
+            path="/purchases"
+            element={
+              <RequirePage page={pageForPath("/purchases")}>
+                <PurchasesPage />
+              </RequirePage>
+            }
+          />
+          <Route
+            path="/purchases/create"
+            element={
+              <RequirePage page={pageForPath("/purchases/create")}>
+                <PurchaseCreatePage />
               </RequirePage>
             }
           />

@@ -470,10 +470,10 @@ export default function DepositsWithdrawalsPage() {
                         }`}
                         dir="ltr"
                       >
-                        {Number(tx.amount || 0).toLocaleString("en-US")} {tx.currency}
+                        {Number(tx.amount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {tx.currency}
                       </td>
                       <td className={`${TABLE_CELL} text-center font-mono text-content`} dir="ltr">
-                        {Number(tx.balance_after || 0).toLocaleString("en-US")} {tx.currency}
+                        {Number(tx.balance_after || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {tx.currency}
                       </td>
                       <td className={`${TABLE_CELL} text-content-body`}>{tx.created_by || t("emptyValue")}</td>
                       <td className="px-3 py-2.5 text-center whitespace-nowrap">{renderActionButtons(tx)}</td>
@@ -527,12 +527,12 @@ export default function DepositsWithdrawalsPage() {
                         className={`font-mono font-bold ${isDeposit ? "text-positive-strong" : "text-danger-text"}`}
                         dir="ltr"
                       >
-                        {Number(tx.amount || 0).toLocaleString("en-US")} {tx.currency}
+                        {Number(tx.amount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {tx.currency}
                       </span>
                     </MobileField>
                     <MobileField label={t("table.columns.balance")}>
                       <span className="font-mono text-content" dir="ltr">
-                        {Number(tx.balance_after || 0).toLocaleString("en-US")} {tx.currency}
+                        {Number(tx.balance_after || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {tx.currency}
                       </span>
                     </MobileField>
                     <MobileField label={t("table.columns.description")}>

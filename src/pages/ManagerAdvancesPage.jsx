@@ -35,7 +35,10 @@ const safeText = (val, fallback = "—") => {
   if (typeof val === "object") return val.name || val.title || val.description || fallback;
   return String(val);
 };
-const fmt = (n) => Number(n || 0).toLocaleString("en-US");
+const fmt = (n) => Number(n || 0).toLocaleString("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 export default function ManagerAdvancesPage() {
   const { t } = useTranslation("advances");
   const nextSignal = useAbortController();

@@ -358,7 +358,7 @@ export default function TransfersPage() {
                     <td className={`${TABLE_CELL} font-bold text-content-strong`}>{row.from_vault?.name || t("emptyValue")}</td>
                     <td className={`${TABLE_CELL} font-bold text-content-strong`}>{row.to_vault?.name || t("emptyValue")}</td>
                     <td className={`${TABLE_CELL} text-center font-mono font-bold text-content`} dir="ltr">
-                      {Number(row.amount || 0).toLocaleString("en-US")} {row.currency}
+                      {Number(row.amount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {row.currency}
                     </td>
                     <td className="px-3 py-2.5 border-l border-line text-content-muted whitespace-normal break-words min-w-[220px]">
                       {row.notes || t("emptyValue")}
@@ -382,7 +382,7 @@ export default function TransfersPage() {
               <div key={row.id} className="p-3 space-y-3">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-mono font-bold text-content" dir="ltr">{formatTransactionDocNumber(row.receipt_number, row.id)}</span>
-                  <span className="font-mono font-bold text-content" dir="ltr">{Number(row.amount || 0).toLocaleString("en-US")} {row.currency}</span>
+                  <span className="font-mono font-bold text-content" dir="ltr">{Number(row.amount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {row.currency}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-table-cell-text">
                   <MobileField label={t("table.columns.from")}>{row.from_vault?.name || t("emptyValue")}</MobileField>

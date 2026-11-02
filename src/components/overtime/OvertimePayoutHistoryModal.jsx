@@ -19,7 +19,7 @@ const STATE_TONE = {
   rejected: "bg-danger-soft text-danger-text border-danger-line",
   reversed: "bg-surface-subtle text-content-muted border-line",
 };
-const money = (value) => Number(value || 0).toLocaleString("en-US");
+const money = (value) => Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const dash = (value) => (value === null || value === undefined || value === "" ? "—" : value);
 export default function OvertimePayoutHistoryModal({ isOpen, onClose, branchId, reloadKey = 0, onChanged }) {
   useBodyScrollLock(isOpen);

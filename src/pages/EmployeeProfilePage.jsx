@@ -344,7 +344,7 @@ export default function EmployeeProfilePage() {
                 <div className="relative flex items-center">
                   <CreditCard size={16} className="text-gray-400 absolute right-3 pointer-events-none" />
                   <div className="w-full h-10 bg-gray-50 border border-gray-300 rounded-input pr-9 pl-12 text-base font-mono font-bold text-slate-900 flex items-center" dir="ltr">
-                    <span>{Number(employee.salary || 0).toLocaleString("en-US")}</span>
+                    <span>{Number(employee.salary || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                   <span className="absolute left-3 text-xs font-bold text-gray-500 font-sans pointer-events-none">
                     {t("company.currency", { ns: "common" })}
@@ -353,7 +353,7 @@ export default function EmployeeProfilePage() {
                 <div className="relative flex items-center">
                   <CreditCard size={16} className="text-gray-400 absolute right-3 pointer-events-none" />
                   <div className="w-full h-10 bg-gray-50 border border-gray-300 rounded-input pr-9 pl-14 text-base font-mono font-bold text-slate-900 flex items-center" dir="ltr">
-                    <span>{Number(employee.hourly_rate || 50).toLocaleString("en-US")}</span>
+                    <span>{Number(employee.hourly_rate || 50).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                   <span className="absolute left-3 text-xs font-bold text-gray-500 font-sans pointer-events-none">
                     {t("form.hourlyUnit")}

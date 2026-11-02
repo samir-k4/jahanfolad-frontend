@@ -46,7 +46,7 @@ const HEAD = "p-3 border-l border-gray-200";
 const ACTION_TONE = "bg-white hover:bg-gray-50 text-gray-600 border border-gray-300";
 const FILTER_BUTTON =
   "px-3 py-1.5 text-label-text font-medium text-gray-700 bg-white rounded-input border border-gray-300 min-w-[150px]";
-const money = (value) => Number(value || 0).toLocaleString("en-US");
+const money = (value) => Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 export default function SalaryTable({
   payrollList = [],
   isLoading = false,

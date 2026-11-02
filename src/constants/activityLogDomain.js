@@ -46,4 +46,4 @@ export const PER_PAGE_OPTIONS = [25, 50, 100];
 export const formatAmount = (amount, currency) =>
   amount === null || amount === undefined
     ? null
-    : `${Number(amount).toLocaleString("en-US")}${currency ? ` ${currency}` : ""}`;
+    : `${Number(amount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${currency ? ` ${currency}` : ""}`;

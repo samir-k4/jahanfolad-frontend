@@ -23,7 +23,10 @@ import { getCleanErrorMessage } from "../../utils/errorHandler";
 import { formatProductName } from "../../utils/productFormat";
 import { formatShamsiDate } from "../../utils";
 
-const fmt = (n) => Number(n || 0).toLocaleString("en-US");
+const fmt = (n) => Number(n || 0).toLocaleString("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
 export default function SalesInvoicePreviewModal({
   isOpen,

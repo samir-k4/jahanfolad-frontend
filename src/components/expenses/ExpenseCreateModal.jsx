@@ -16,7 +16,10 @@ import CustomDropdown from "../common/CustomDropdown";
 import { formatTimeDari, toEnglishDigits } from "../../utils";
 import { exceedsBalance } from "../../utils/vaultBalance";
 import { useTranslation } from "react-i18next";
-const fmt = (n) => Number(n || 0).toLocaleString("en-US");
+const fmt = (n) => Number(n || 0).toLocaleString("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 const EMPTY_FORM = {
   payment_source: "vault_direct",
   vault_id: "",

@@ -9,8 +9,8 @@ import { formatShamsiDate } from "../../utils";
 import { usePagePerms } from "../common";
 const fmt = (n) =>
   Number(n || 0).toLocaleString("en-US", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 1,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   });
 function DetailCard({ label, value, subValue, extra, badge, dir = "rtl" }) {
   return (

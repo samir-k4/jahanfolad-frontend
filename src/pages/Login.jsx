@@ -35,15 +35,17 @@ export default function Login() {
       <section className="w-full max-w-md overflow-hidden rounded-xl border border-slate-200 bg-slate-100 text-slate-900 shadow-2xl shadow-black/20">
         <div className="h-1 bg-amber-400" />
         <div className="p-7 sm:p-9">
-          <header className="mb-8 text-center">
-            <p className="mb-1 text-xs font-semibold tracking-[0.18em] text-slate-500">
-              {t("login.productType")}
-            </p>
-            <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-              {t("app.title")}
+          <header className="mb-8 flex flex-col items-center text-center">
+            <img
+              src="/Noor%20Accounting%20System%20Logo%20(1).png"
+              alt="Noor Accounting"
+              className="mx-auto mb-5 h-32 w-32 object-contain"
+            />
+            <h1 className="text-3xl font-extrabold text-blue-900 sm:text-4xl">
+              سیستم حسابدار نور
             </h1>
             <p className="mt-2 text-sm text-slate-600">
-              {t("login.subtitle")}
+              برای ادامه، به حساب کاربری خود وارد شوید
             </p>
           </header>
 

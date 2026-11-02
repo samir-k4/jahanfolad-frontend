@@ -18,7 +18,10 @@ const currencyOptions = (t) => [
   { value: "IRR", label: t("createModal.currencyIrr") },
 ];
 
-const formatAmount = (value) => Number(value || 0).toLocaleString("en-US");
+const formatAmount = (value) => Number(value || 0).toLocaleString("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
 export default function ExpenseEditModal({ isOpen, expense, onClose, onDone }) {
   useBodyScrollLock(isOpen);

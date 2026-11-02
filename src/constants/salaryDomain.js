@@ -78,5 +78,5 @@ export const defaultVaultId = (vaults) => {
 };
 export const vaultOption = (vault) => ({
   value: String(vault.id),
-  label: `[${vault.account_number || vault.id}] ${vault.name} (${vault.currency} — ${Number(vault.current_balance || 0).toLocaleString("en-US")})`,
+  label: `[${vault.account_number || vault.id}] ${vault.name} (${vault.currency} — ${Number(vault.current_balance || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`,
 });

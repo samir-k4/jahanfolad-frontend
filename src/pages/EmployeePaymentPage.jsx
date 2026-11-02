@@ -70,7 +70,10 @@ const BTN_SECONDARY =
   "px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-btn text-btn-text font-bold transition-colors cursor-pointer disabled:opacity-40";
 const ACTION_REST = "bg-white text-gray-500 border border-gray-300";
 const SECTION_TITLE = "text-base sm:text-lg font-bold text-gray-900";
-const money = (value) => Number(value || 0).toLocaleString("en-US");
+const money = (value) => Number(value || 0).toLocaleString("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 const dash = (value, fallback) => {
   if (value === null || value === undefined || value === "") return fallback;
   if (typeof value === "object") return value.name || value.title || value.description || fallback;
@@ -704,7 +707,7 @@ export default function EmployeePaymentPage() {
                   </span>
                   {" / "}
                   <span className="font-mono" dir="ltr">
-                    {Number(account?.daily_rate || 0).toLocaleString("en-US", { maximumFractionDigits: 1 })}
+                    {Number(account?.daily_rate || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </p>
                 {account?.account_start ? (

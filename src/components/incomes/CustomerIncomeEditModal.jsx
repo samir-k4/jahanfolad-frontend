@@ -17,7 +17,10 @@ import { getCleanErrorMessage } from "../../utils/errorHandler";
 import { numberToWordsDari } from "../../utils/numberToWordsDari";
 import { toEnglishDigits } from "../../utils/dariNumberFormatter";
 import { apiUrl } from "../../api";
-const fmt = (n) => Number(n || 0).toLocaleString("en-US");
+const fmt = (n) => Number(n || 0).toLocaleString("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 export default function CustomerIncomeEditModal({
   isOpen,
   onClose,
