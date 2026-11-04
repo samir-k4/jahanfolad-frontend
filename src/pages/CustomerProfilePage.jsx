@@ -1087,7 +1087,9 @@ export default function CustomerProfilePage() {
         title="صورت حساب تفصیلی مشتری"
         subtitle={customer?.name || ""}
         icon={<Printer size={18} />}
-        sheetWidth={794}
+        sheetWidth={1123}
+        previewSheetHeight={794}
+        maxWidth="max-w-[95vw]"
         fitToWidth
       />
 
