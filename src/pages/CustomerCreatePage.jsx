@@ -52,6 +52,9 @@ export default function CustomerCreatePage({ sellerMode = false }) {
   const [hasOpeningBalance, setHasOpeningBalance] = useState(false);
   const [status, setStatus] = useState("active");
   const [notes, setNotes] = useState("");
+  const [isRepresentative, setIsRepresentative] = useState(false);
+  const [representativeResponsible, setRepresentativeResponsible] = useState("");
+  const [representativeNotes, setRepresentativeNotes] = useState("");
 
   const [loadingCode, setLoadingCode] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -130,6 +133,13 @@ export default function CustomerCreatePage({ sellerMode = false }) {
           : 0,
         status: status,
         notes: notes.trim() || null,
+        ...(!sellerMode ? {
+          is_representative: isRepresentative,
+          representative_responsible: isRepresentative ? representativeResponsible.trim() || null : null,
+          representative_notes: isRepresentative ? representativeNotes.trim() || null : null,
+        } : {}),
+        ...(!sellerMode ? {
+        } : {}),
       };
 
       const res = await fetch(apiUrl(sellerMode ? "/suppliers" : "/customers"), {
@@ -349,6 +359,26 @@ export default function CustomerCreatePage({ sellerMode = false }) {
               </div>
 
               <div className="space-y-4 text-xs">
+                {!sellerMode && (
+                  <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+                    <label className="flex cursor-pointer items-center gap-2 font-bold text-amber-900">
+                      <input type="checkbox" checked={isRepresentative} onChange={(event) => setIsRepresentative(event.target.checked)} className="h-4 w-4 accent-amber-600" />
+                      <span>نماینده</span>
+                    </label>
+                    {isRepresentative && (
+                      <div className="space-y-3 border-t border-amber-200 pt-3">
+                        <label className="block">
+                          <span className="mb-1 block font-bold text-gray-800">مسؤول</span>
+                          <input type="text" value={representativeResponsible} onChange={(event) => setRepresentativeResponsible(event.target.value)} className="h-9 w-full rounded-input border border-gray-300 bg-white px-3 text-xs focus:border-amber-600 focus:outline-none" />
+                        </label>
+                        <label className="block">
+                          <span className="mb-1 block font-bold text-gray-800">توضیحات نمایندگی</span>
+                          <textarea rows={2} value={representativeNotes} onChange={(event) => setRepresentativeNotes(event.target.value)} className="w-full rounded-input border border-gray-300 bg-white px-3 py-2 text-xs leading-relaxed focus:border-amber-600 focus:outline-none" />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                )}
                 {!sellerMode && <div>
                   <label className="block text-xs font-bold text-gray-800 mb-1.5">
                     {t("form.creditLimit")}

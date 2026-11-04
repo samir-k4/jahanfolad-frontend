@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { escapeHtml as esc } from "../utils/escapeHtml";
 import { showToast as appToast } from "../utils/toast";
@@ -15,15 +14,13 @@ import {
   Trash2,
   Wallet,
   Calendar,
-  Eye,
 } from "lucide-react";
 import DatePicker from "react-multi-date-picker";
-import { persian, persian_af, formatToGregorian } from "../utils/dateHelpers";
+import { persian, persian_af, DateObject } from "../utils/dateHelpers";
 import useBodyScrollLock from "../hooks/useBodyScrollLock";
 import useDebounce from "../hooks/useDebounce";
-import useDatePresets from "../hooks/useDatePresets";
 import { apiUrl } from "../api";
-import { TooltipButton, SearchableSelect, CustomDropdown, DeleteConfirmationModal, DocumentPreviewModal, usePagePerms } from "../components/common";
+import { TooltipButton, SearchableSelect, DeleteConfirmationModal, DocumentPreviewModal, usePagePerms } from "../components/common";
 import SalesInvoicePreviewModal from "../components/sales/SalesInvoicePreviewModal";
 import CustomerIncomeDetailModal from "../components/incomes/CustomerIncomeDetailModal";
 import CustomerOpeningBalanceModal from "../components/customers/CustomerOpeningBalanceModal";
@@ -42,7 +39,7 @@ const creatorName = (creator) =>
 
 const formatMoney = (value) =>
   Number(value || 0).toLocaleString("en-US", {
-    minimumFractionDigits: 0,
+    minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 
@@ -72,6 +69,9 @@ export default function CustomerProfilePage() {
     credit_limit: "0",
     status: "active",
     notes: "",
+    is_representative: false,
+    representative_responsible: "",
+    representative_notes: "",
   });
   const [savingEdit, setSavingEdit] = useState(false);
 
@@ -81,31 +81,13 @@ export default function CustomerProfilePage() {
   const [selectedIncomeForVoucher, setSelectedIncomeForVoucher] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [showStatementPdf, setShowStatementPdf] = useState(false);
-  const [showStatementFilter, setShowStatementFilter] = useState(false);
-  const [statementFilter, setStatementFilter] = useState({
-    period: "all",
-    from: "",
-    to: "",
-    transaction_type: "all",
-    currency: "all",
-  });
-  const [appliedStatementFilter, setAppliedStatementFilter] = useState({
-    period: "all",
-    from: "",
-    to: "",
-    transaction_type: "all",
-    currency: "all",
-  });
-  const {
-    activePreset: statementDatePreset,
-    setActivePreset: setStatementDatePreset,
-    fromDate: statementFromDate,
-    setFromDate: setStatementFromDate,
-    toDate: statementToDate,
-    setToDate: setStatementToDate,
-    applyPreset: applyStatementDatePreset,
-  } = useDatePresets("this_month");
   const [showOpeningBalanceModal, setShowOpeningBalanceModal] = useState(false);
+  const [showRepresentativeBenefitModal, setShowRepresentativeBenefitModal] = useState(false);
+  const [benefitAmount, setBenefitAmount] = useState("");
+  const [benefitCurrency, setBenefitCurrency] = useState("AFN");
+  const [benefitDate, setBenefitDate] = useState("");
+  const [benefitDescription, setBenefitDescription] = useState("");
+  const [savingBenefit, setSavingBenefit] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { canEdit } = usePagePerms("customers");
@@ -122,7 +104,7 @@ export default function CustomerProfilePage() {
     (appToast[type] || appToast.info)(message);
   };
 
-  useBodyScrollLock(editing || !!viewingInvoice || showOpeningBalanceModal || showStatementFilter);
+  useBodyScrollLock(editing || !!viewingInvoice || showOpeningBalanceModal || showRepresentativeBenefitModal);
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
@@ -174,6 +156,9 @@ export default function CustomerProfilePage() {
           credit_limit: String(cust.credit_limit || "0"),
           status: cust.status || "active",
           notes: cust.notes || "",
+          is_representative: Boolean(cust.is_representative),
+          representative_responsible: cust.representative_responsible || "",
+          representative_notes: cust.representative_notes || "",
         });
       }
     } catch (err) {
@@ -209,6 +194,9 @@ export default function CustomerProfilePage() {
         credit_limit: parseFloat(toEnglishDigits(editForm.credit_limit)) || 0,
         status: editForm.status,
         notes: editForm.notes && editForm.notes.trim() ? editForm.notes.trim() : null,
+        is_representative: Boolean(editForm.is_representative),
+        representative_responsible: editForm.is_representative ? editForm.representative_responsible?.trim() || null : null,
+        representative_notes: editForm.is_representative ? editForm.representative_notes?.trim() || null : null,
       };
 
       const res = await fetch(apiUrl(`/customers/${id}`), {
@@ -230,6 +218,44 @@ export default function CustomerProfilePage() {
     }
   };
 
+  const openRepresentativeBenefitModal = () => {
+    setBenefitAmount("");
+    setBenefitCurrency("AFN");
+    setBenefitDate(new DateObject({ calendar: persian, locale: persian_af }).format("YYYY/MM/DD"));
+    setBenefitDescription("");
+    setShowRepresentativeBenefitModal(true);
+  };
+
+  const handleSaveRepresentativeBenefit = async (event) => {
+    event.preventDefault();
+    if (!benefitAmount || Number(benefitAmount) <= 0) {
+      showToast("مبلغ مفاد نمایندگی را وارد کنید.", "error");
+      return;
+    }
+    setSavingBenefit(true);
+    try {
+      const response = await fetch(apiUrl(`/customers/${id}/representative-benefits`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          amount: Number(toEnglishDigits(benefitAmount)),
+          currency: benefitCurrency,
+          shamsi_date: benefitDate,
+          description: benefitDescription.trim() || null,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || "ثبت مفاد نمایندگی انجام نشد.");
+      showToast(data.message || "مفاد نمایندگی ثبت شد.");
+      setShowRepresentativeBenefitModal(false);
+      fetchCustomerData();
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setSavingBenefit(false);
+    }
+  };
+
   const filteredStatement = statement.filter((s) => {
     if (!debouncedSearchQuery) return true;
     return (
@@ -238,26 +264,6 @@ export default function CustomerProfilePage() {
       (s.type && s.type.includes(debouncedSearchQuery))
     );
   });
-
-  const statementReportQuery = `?${new URLSearchParams(
-    Object.entries(appliedStatementFilter).filter(([, value]) => value),
-  ).toString()}`;
-
-  const openStatementFilter = () => {
-    setShowStatementFilter(true);
-  };
-
-  const applyStatementFilter = (event) => {
-    event.preventDefault();
-    setAppliedStatementFilter({
-      ...statementFilter,
-      period: statementDatePreset,
-      from: statementDatePreset === "all" ? "" : formatToGregorian(statementFromDate),
-      to: statementDatePreset === "all" ? "" : formatToGregorian(statementToDate),
-    });
-    setShowStatementFilter(false);
-    setShowStatementPdf(true);
-  };
 
   const filteredInvoices = invoices.filter((inv) => {
     if (!debouncedSearchQuery) return true;
@@ -316,7 +322,7 @@ export default function CustomerProfilePage() {
           <div class="info-row"><strong>نوعیت:</strong> <span>${esc(item.type || "—")}</span></div>
           <div class="info-row"><strong>توضیحات:</strong> <span>${esc(item.description || "—")}</span></div>
         </div>
-        <div class="amount-box" dir="ltr">${isLoan ? "+" : "-"} ${esc(rawAmt.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }))} ${esc(isDollar ? "$" : "؋")}</div>
+        <div class="amount-box" dir="ltr">${isLoan ? "+" : "-"} ${esc(rawAmt.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }))} ${esc(isDollar ? "$" : "؋")}</div>
         <script>window.onload=function(){window.print();}<\/script>
       </body>
       </html>
@@ -371,12 +377,15 @@ export default function CustomerProfilePage() {
             }`}>
               {customer.status === "active" ? "فعال" : "غیرفعال"}
             </span>
+            {customer.is_representative && (
+              <span className="rounded-badge border border-amber-200 px-2 py-0.5 text-xs font-bold text-amber-700">نماینده</span>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={openStatementFilter}
+              onClick={() => setShowStatementPdf(true)}
               className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-btn text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
             >
               <Printer size={14} className="text-slate-600" />
@@ -391,6 +400,17 @@ export default function CustomerProfilePage() {
               >
                 <Wallet size={14} />
                 <span>{hasOpeningBalance ? "ویرایش بیلانس افتتاحیه" : "ثبت بیلانس افتتاحیه"}</span>
+              </button>
+            )}
+
+            {customer.is_representative && canEdit && (
+              <button
+                type="button"
+                onClick={openRepresentativeBenefitModal}
+                className="px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-btn text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+              >
+                <Wallet size={14} />
+                <span>ثبت مفاد نمایندگی</span>
               </button>
             )}
 
@@ -551,7 +571,7 @@ export default function CustomerProfilePage() {
           <TooltipButton
             icon={<Printer size={14} />}
             tooltip="چاپ کارکرد"
-            onClick={openStatementFilter}
+            onClick={() => setShowStatementPdf(true)}
             colorClass="bg-gray-100 hover:bg-slate-800 hover:text-white text-gray-700 border border-gray-300"
           />
         </div>
@@ -966,7 +986,7 @@ export default function CustomerProfilePage() {
                           {it.sales_scale === "تن"
                             ? Number(it.billable_quantity || it.quantity).toFixed(3)
                             : Number(it.billable_quantity || it.quantity).toLocaleString("en-US", {
-                              minimumFractionDigits: 0,
+                              minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
                             })}{" "}
                           {it.sales_scale || "تن"}
@@ -1048,155 +1068,6 @@ export default function CustomerProfilePage() {
         }}
       />
 
-      {showStatementFilter && createPortal((
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 p-3 sm:p-4 backdrop-blur-xs" dir="rtl">
-          <div className="w-full max-w-3xl max-h-[92vh] overflow-hidden rounded-modal border border-gray-200 bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-gray-200 bg-slate-50/70 px-6 py-5">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-card border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-2xs">
-                  <Printer size={20} />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">فیلتر و استخراج صورت حساب تفصیلی مشتری</h2>
-                  <p className="mt-1 text-xs font-medium text-gray-500">بازه زمانی، نوع معامله و واحد پول را مشخص کنید.</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowStatementFilter(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-btn text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                aria-label="بستن"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={applyStatementFilter} className="max-h-[calc(92vh-92px)] space-y-4 overflow-y-auto bg-slate-50/40 p-6">
-              <section className="space-y-3 border-b border-gray-200 pb-5">
-                <div className="flex items-center gap-1.5 text-sm font-bold text-gray-800">
-                  <Calendar size={20} className="text-slate-700" />
-                  <span>محدوده زمانی گزارش:</span>
-                </div>
-                <div className="flex flex-wrap justify-start gap-2">
-                  {[
-                    ["today", "امروز"],
-                    ["last_7_days", "۷ روز اخیر"],
-                    ["this_month", "ماه جاری"],
-                    ["last_30_days", "۳۰ روز اخیر"],
-                    ["all", "کل اسناد"],
-                    ["custom", "انتخاب تاریخ"],
-                  ].map(([value, label]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => {
-                        setStatementDatePreset(value);
-                        applyStatementDatePreset(value);
-                      }}
-                      className={`h-10 rounded-btn border px-4 text-sm font-bold transition-colors ${
-                        statementDatePreset === value
-                          ? "border-slate-800 bg-slate-800 text-white"
-                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                {statementDatePreset === "custom" && (
-                  <div className="grid grid-cols-1 gap-3 pt-1 sm:grid-cols-2">
-                    <label className="space-y-1.5">
-                      <span className="block text-xs font-bold text-gray-600">از تاریخ</span>
-                      <DatePicker
-                        value={statementFromDate}
-                        onChange={(value) => {
-                          setStatementDatePreset("custom");
-                          setStatementFromDate(value);
-                        }}
-                        calendar={persian}
-                        locale={persian_af}
-                        calendarPosition="bottom-right"
-                        inputClass="w-full h-10 rounded-input border border-gray-300 bg-white px-3 text-sm font-bold text-gray-800 outline-none focus:border-emerald-600"
-                        format="YYYY/MM/DD"
-                      />
-                    </label>
-                    <label className="space-y-1.5">
-                      <span className="block text-xs font-bold text-gray-600">تا تاریخ</span>
-                      <DatePicker
-                        value={statementToDate}
-                        onChange={(value) => {
-                          setStatementDatePreset("custom");
-                          setStatementToDate(value);
-                        }}
-                        calendar={persian}
-                        locale={persian_af}
-                        calendarPosition="bottom-right"
-                        inputClass="w-full h-10 rounded-input border border-gray-300 bg-white px-3 text-sm font-bold text-gray-800 outline-none focus:border-emerald-600"
-                        format="YYYY/MM/DD"
-                      />
-                    </label>
-                  </div>
-                )}
-              </section>
-
-              <section className="grid grid-cols-1 gap-3 rounded-card border border-gray-200 bg-white p-5 sm:grid-cols-2">
-                <label className="space-y-1.5">
-                  <span className="block text-xs font-bold text-gray-700">نوع معامله</span>
-                  <CustomDropdown
-                    value={statementFilter.transaction_type}
-                    onChange={(value) => setStatementFilter((current) => ({ ...current, transaction_type: value }))}
-                    options={[
-                      { value: "all", label: "همه معاملات" },
-                      { value: "debit", label: "طلبات / فروش" },
-                      { value: "credit", label: "پرداختی‌ها" },
-                    ]}
-                    buttonClassName="w-full border-gray-300 bg-white px-3 py-2 text-sm font-bold"
-                    width="w-full"
-                    align="right"
-                    className="w-full"
-                    menuPlacement="bottom"
-                  />
-                </label>
-                <label className="space-y-1.5">
-                  <span className="block text-xs font-bold text-gray-700">واحد پول</span>
-                  <CustomDropdown
-                    value={statementFilter.currency}
-                    onChange={(value) => setStatementFilter((current) => ({ ...current, currency: value }))}
-                    options={[
-                      { value: "all", label: "همه واحدها" },
-                      { value: "AFN", label: "افغانی" },
-                      { value: "USD", label: "دالر" },
-                    ]}
-                    buttonClassName="w-full border-gray-300 bg-white px-3 py-2 text-sm font-bold"
-                    width="w-full"
-                    align="right"
-                    className="w-full"
-                    menuPlacement="bottom"
-                  />
-                </label>
-              </section>
-
-              <div className="flex items-center justify-end gap-2 border-t border-gray-200 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowStatementFilter(false)}
-                  className="rounded-btn border border-gray-300 bg-white px-4 py-2 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-100"
-                >
-                  انصراف
-                </button>
-                <button
-                  type="submit"
-                  className="inline-flex items-center gap-2 rounded-btn bg-emerald-600 px-5 py-2 text-xs font-bold text-white transition-colors hover:bg-emerald-700"
-                >
-                  <Eye size={16} />
-                  نمایش صورت حساب
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      ), document.body)}
-
       <DocumentPreviewModal
         isOpen={!!selectedIncomeForVoucher}
         onClose={() => setSelectedIncomeForVoucher(null)}
@@ -1204,7 +1075,6 @@ export default function CustomerProfilePage() {
         pdfPath={selectedIncomeForVoucher ? `/incomes/${selectedIncomeForVoucher.id}/voucher-pdf` : ""}
         title="رسید دریافتی"
         subtitle={selectedIncomeForVoucher ? `#${selectedIncomeForVoucher.receipt_number || selectedIncomeForVoucher.id}` : ""}
-        fileName={selectedIncomeForVoucher ? `سند رسید ${selectedIncomeForVoucher.payer_name || "مشتری"} ${selectedIncomeForVoucher.receipt_number || selectedIncomeForVoucher.id}.pdf` : ""}
         icon={<FileText size={18} />}
         sheetWidth={560}
       />
@@ -1212,14 +1082,12 @@ export default function CustomerProfilePage() {
       <DocumentPreviewModal
         isOpen={showStatementPdf}
         onClose={() => setShowStatementPdf(false)}
-        htmlPath={`/customers/${id}/statement-html${statementReportQuery}`}
-        pdfPath={`/customers/${id}/statement-pdf${statementReportQuery}`}
+        htmlPath={`/customers/${id}/statement-html`}
+        pdfPath={`/customers/${id}/statement-pdf`}
         title="صورت حساب تفصیلی مشتری"
         subtitle={customer?.name || ""}
         icon={<Printer size={18} />}
-        sheetWidth={1123}
-        previewSheetHeight={794}
-        maxWidth="max-w-6xl"
+        sheetWidth={794}
         fitToWidth
       />
 
@@ -1243,6 +1111,35 @@ export default function CustomerProfilePage() {
         }
         loading={isDeleting}
       />
+
+      {showRepresentativeBenefitModal && (
+        <div className="fixed inset-0 z-[105] flex items-center justify-center bg-black/50 p-3 font-sans" dir="rtl">
+          <div className="w-full max-w-lg overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+              <div><h2 className="text-base font-black text-gray-900">ثبت مفاد نمایندگی</h2><p className="mt-1 text-xs text-gray-500">افزودن مبلغ جدید به حساب نماینده</p></div>
+              <button type="button" onClick={() => setShowRepresentativeBenefitModal(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100" aria-label="بستن"><X size={18} /></button>
+            </div>
+            <form onSubmit={handleSaveRepresentativeBenefit} className="space-y-4 p-5">
+              <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-3 py-2 text-xs"><span className="block text-amber-700">حساب نماینده</span><strong className="text-amber-950">{customer.name}</strong></div>
+              <label className="block text-xs font-bold text-gray-800">مبلغ مفاد *
+                <input type="number" min="0.01" step={benefitCurrency === "AFN" ? "1" : "0.01"} required value={benefitAmount} onChange={(event) => setBenefitAmount(event.target.value)} placeholder="0.0" dir="ltr" className="mt-1 h-12 w-full rounded-lg border border-gray-300 px-3 text-center text-xl font-black outline-none focus:border-amber-500" />
+              </label>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <label className="block text-xs font-bold text-gray-800">واحد پول
+                  <select value={benefitCurrency} onChange={(event) => setBenefitCurrency(event.target.value)} className="mt-1 h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-xs"><option value="AFN">افغانی (AFN)</option><option value="USD">دالر (USD)</option><option value="IRR">تومان (IRR)</option></select>
+                </label>
+                <label className="block text-xs font-bold text-gray-800">تاریخ
+                  <DatePicker value={benefitDate} onChange={(value) => setBenefitDate(value?.format?.("YYYY/MM/DD") || "")} calendar={persian} locale={persian_af} format="YYYY/MM/DD" calendarPosition="bottom-right" inputClass="mt-1 h-10 w-full rounded-lg border border-gray-300 px-3 text-center text-xs" />
+                </label>
+              </div>
+              <label className="block text-xs font-bold text-gray-800">توضیحات <span className="font-normal text-gray-400">(اختیاری)</span>
+                <textarea rows={2} value={benefitDescription} onChange={(event) => setBenefitDescription(event.target.value)} className="mt-1 w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-xs outline-none focus:border-amber-500" />
+              </label>
+              <div className="flex justify-end gap-2 border-t border-gray-200 pt-4"><button type="button" onClick={() => setShowRepresentativeBenefitModal(false)} className="rounded-lg px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100">انصراف</button><button type="submit" disabled={savingBenefit} className="rounded-lg bg-amber-600 px-5 py-2 text-xs font-bold text-white hover:bg-amber-700 disabled:opacity-60">{savingBenefit ? "در حال ثبت..." : "ثبت مفاد"}</button></div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {editing && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/50 backdrop-blur-xs font-sans" dir="rtl">
@@ -1349,6 +1246,23 @@ export default function CustomerProfilePage() {
                   onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                   className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 outline-none focus:border-emerald-600 leading-relaxed"
                 />
+              </div>
+
+              <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+                <label className="flex cursor-pointer items-center gap-2 font-bold text-amber-900">
+                  <input type="checkbox" checked={Boolean(editForm.is_representative)} onChange={(event) => setEditForm({ ...editForm, is_representative: event.target.checked })} className="h-4 w-4 accent-amber-600" />
+                  <span>نماینده</span>
+                </label>
+                {editForm.is_representative && (
+                  <div className="space-y-3 border-t border-amber-200 pt-3">
+                    <label className="block font-bold text-gray-800">مسؤول
+                      <input type="text" value={editForm.representative_responsible} onChange={(event) => setEditForm({ ...editForm, representative_responsible: event.target.value })} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-normal outline-none focus:border-amber-600" />
+                    </label>
+                    <label className="block font-bold text-gray-800">توضیحات نمایندگی
+                      <textarea rows={2} value={editForm.representative_notes} onChange={(event) => setEditForm({ ...editForm, representative_notes: event.target.value })} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-normal leading-relaxed outline-none focus:border-amber-600" />
+                    </label>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-4 pt-1">
