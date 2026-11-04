@@ -83,6 +83,7 @@ export default function CustomerProfilePage() {
   const [showStatementPdf, setShowStatementPdf] = useState(false);
   const [showOpeningBalanceModal, setShowOpeningBalanceModal] = useState(false);
   const [showRepresentativeBenefitModal, setShowRepresentativeBenefitModal] = useState(false);
+  const [selectedRepresentativeBenefit, setSelectedRepresentativeBenefit] = useState(null);
   const [benefitAmount, setBenefitAmount] = useState("");
   const [benefitCurrency, setBenefitCurrency] = useState("AFN");
   const [benefitDate, setBenefitDate] = useState("");
@@ -104,7 +105,7 @@ export default function CustomerProfilePage() {
     (appToast[type] || appToast.info)(message);
   };
 
-  useBodyScrollLock(editing || !!viewingInvoice || showOpeningBalanceModal || showRepresentativeBenefitModal);
+  useBodyScrollLock(editing || !!viewingInvoice || showOpeningBalanceModal || showRepresentativeBenefitModal || !!selectedRepresentativeBenefit);
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
@@ -112,7 +113,9 @@ export default function CustomerProfilePage() {
     try {
       const endpoint = deleteTarget.type === "invoice"
         ? `/sales-invoices/${deleteTarget.record.id}`
-        : `/incomes/${deleteTarget.record.id}`;
+        : deleteTarget.type === "income"
+          ? `/incomes/${deleteTarget.record.id}`
+          : `/customers/${id}/representative-benefits/${deleteTarget.record.transaction_id || deleteTarget.record.id}`;
       const res = await fetch(apiUrl(endpoint), {
         method: "DELETE",
         headers: { Accept: "application/json" },
@@ -219,10 +222,20 @@ export default function CustomerProfilePage() {
   };
 
   const openRepresentativeBenefitModal = () => {
+    setSelectedRepresentativeBenefit(null);
     setBenefitAmount("");
     setBenefitCurrency("AFN");
     setBenefitDate(new DateObject({ calendar: persian, locale: persian_af }).format("YYYY/MM/DD"));
     setBenefitDescription("");
+    setShowRepresentativeBenefitModal(true);
+  };
+
+  const openRepresentativeBenefitForEdit = (benefit) => {
+    setSelectedRepresentativeBenefit(benefit);
+    setBenefitAmount(String(benefit.debit || ""));
+    setBenefitCurrency(benefit.currency || "AFN");
+    setBenefitDate(benefit.shamsi_date || "");
+    setBenefitDescription(benefit.description || "");
     setShowRepresentativeBenefitModal(true);
   };
 
@@ -234,8 +247,12 @@ export default function CustomerProfilePage() {
     }
     setSavingBenefit(true);
     try {
-      const response = await fetch(apiUrl(`/customers/${id}/representative-benefits`), {
-        method: "POST",
+      const response = await fetch(apiUrl(
+        selectedRepresentativeBenefit
+          ? `/customers/${id}/representative-benefits/${selectedRepresentativeBenefit.transaction_id || selectedRepresentativeBenefit.id}`
+          : `/customers/${id}/representative-benefits`,
+      ), {
+        method: selectedRepresentativeBenefit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
           amount: Number(toEnglishDigits(benefitAmount)),
@@ -246,8 +263,9 @@ export default function CustomerProfilePage() {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.message || "ثبت مفاد نمایندگی انجام نشد.");
-      showToast(data.message || "مفاد نمایندگی ثبت شد.");
+      showToast(data.message || (selectedRepresentativeBenefit ? "مفاد نمایندگی ویرایش شد." : "مفاد نمایندگی ثبت شد."));
       setShowRepresentativeBenefitModal(false);
+      setSelectedRepresentativeBenefit(null);
       fetchCustomerData();
     } catch (error) {
       showToast(error.message, "error");
@@ -617,6 +635,7 @@ export default function CustomerProfilePage() {
                     const linkedIncome = item.reference_type === "income"
                       ? receipts.find((rcp) => rcp.id === item.reference_id)
                       : null;
+                    const isRepresentativeBenefit = item.reference_type === "representative_benefit";
 
                     return (
                       <tr key={item.id || idx} className="hover:bg-gray-50/80 transition-colors">
@@ -677,7 +696,19 @@ export default function CustomerProfilePage() {
                         </td>
 
                         <td className="px-3 py-2.5 text-center min-w-[150px]">
-                          {linkedInvoice ? (
+                          {isRepresentativeBenefit ? (
+                            <div className="flex items-center justify-center gap-1.5">
+                              <TooltipButton onClick={() => setSelectedRepresentativeBenefit(item)} tooltip="جزییات مفاد" className="p-1.5 bg-white hover:bg-gray-100 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-btn shadow-2xs transition-all cursor-pointer inline-flex items-center justify-center">
+                                <FileText size={14} />
+                              </TooltipButton>
+                              {canEdit && <TooltipButton onClick={() => openRepresentativeBenefitForEdit(item)} tooltip="ویرایش مفاد" className="p-1.5 bg-white hover:bg-gray-100 text-gray-600 hover:text-gray-900 border border-gray-300 rounded-btn shadow-2xs transition-all cursor-pointer inline-flex items-center justify-center">
+                                <Edit3 size={14} />
+                              </TooltipButton>}
+                              {canEdit && <TooltipButton onClick={() => setDeleteTarget({ type: "representative_benefit", record: item })} tooltip="حذف مفاد" className="p-1.5 bg-white hover:bg-red-600 hover:text-white text-red-600 border border-gray-300 rounded-btn shadow-2xs transition-all cursor-pointer inline-flex items-center justify-center">
+                                <Trash2 size={14} />
+                              </TooltipButton>}
+                            </div>
+                          ) : linkedInvoice ? (
                             <div className="flex items-center justify-center gap-1.5">
                               <TooltipButton
                                 onClick={() => setViewingInvoice(linkedInvoice)}
@@ -1068,6 +1099,24 @@ export default function CustomerProfilePage() {
         }}
       />
 
+      {selectedRepresentativeBenefit && (
+        <div className="fixed inset-0 z-[105] flex items-center justify-center bg-black/50 p-3 font-sans" dir="rtl">
+          <div className="w-full max-w-md overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+              <h2 className="text-base font-black text-gray-900">جزییات مفاد نمایندگی</h2>
+              <button type="button" onClick={() => setSelectedRepresentativeBenefit(null)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100" aria-label="بستن"><X size={18} /></button>
+            </div>
+            <dl className="grid grid-cols-2 gap-3 p-5 text-xs">
+              <dt className="text-gray-500">مبلغ</dt><dd className="font-mono font-bold text-rose-700" dir="ltr">{formatMoney(selectedRepresentativeBenefit.debit)} {selectedRepresentativeBenefit.currency}</dd>
+              <dt className="text-gray-500">تاریخ</dt><dd className="font-mono text-gray-800">{selectedRepresentativeBenefit.shamsi_date || selectedRepresentativeBenefit.date || "—"}</dd>
+              <dt className="text-gray-500">شماره ترانزکشن</dt><dd className="font-mono text-gray-800">{selectedRepresentativeBenefit.tx_number || selectedRepresentativeBenefit.id || "—"}</dd>
+              <dt className="text-gray-500">ثبت‌کننده</dt><dd className="text-gray-800">{creatorName(selectedRepresentativeBenefit.created_by)}</dd>
+              <dt className="col-span-2 text-gray-500">توضیحات</dt><dd className="col-span-2 text-gray-800">{selectedRepresentativeBenefit.description || "—"}</dd>
+            </dl>
+          </div>
+        </div>
+      )}
+
       <DocumentPreviewModal
         isOpen={!!selectedIncomeForVoucher}
         onClose={() => setSelectedIncomeForVoucher(null)}
@@ -1102,14 +1151,16 @@ export default function CustomerProfilePage() {
             ? `فاکتور شماره ${deleteTarget.record.invoice_number}`
             : deleteTarget?.type === "income"
             ? `رسید شماره ${deleteTarget.record.receipt_number || deleteTarget.record.id}`
-            : ""
+            : `مفاد نمایندگی ${deleteTarget?.record?.id || ""}`
         }
-        title={deleteTarget?.type === "invoice" ? "تایید حذف فاکتور" : "تایید حذف رسید"}
-        question={deleteTarget?.type === "invoice" ? "آیا از حذف این فاکتور مطمئن هستید؟" : "آیا از حذف این رسید مطمئن هستید؟"}
+        title={deleteTarget?.type === "invoice" ? "تایید حذف فاکتور" : deleteTarget?.type === "income" ? "تایید حذف رسید" : "تایید حذف مفاد نمایندگی"}
+        question={deleteTarget?.type === "invoice" ? "آیا از حذف این فاکتور مطمئن هستید؟" : deleteTarget?.type === "income" ? "آیا از حذف این رسید مطمئن هستید؟" : "آیا از حذف این مفاد نمایندگی مطمئن هستید؟"}
         warning={
           deleteTarget?.type === "invoice"
             ? "با حذف فاکتور، اسناد و تراکنش‌های مربوطه لغو خواهند شد."
-            : "با حذف رسید، موجودی صندوق و حساب مشتری اصلاح خواهد شد."
+            : deleteTarget?.type === "income"
+            ? "با حذف رسید، موجودی صندوق و حساب مشتری اصلاح خواهد شد."
+            : "با حذف مفاد نمایندگی، مانده حساب مشتری دوباره محاسبه خواهد شد."
         }
         loading={isDeleting}
       />

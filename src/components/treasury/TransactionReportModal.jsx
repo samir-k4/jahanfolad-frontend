@@ -64,7 +64,9 @@ export default function TransactionReportModal({
   const [selectedCurrency, setSelectedCurrency] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedMember, setSelectedMember] = useState("all");
   const [categories, setCategories] = useState([]);
+  const [members, setMembers] = useState([]);
   const showDateRange = activePreset === "all" || activePreset === "custom";
   const [reportHtml, setReportHtml] = useState("");
   const [reportQueryParams, setReportQueryParams] = useState("");
@@ -85,14 +87,13 @@ export default function TransactionReportModal({
       dEnd.setDay(days);
       setStartDate(dStart);
       setEndDate(dEnd);
-      fetch(apiUrl("/vault-transaction-categories"))
-        .then((res) => res.json())
-        .then((data) => {
-          if (data && Array.isArray(data.data)) {
-            setCategories(data.data);
-          }
-        })
-        .catch(() => {});
+      Promise.all([
+        fetch(apiUrl("/vault-transaction-categories")).then((res) => res.json()),
+        fetch(apiUrl("/vault-transaction-members")).then((res) => res.json()),
+      ]).then(([categoryData, memberData]) => {
+        if (categoryData && Array.isArray(categoryData.data)) setCategories(categoryData.data);
+        if (memberData && Array.isArray(memberData.data)) setMembers(memberData.data);
+      }).catch(() => {});
     }
   }, [isOpen]);
   if (!isOpen) return null;
@@ -147,6 +148,9 @@ export default function TransactionReportModal({
       }
       if (selectedCategory !== "all") {
         params.append("category_id", selectedCategory);
+      }
+      if (selectedMember !== "all") {
+        params.append("member_id", selectedMember);
       }
       const queryStr = params.toString();
       const res = await fetch(apiUrl(`/vault-transactions/report-html?${queryStr}`));
@@ -209,6 +213,17 @@ export default function TransactionReportModal({
       label: c.name,
     })),
   ];
+  const selectedCategoryObject = categories.find(
+    (category) => String(category.id) === String(selectedCategory)
+  );
+  const isPersonalCategory = selectedCategoryObject?.name === "برداشت شخصی";
+  const memberOptions = [
+    { value: "all", label: "همه اعضا و مسئولین" },
+    ...members.map((member) => ({
+      value: String(member.id),
+      label: member.name,
+    })),
+  ];
   const typeOptions = [
     { value: "all", label: t("report.allTypes") },
     { value: "deposit", label: t("report.onlyDeposits") },
@@ -266,7 +281,7 @@ export default function TransactionReportModal({
                 ))}
               </div>
             </div>
-            {showDateRange && <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {showDateRange && <div className="grid grid-cols-2 gap-3.5">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">{t("report.fromDate")}</label>
                 <DatePicker
@@ -297,7 +312,7 @@ export default function TransactionReportModal({
               </div>
             </div>}
             <div className="border-t border-gray-100 pt-4 space-y-3.5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+              <div className="grid grid-cols-2 gap-3 items-end">
               <div className="min-w-0">
                 <label className="block text-xs font-medium text-gray-700 mb-1">{t("report.vault")}</label>
                 <SearchableSelect
@@ -306,6 +321,7 @@ export default function TransactionReportModal({
                   onChange={(val) => setSelectedVault(val)}
                   placeholder={t("report.allVaultsOption")}
                   searchPlaceholder={t("report.vaultSearch")}
+                  className="w-full"
                   buttonClassName="w-full bg-white border border-gray-300 rounded-btn px-3 py-2 text-xs font-normal text-gray-900 outline-none hover:border-gray-400"
                   usePortal={true}
                 />
@@ -316,6 +332,7 @@ export default function TransactionReportModal({
                     options={currencyOptions}
                     value={selectedCurrency}
                     onChange={(val) => setSelectedCurrency(val)}
+                    className="w-full"
                     buttonClassName="w-full px-3 py-2 text-xs font-normal"
                   />
                 </div>
@@ -325,6 +342,7 @@ export default function TransactionReportModal({
                     options={typeOptions}
                     value={selectedType}
                     onChange={(val) => setSelectedType(val)}
+                    className="w-full"
                     buttonClassName="w-full px-3 py-2 text-xs font-normal"
                   />
                 </div>
@@ -333,10 +351,27 @@ export default function TransactionReportModal({
                   <CustomDropdown
                     options={categoryOptions}
                     value={selectedCategory}
-                    onChange={(val) => setSelectedCategory(val)}
+                    onChange={(val) => {
+                      setSelectedCategory(val);
+                      const category = categories.find((item) => String(item.id) === String(val));
+                      if (category?.name !== "برداشت شخصی") setSelectedMember("all");
+                    }}
+                    className="w-full"
                     buttonClassName="w-full px-3 py-2 text-xs font-normal"
                   />
                 </div>
+                {isPersonalCategory && (
+                <div className="min-w-0">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">عضو یا مسئول</label>
+                  <CustomDropdown
+                    options={memberOptions}
+                    value={selectedMember}
+                    onChange={(val) => setSelectedMember(val)}
+                    className="w-full"
+                    buttonClassName="w-full px-3 py-2 text-xs font-normal"
+                  />
+                </div>
+                )}
               </div>
             </div>
           </div>

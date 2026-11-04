@@ -256,6 +256,7 @@ export default function DepositWithdrawCreatePage() {
   const selectedCategoryObj = useMemo(() => {
     return categories.find((c) => String(c.id) === String(selectedCategoryId)) || null;
   }, [categories, selectedCategoryId]);
+  const isPersonalWithdrawal = !isDeposit && selectedCategoryObj?.name === "برداشت شخصی";
   const memberOptions = useMemo(() => {
     const list = members.map((m) => ({
       id: String(m.id),
@@ -425,6 +426,10 @@ export default function DepositWithdrawCreatePage() {
       showToast.error(t("messages.categoryRequired"));
       return;
     }
+    if (isPersonalWithdrawal && !selectedMemberId) {
+      showToast.error("برای برداشت شخصی انتخاب عضو یا مسئول الزامی است.");
+      return;
+    }
     if (!partyName.trim()) {
       showToast.error(t("messages.partyRequired"));
       return;
@@ -433,7 +438,7 @@ export default function DepositWithdrawCreatePage() {
       showToast.error(t("messages.amountInvalid"));
       return;
     }
-    if (isCurrencyMismatch && numRate <= 0) {
+    if ((isCurrencyMismatch || isPersonalWithdrawal) && numRate <= 0) {
       showToast.error(t("messages.rateInvalid"));
       return;
     }
@@ -470,7 +475,7 @@ export default function DepositWithdrawCreatePage() {
       member_id: numMemberId,
       amount: numAmount,
       currency: currency,
-      exchange_rate: isCurrencyMismatch ? numRate : 1.0,
+      exchange_rate: isCurrencyMismatch || isPersonalWithdrawal ? numRate : 1.0,
       receipt_number: docNumber,
       receipt_type: paymentMethod,
       reference_type: "direct",
@@ -694,7 +699,14 @@ export default function DepositWithdrawCreatePage() {
                 <CustomDropdown
                   options={categoryOptions}
                   value={selectedCategoryId}
-                  onChange={(val) => setSelectedCategoryId(val)}
+                  onChange={(val) => {
+                    setSelectedCategoryId(val);
+                    const category = categories.find((item) => String(item.id) === String(val));
+                    if (category?.name !== "برداشت شخصی") {
+                      setSelectedMemberId("");
+                      setSelectedHandler("");
+                    }
+                  }}
                   placeholder={isDeposit ? t("form.categoryPlaceholderDeposit") : t("form.categoryPlaceholderWithdraw")}
                   className="w-full"
                   buttonClassName="w-full h-10 px-3 py-2 text-body-text font-medium text-gray-900 border-gray-300 rounded-input justify-between"
@@ -720,10 +732,11 @@ export default function DepositWithdrawCreatePage() {
                   className="w-full bg-white border border-gray-300 rounded-input px-3 py-2 text-body-text outline-none focus:border-slate-800"
                 />
               </div>
-              <div>
+              {isPersonalWithdrawal && (
+              <div className="sm:col-span-2">
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-label-text font-bold text-gray-800">
-                    {t("form.member")} <span className="text-gray-400 font-normal text-xs">{t("form.optional")}</span>
+                    {t("form.member")} <span className="text-gray-400 font-normal text-xs">{isPersonalWithdrawal ? "*" : t("form.optional")}</span>
                   </label>
                   <div className="flex items-center gap-1.5">
                     {selectedHandler && (
@@ -742,7 +755,8 @@ export default function DepositWithdrawCreatePage() {
                     )}
                     <button
                       type="button"
-                      onClick={() => setIsMemberModalOpen(true)}
+                      onClick={() => isPersonalWithdrawal && setIsMemberModalOpen(true)}
+                      disabled={!isPersonalWithdrawal}
                       className="text-xs font-bold text-slate-700 hover:text-slate-900 bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded flex items-center gap-1 transition-colors cursor-pointer"
                       title={t("form.addMember")}
                     >
@@ -758,10 +772,12 @@ export default function DepositWithdrawCreatePage() {
                   getOptionValue={(m) => m.name}
                   placeholder={t("form.memberPlaceholder")}
                   searchPlaceholder={t("form.memberSearch")}
+                  disabled={!isPersonalWithdrawal}
                   buttonClassName="w-full bg-white border border-gray-300 rounded-input px-3 py-2 text-body-text font-medium text-gray-900 outline-none hover:border-gray-400"
                   usePortal={true}
                 />
               </div>
+              )}
             </div>
             <div className="flex items-center justify-between text-xs pt-1 px-1 text-gray-600 border-t border-gray-100">
               <span>{t("form.currentBalance")}</span>
@@ -809,11 +825,11 @@ export default function DepositWithdrawCreatePage() {
                   </span>
                 </div>
               </div>
-              {isCurrencyMismatch && (
+              {(isCurrencyMismatch || isPersonalWithdrawal) && (
                 <div className="sm:col-span-2 bg-amber-50/70 border border-amber-200 rounded-lg p-3.5 space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="block text-xs font-bold text-amber-900">
-                      {t("form.exchangeRate")}
+                      {isPersonalWithdrawal ? "نرخ تاریخی دالر در تاریخ برداشت" : t("form.exchangeRate")}
                     </label>
                     <span className="text-3xs font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
                       {t("form.currencyMismatch")}

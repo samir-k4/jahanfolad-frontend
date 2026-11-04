@@ -41,6 +41,7 @@ export default function DepositWithdrawModal({
   const [docNumber, setDocNumber] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [memberId, setMemberId] = useState("");
+  const [exchangeRate, setExchangeRate] = useState("70");
   const [categories, setCategories] = useState([]);
   const [members, setMembers] = useState([]);
   const categoryOptions = [{ value: "", label: t("depositWithdraw.categoryPlaceholder") }, ...categories.map((c) => ({ value: String(c.id), label: c.name }))];
@@ -99,6 +100,7 @@ export default function DepositWithdrawModal({
       setTimePeriod(currentTime?.period || "AM");
       setCategoryId("");
       setMemberId("");
+      setExchangeRate("70");
       fetchNextDocNumber();
       fetchCategories(initialType);
       fetchMembers();
@@ -112,6 +114,8 @@ export default function DepositWithdrawModal({
   const handleTypeChange = (newType) => {
     setTransactionType(newType);
     setCategoryId("");
+    setMemberId("");
+    setExchangeRate("70");
     fetchCategories(newType);
   };
   const handleMemberSelect = (selectedId) => {
@@ -125,6 +129,8 @@ export default function DepositWithdrawModal({
   };
   if (!isOpen) return null;
   const isDeposit = transactionType === "deposit";
+  const selectedCategory = categories.find((category) => String(category.id) === String(categoryId));
+  const isPersonalWithdrawal = !isDeposit && selectedCategory?.name === "برداشت شخصی";
   const selectedVault = vaults.find((v) => String(v.id) === String(selectedVaultId)) || vaults[0];
   const vaultCurrency = selectedVault?.currency || "AFN";
   const vaultBalance = Number(selectedVault?.current_balance || 0);
@@ -133,6 +139,15 @@ export default function DepositWithdrawModal({
     e.preventDefault();
     if (!categoryId) {
       showToast.error(t("depositWithdraw.categoryRequired"));
+      return;
+    }
+    if (isPersonalWithdrawal && !memberId) {
+      showToast.error("برای برداشت شخصی انتخاب عضو یا مسئول الزامی است.");
+      return;
+    }
+    const numericRate = Number(toEnglishDigits(exchangeRate));
+    if (isPersonalWithdrawal && (!Number.isFinite(numericRate) || numericRate <= 0)) {
+      showToast.error("برای برداشت شخصی نرخ تاریخی دالر الزامی است.");
       return;
     }
     const formattedTime = `${toEnglishDigits(timeStr)} ${timePeriod === "PM" ? t("timeSuffix.pm") : t("timeSuffix.am")}`;
@@ -153,6 +168,7 @@ export default function DepositWithdrawModal({
       receipt_number: docNumber,
       category_id: categoryId ? Number(categoryId) : null,
       member_id: memberId ? Number(memberId) : null,
+      exchange_rate: isPersonalWithdrawal ? numericRate : 1,
       reference_number: referenceNumber,
       transaction_date: gregDate,
       shamsi_date: shamsiDate,
@@ -285,32 +301,39 @@ export default function DepositWithdrawModal({
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
+            <div className={isPersonalWithdrawal ? "" : "sm:col-span-2"}>
               <label className="block text-xs font-bold text-gray-800 mb-1 flex items-center gap-1">
                 <Tag size={13} className="text-slate-700" />{t("depositWithdraw.category")}<span className="text-rose-600">*</span>
               </label>
               <CustomDropdown
                 value={categoryId}
-                onChange={(val) => setCategoryId(val)}
+                onChange={(val) => {
+                  setCategoryId(val);
+                  const category = categories.find((item) => String(item.id) === String(val));
+                  if (category?.name !== "برداشت شخصی") setMemberId("");
+                }}
                 options={categoryOptions}
                 buttonClassName="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium text-gray-900 outline-none focus:border-slate-800"
                 width="w-full"
                 usePortal
               />
             </div>
-            <div>
+            {isPersonalWithdrawal && (
+            <div className="sm:col-span-2">
               <label className="block text-xs font-bold text-gray-800 mb-1 flex items-center gap-1">
-                <Users size={13} className="text-slate-700" />{t("depositWithdraw.member")}<span className="text-gray-400 font-normal text-3xs">{t("depositWithdraw.optional")}</span>
+                <Users size={13} className="text-slate-700" />{t("depositWithdraw.member")}                <span className="text-gray-400 font-normal text-3xs">{isPersonalWithdrawal ? "*" : t("depositWithdraw.optional")}</span>
               </label>
               <CustomDropdown
                 value={memberId}
                 onChange={(val) => handleMemberSelect(val)}
                 options={memberOptions}
+                disabled={!isPersonalWithdrawal}
                 buttonClassName="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-medium text-gray-900 outline-none focus:border-slate-800"
                 width="w-full"
                 usePortal
               />
             </div>
+            )}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -331,6 +354,23 @@ export default function DepositWithdrawModal({
                 }`}
               />
             </div>
+            {isPersonalWithdrawal && (
+              <div className="bg-amber-50 border border-amber-200 rounded-sm p-3">
+                <label className="block text-xs font-bold text-amber-900 mb-1">
+                  نرخ تاریخی دالر در تاریخ برداشت *
+                </label>
+                <input
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  required
+                  value={exchangeRate}
+                  onChange={(e) => setExchangeRate(e.target.value)}
+                  className="w-full bg-white border border-amber-300 rounded-sm px-3 py-2 text-sm font-mono font-bold outline-none focus:border-amber-500"
+                  dir="ltr"
+                />
+              </div>
+            )}
             <div>
               <label className="block text-xs font-bold text-gray-800 mb-1 flex items-center gap-1">
                 <Building2 size={13} className="text-slate-700" />
