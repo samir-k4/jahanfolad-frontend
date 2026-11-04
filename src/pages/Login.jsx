@@ -49,8 +49,8 @@ export default function Login() {
             </p>
           </header>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
+          <form onSubmit={handleSubmit} className="w-full space-y-5">
+            <div className="w-full">
               <label
                 htmlFor="login-email"
                 className="mb-2 block text-sm font-semibold text-slate-700"
@@ -67,13 +67,13 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isSubmitting}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-left text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 disabled:opacity-60"
+                className="h-12 w-full rounded-lg border border-slate-300 bg-white px-4 text-left text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 disabled:opacity-60"
                 dir="ltr"
                 placeholder={t("login.usernamePlaceholder")}
               />
             </div>
 
-            <div>
+            <div className="w-full">
               <label
                 htmlFor="login-password"
                 className="mb-2 block text-sm font-semibold text-slate-700"
@@ -89,7 +89,7 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isSubmitting}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-left text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 disabled:opacity-60"
+                className="h-12 w-full rounded-lg border border-slate-300 bg-white px-4 text-left text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 disabled:opacity-60"
                 dir="ltr"
                 placeholder={t("login.passwordPlaceholder")}
               />

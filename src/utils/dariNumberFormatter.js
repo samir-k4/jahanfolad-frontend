@@ -36,7 +36,9 @@ export const formatDariNumber = (value, options = {}) => {
 };
 
 export const formatCurrencyAmount = (value, currency, options = {}) => {
-  const maximumFractionDigits = options.maximumFractionDigits ?? 2;
+  const maximumFractionDigits = currency === "AFN"
+    ? 0
+    : (options.maximumFractionDigits ?? 2);
 
   return formatNumber(value, {
     ...options,

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, RefreshCw, Users, WalletCards } from "lucide-react";
+import { Search, RefreshCw, Users, WalletCards, Printer } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { CustomDropdown, TooltipButton } from "../components/common";
+import { CustomDropdown, TablePagination, TooltipButton } from "../components/common";
 import { apiFetch, apiList } from "../api";
 import { showToast } from "../utils/toast";
 import { formatCurrencyAmount } from "../utils/dariNumberFormatter";
@@ -14,6 +14,8 @@ export default function SupplierPaymentsPage() {
   const [currency, setCurrency] = useState("all");
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(15);
 
   const loadAccounts = async () => {
     setLoading(true);
@@ -37,13 +39,18 @@ export default function SupplierPaymentsPage() {
     }
   };
   useEffect(() => { loadAccounts(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  const visibleAccounts = useMemo(() => accounts.filter((account) => {
+  const filteredAccounts = useMemo(() => accounts.filter((account) => {
     const query = searchQuery.trim().toLowerCase();
     const matchesSearch = !query || [account.code, account.name, account.phone].some((value) => String(value || "").toLowerCase().includes(query));
     const matchesCurrency = currency === "all" || account.currency === currency;
     const matchesStatus = status === "all" || (status === "owed" ? Number(account.remaining) > 0 : Number(account.remaining) <= 0);
     return matchesSearch && matchesCurrency && matchesStatus;
   }), [accounts, currency, searchQuery, status]);
+  const visibleAccounts = useMemo(
+    () => filteredAccounts.slice((page - 1) * perPage, page * perPage),
+    [filteredAccounts, page, perPage],
+  );
+  useEffect(() => { setPage(1); }, [searchQuery, currency, status]);
 
   return (
     <div className="w-full space-y-4 font-sans" dir="rtl">
@@ -52,19 +59,23 @@ export default function SupplierPaymentsPage() {
           <h1 className="text-page-title tracking-tight text-gray-900">{t("page.title")}</h1>
           <p className="mt-1 text-subtitle text-gray-500">{t("page.subtitle")}</p>
         </div>
-        <Link
-          to="/seller-payments/create"
-          className="inline-flex w-fit items-center gap-1.5 rounded-btn bg-emerald-600 px-3.5 py-2 text-btn-text font-bold text-white shadow-2xs transition-colors hover:bg-emerald-700"
-        >
-          پرداختی جدید
-        </Link>
-        <Link
-          to="/sellers"
-          className="inline-flex w-fit items-center gap-1.5 rounded-btn border border-gray-300 bg-white px-3.5 py-2 text-btn-text font-bold text-gray-700 shadow-2xs transition-colors hover:bg-gray-50"
-        >
-          <Users size={15} />
-          {t("page.sellers")}
-        </Link>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <Link
+            to="/sellers"
+            className="inline-flex items-center gap-1.5 rounded-btn border border-gray-300 bg-white px-3.5 py-2 text-btn-text font-bold text-gray-700 shadow-2xs transition-colors hover:bg-gray-50"
+          >
+            <Users size={15} />
+            {t("page.sellers")}
+          </Link>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 rounded-btn bg-slate-800 px-4 py-2 text-btn-text font-bold text-white shadow-xs transition-colors hover:bg-slate-900"
+          >
+            <Printer size={16} />
+            راپور پرداختنی‌ها
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-white p-3.5 shadow-2xs">
@@ -75,7 +86,7 @@ export default function SupplierPaymentsPage() {
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder={t("filters.search")}
-            className="w-full rounded-lg border border-gray-300 bg-white py-1.5 pl-3 pr-9 text-xs text-gray-800 focus:border-emerald-600 focus:outline-none"
+            className="w-full rounded-lg border border-gray-300 bg-white py-1.5 pl-3 pr-9 text-xs text-gray-800 focus:border-rose-600 focus:outline-none focus:ring-1 focus:ring-rose-500"
           />
         </div>
         <CustomDropdown
@@ -95,6 +106,7 @@ export default function SupplierPaymentsPage() {
             { value: "all", label: t("filters.currency.all") },
             { value: "AFN", label: t("filters.currency.afn") },
             { value: "USD", label: t("filters.currency.usd") },
+            { value: "IRR", label: "تومان" },
           ]}
           value={currency}
           onChange={setCurrency}
@@ -103,7 +115,7 @@ export default function SupplierPaymentsPage() {
           width="w-36"
         />
         <TooltipButton
-          icon={<RefreshCw size={14} />}
+          icon={<RefreshCw size={14} className={loading ? "animate-spin" : ""} />}
           tooltip={t("filters.refresh")}
           onClick={loadAccounts}
           colorClass="border border-gray-300 bg-white text-gray-700 hover:bg-slate-800 hover:text-white"
@@ -116,7 +128,7 @@ export default function SupplierPaymentsPage() {
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50 font-bold text-gray-700">
                 {["index", "code", "name", "phone", "purchases", "paid", "balance", "currency", "status"].map((column) => (
-                  <th key={column} className="whitespace-nowrap border-l border-gray-200 px-3.5 py-2.5">
+                  <th key={column} className="whitespace-nowrap border-l border-gray-200 px-3.5 py-2.5 text-center">
                     {t(`table.${column}`)}
                   </th>
                 ))}
@@ -129,13 +141,13 @@ export default function SupplierPaymentsPage() {
                 <tr><td colSpan={9} className="p-12 text-center"><WalletCards className="mx-auto mb-3 text-gray-300" size={30} strokeWidth={1.5} /><p className="font-bold text-gray-600">{t("table.empty")}</p><p className="mt-1 text-gray-400">{t("table.emptyHint")}</p></td></tr>
               ) : visibleAccounts.map((account, index) => (
                 <tr key={`${account.supplier_id}-${account.currency}`} className="hover:bg-gray-50/70">
-                  <td className="border-l border-gray-200 px-3.5 py-2.5 text-center">{index + 1}</td>
-                  <td className="border-l border-gray-200 px-3.5 py-2.5 font-mono font-bold">{account.code}</td>
+                  <td className="border-l border-gray-200 px-3.5 py-2.5 text-center">{(page - 1) * perPage + index + 1}</td>
+                  <td className="border-l border-gray-200 px-3.5 py-2.5 text-center font-mono font-bold">{account.code}</td>
                   <td className="border-l border-gray-200 px-3.5 py-2.5 font-bold">{account.name}</td>
                   <td className="border-l border-gray-200 px-3.5 py-2.5" dir="ltr">{account.phone || "—"}</td>
-                  <td className="border-l border-gray-200 px-3.5 py-2.5 font-mono" dir="ltr">{formatCurrencyAmount(account.total, account.currency)}</td>
-                  <td className="border-l border-gray-200 px-3.5 py-2.5 font-mono" dir="ltr">{formatCurrencyAmount(account.paid, account.currency)}</td>
-                  <td className="border-l border-gray-200 px-3.5 py-2.5 font-mono font-bold text-rose-700" dir="ltr">{formatCurrencyAmount(account.remaining, account.currency)}</td>
+                  <td className="border-l border-gray-200 px-3.5 py-2.5 text-center font-mono" dir="ltr">{formatCurrencyAmount(account.total, account.currency)}</td>
+                  <td className="border-l border-gray-200 px-3.5 py-2.5 text-center font-mono" dir="ltr">{formatCurrencyAmount(account.paid, account.currency)}</td>
+                  <td className="border-l border-gray-200 bg-rose-50/30 px-3.5 py-2.5 text-center font-mono font-bold text-rose-700" dir="ltr">{formatCurrencyAmount(account.remaining, account.currency)}</td>
                   <td className="border-l border-gray-200 px-3.5 py-2.5 text-center">{account.currency}</td>
                   <td className="px-3.5 py-2.5 text-center">{Number(account.remaining || 0) > 0 ? t("filters.status.owed") : t("filters.status.settled")}</td>
                 </tr>
@@ -143,6 +155,15 @@ export default function SupplierPaymentsPage() {
             </tbody>
           </table>
         </div>
+        <TablePagination
+          currentPage={page}
+          lastPage={Math.max(1, Math.ceil(filteredAccounts.length / perPage))}
+          total={filteredAccounts.length}
+          perPage={perPage}
+          onPageChange={setPage}
+          onPerPageChange={(size) => { setPerPage(size); setPage(1); }}
+          unit="مورد"
+        />
       </div>
     </div>
   );

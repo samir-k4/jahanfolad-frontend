@@ -10,7 +10,7 @@ import { getCleanErrorMessage } from "../../utils/errorHandler";
 const SHEET_WIDTH_PX = 794;
 const MIN_SHEET_HEIGHT_PX = 520;
 const REQUEST_HEADERS = Object.freeze({ "X-Branch-Id": "all" });
-export default function PaymentSlipModal({ isOpen, onClose, payment, basePath = "/employee-payments" }) {
+export default function PaymentSlipModal({ isOpen, onClose, payment, basePath = "/employee-payments", title, subtitle, sheetWidth = SHEET_WIDTH_PX, minSheetHeight = MIN_SHEET_HEIGHT_PX, fixedSheetHeight = null }) {
   useBodyScrollLock(isOpen);
   const { t } = useTranslation("salary");
   const paymentId = payment?.id;
@@ -33,12 +33,16 @@ export default function PaymentSlipModal({ isOpen, onClose, payment, basePath = 
       htmlPath,
       pdfPath,
       buildPayload,
-      fallbackFilename: () => `${payment?.receipt_number || t("slip.fallbackFile")}.pdf`,
+      fallbackFilename: () => {
+        const supplier = payment?.supplier?.name || payment?.seller || "فروشنده";
+        const number = payment?.payment_number || payment?.receipt_number || payment?.id || "";
+        return `رسید پرداختی فروشنده ${supplier} ${number}.pdf`;
+      },
       onError,
       method: "GET",
       headers: REQUEST_HEADERS,
     });
-  const [sheetHeight, setSheetHeight] = useReportFrameHeight(iframeRef, MIN_SHEET_HEIGHT_PX);
+  const [sheetHeight, setSheetHeight] = useReportFrameHeight(iframeRef, minSheetHeight);
   if (!isOpen || !payment) return null;
   const busy = isDownloading || isLoadingPreview;
   return createPortal(
@@ -54,14 +58,18 @@ export default function PaymentSlipModal({ isOpen, onClose, payment, basePath = 
             </span>
             <div className="min-w-0">
               <h3 className="text-section-title text-gray-900 whitespace-normal break-words">
-                {t("slip.modalTitle", { name: payment.employee?.full_name || "" })}
+                {title || t("slip.modalTitle", { name: payment.employee?.full_name || "" })}
               </h3>
               <p className="text-caption-text text-gray-500 font-medium">
                 <span className="font-mono" dir="ltr">
-                  {payment.receipt_number}
+                  {subtitle || payment.receipt_number}
                 </span>
-                {" · "}
-                {payment.shamsi_month_name} {payment.shamsi_year}
+                {!subtitle && (
+                  <>
+                    {" · "}
+                    {payment.shamsi_month_name} {payment.shamsi_year}
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -87,7 +95,7 @@ export default function PaymentSlipModal({ isOpen, onClose, payment, basePath = 
               title={t("slip.iframeTitle")}
               sandbox="allow-scripts allow-modals"
               className="bg-white shadow-lg border border-gray-300 rounded-card"
-              style={{ width: `${SHEET_WIDTH_PX}px`, height: `${sheetHeight}px`, border: "none" }}
+              style={{ width: `${sheetWidth}px`, height: `${fixedSheetHeight || sheetHeight}px`, border: "none", overflow: "hidden" }}
             />
           )}
         </div>

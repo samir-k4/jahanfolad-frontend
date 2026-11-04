@@ -45,6 +45,7 @@ const SellersPage = lazy(() => import("./pages/SellersPage"));
 const SupplierPaymentsPage = lazy(() => import("./pages/SupplierPaymentsPage"));
 const SupplierPaymentListPage = lazy(() => import("./pages/SupplierPaymentListPage"));
 const SupplierPaymentCreatePage = lazy(() => import("./pages/SupplierPaymentCreatePage"));
+const SupplierAccountPage = lazy(() => import("./pages/SupplierAccountPage"));
 const SellerCreatePage = lazy(() => import("./pages/SellerCreatePage"));
 const PurchaseCreatePage = lazy(() => import("./pages/PurchaseCreatePage"));
 const Login = lazy(() => import("./pages/Login"));
@@ -314,7 +315,7 @@ export default function App() {
           </NavGroup>
           <NavGroup pages={["customers"]}>
             <div className="relative group cursor-pointer">
-              <div className={`${getNavItemClass(isRouteActive(["/sellers", "/seller-payments"]))} space-x-1 space-x-reverse`}>
+              <div className={`${getNavItemClass(isRouteActive(["/sellers", "/seller-payables"]))} space-x-1 space-x-reverse`}>
                 <span>{t("navigation.groups.sellers")}</span>
                 <ChevronDown size={14} />
               </div>
@@ -325,13 +326,6 @@ export default function App() {
                   className="w-full text-right block px-4 py-3 hover:bg-gray-100 border-b border-gray-100 text-gray-700"
                 >
                   {t("navigation.pages.sellers")}
-                </PageLink>
-                <PageLink
-                  page="incomes"
-                  to="/seller-payments"
-                  className="w-full text-right block px-4 py-3 hover:bg-gray-100 text-gray-700"
-                >
-                  {t("navigation.pages.sellerPayments")}
                 </PageLink>
                 <PageLink
                   page="incomes"
@@ -918,6 +912,14 @@ export default function App() {
             element={
               <RequirePage page={pageForPath("/sellers")}>
                 <SellersPage />
+              </RequirePage>
+            }
+          />
+          <Route
+            path="/sellers/:id"
+            element={
+              <RequirePage page={pageForPath("/sellers/:id")}>
+                <SupplierAccountPage />
               </RequirePage>
             }
           />
