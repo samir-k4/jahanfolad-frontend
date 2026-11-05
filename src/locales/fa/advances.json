@@ -102,6 +102,29 @@
     "subtitle": "مشاهده وضعیت امانت، ریز مصارف ثبت‌شده، چاپ سند رسمی و تسویه نهایی",
     "title": "جزئیات و صورت حساب امانت",
     "totalSpent": "مجموع مصارف انجام‌شده"
+    ,"topupButton": "افزایش امانت",
+    "topupCount": "{{count}} افزایش",
+    "topupsTitle": "افزایش‌های ثبت‌شده امانت",
+    "topupDate": "تاریخ",
+    "topupNotes": "توضیحات",
+    "topupAmount": "مبلغ افزایش"
+  },
+  "topup": {
+    "title": "افزایش مبلغ امانت",
+    "amount": "مبلغ افزایش",
+    "notes": "توضیحات",
+    "notesPlaceholder": "دلیل یا توضیح افزایش مبلغ...",
+    "currentAvailable": "مانده فعلی: {{amount}} {{currency}}",
+    "vault": "صندوق پرداخت",
+    "vaultPlaceholder": "صندوق پرداخت را انتخاب کنید...",
+    "vaultSearch": "جستجوی صندوق...",
+    "vaultRequired": "انتخاب صندوق پرداخت الزامی است.",
+    "amountRequired": "مبلغ معتبر و بزرگتر از صفر وارد کنید.",
+    "error": "خطا در افزایش مبلغ امانت",
+    "created": "مبلغ امانت با موفقیت افزایش یافت.",
+    "cancel": "انصراف",
+    "submit": "ثبت افزایش امانت",
+    "submitting": "در حال ثبت..."
   },
   "expenseModal": {
     "advancePlaceholder": "انتخاب امانت شخص گیرنده...",

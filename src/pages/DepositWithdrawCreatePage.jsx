@@ -74,7 +74,7 @@ export default function DepositWithdrawCreatePage() {
   const [savingMember, setSavingMember] = useState(false);
   const [currency, setCurrency] = useState("AFN");
   const [amount, setAmount] = useState("");
-  const [exchangeRate, setExchangeRate] = useState("70.00");
+  const [exchangeRate, setExchangeRate] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [referenceNumber, setReferenceNumber] = useState("");
   const [description, setDescription] = useState("");
@@ -130,7 +130,11 @@ export default function DepositWithdrawCreatePage() {
       if (tx.member_id) setSelectedMemberId(String(tx.member_id));
       if (tx.currency) setCurrency(tx.currency);
       if (tx.amount) setAmount(String(tx.amount));
-      if (tx.exchange_rate) setExchangeRate(String(tx.exchange_rate));
+      setExchangeRate(
+        tx.exchange_rate !== null && tx.exchange_rate !== undefined
+          ? String(tx.exchange_rate)
+          : "",
+      );
       if (tx.receipt_type) setPaymentMethod(tx.receipt_type);
       if (tx.reference_number) setReferenceNumber(tx.reference_number);
       if (tx.notes) setDescription(tx.notes);

@@ -12,6 +12,7 @@ import {
   ZoomIn,
   ZoomOut,
   Eye,
+  RefreshCw,
 } from "lucide-react";
 import DatePicker from "react-multi-date-picker";
 import { DateObject, persian, persian_af } from "../../utils/dateHelpers";
@@ -96,6 +97,21 @@ export default function TransactionReportModal({
       }).catch(() => {});
     }
   }, [isOpen]);
+  useEffect(() => {
+    if (viewMode !== "preview") return undefined;
+
+    const fitReportToWindow = () => {
+      const availableWidth = window.innerWidth * 0.9;
+      const availableHeight = window.innerHeight * 0.8;
+      const widthScale = availableWidth / 1123;
+      const heightScale = availableHeight / 794;
+      setZoomScale(Math.max(0.6, Math.min(1, widthScale, heightScale)));
+    };
+
+    fitReportToWindow();
+    window.addEventListener("resize", fitReportToWindow);
+    return () => window.removeEventListener("resize", fitReportToWindow);
+  }, [viewMode]);
   if (!isOpen) return null;
   const handlePreset = (preset) => {
     setActivePreset(preset);
@@ -443,6 +459,16 @@ export default function TransactionReportModal({
               </button>
               <button
                 type="button"
+                onClick={handleFetchReportData}
+                disabled={loading}
+                title={t("actions.refresh")}
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-btn text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+                <span>{t("actions.refresh")}</span>
+              </button>
+              <button
+                type="button"
                 onClick={handlePrint}
                 className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-btn text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
               >
@@ -472,7 +498,7 @@ export default function TransactionReportModal({
               </button>
             </div>
           </div>
-          <div className="flex-1 bg-slate-200/80 p-4 sm:p-6 overflow-auto flex justify-center items-start">
+          <div className="flex-1 min-h-0 bg-slate-200/80 p-4 sm:p-6 overflow-auto flex justify-center items-start">
             <div
               className="bg-white shadow-2xl rounded-sm transition-transform duration-100 origin-top overflow-hidden border border-gray-300"
               style={{

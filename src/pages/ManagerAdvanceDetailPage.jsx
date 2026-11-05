@@ -12,12 +12,14 @@ import {
   Home,
   Info,
   Pencil,
+  PlusCircle,
 } from "lucide-react";
 import DateObject from "react-date-object";
 import persian from "react-date-object/calendars/persian";
 import persian_af from "../utils/persian_af";
 import { TooltipButton, DeleteConfirmationModal, DocumentPreviewModal, usePagePerms } from "../components/common";
 import ManagerExpenseAddModal from "../components/manager_advances/ManagerExpenseAddModal";
+import ManagerAdvanceTopupModal from "../components/manager_advances/ManagerAdvanceTopupModal";
 import ExpenseDetailsModal from "../components/expenses/ExpenseDetailsModal";
 import ExpenseEditModal from "../components/expenses/ExpenseEditModal";
 import { useTranslation } from "react-i18next";
@@ -38,6 +40,7 @@ export default function ManagerAdvanceDetailPage() {
   const [advance, setAdvance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showExpenseForm, setShowExpenseForm] = useState(false);
+  const [showTopupForm, setShowTopupForm] = useState(false);
   const [showSettleModal, setShowSettleModal] = useState(false);
   const [settleSubmitting, setSettleSubmitting] = useState(false);
   const [showVoucherModal, setShowVoucherModal] = useState(false);
@@ -151,7 +154,8 @@ export default function ManagerAdvanceDetailPage() {
   }
   const isOpen = advance.status === "open";
   const receiverName = advance.receiver_name || advance.employee?.full_name || t("detail.receiverFallback");
-  const spentPercent = advance.amount > 0 ? Math.min(100, Math.round((advance.total_spent / advance.amount) * 100)) : 0;
+  const totalReceived = Number(advance.total_received ?? advance.amount ?? 0);
+  const spentPercent = totalReceived > 0 ? Math.min(100, Math.round((advance.total_spent / totalReceived) * 100)) : 0;
   return (
     <div className="w-full space-y-4 font-sans" dir="rtl">
       <nav aria-label="Breadcrumb" className="flex items-center flex-wrap gap-2 text-xs font-bold text-gray-500">
@@ -188,6 +192,15 @@ export default function ManagerAdvanceDetailPage() {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setShowTopupForm(true)}
+            disabled={!isOpen || !canCreate}
+            className="inline-flex items-center gap-1.5 rounded-btn bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <PlusCircle size={15} />
+            <span>{t("detail.topupButton")}</span>
+          </button>
           <button
             type="button"
             onClick={fetchAdvance}
@@ -291,10 +304,12 @@ export default function ManagerAdvanceDetailPage() {
             </div>
             <div className="mt-2">
               <span className="text-xl font-black font-mono text-gray-900 block" dir="ltr">
-                {fmt(advance.amount)}
+                {fmt(totalReceived)}
               </span>
             </div>
-            <div className="mt-2 pt-2 border-t border-gray-100 text-3xs text-gray-400">{t("detail.initialWithdraw")}</div>
+            <div className="mt-2 pt-2 border-t border-gray-100 text-3xs text-gray-400">
+              {t("detail.initialWithdraw")} · {t("detail.topupCount", { count: advance.topups?.length || 0 })}
+            </div>
           </div>
           <div className="bg-white rounded-card border border-gray-200 p-4 shadow-2xs flex flex-col justify-between">
             <div className="flex items-center justify-between">
@@ -353,6 +368,35 @@ export default function ManagerAdvanceDetailPage() {
           </div>
         </div>
       </div>
+      {(advance.topups?.length || 0) > 0 && (
+        <div className="bg-white rounded-table border border-emerald-200 shadow-2xs overflow-hidden">
+          <div className="px-5 py-3 border-b border-emerald-100 bg-emerald-50/50">
+            <h3 className="text-sm font-bold text-emerald-900">{t("detail.topupsTitle")}</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-right border-collapse text-sm">
+              <thead>
+                <tr className="bg-emerald-50 text-emerald-900 text-xs font-bold">
+                  <th className="py-2 px-3 text-center">#</th>
+                  <th className="py-2 px-3">{t("detail.topupDate")}</th>
+                  <th className="py-2 px-3">{t("detail.topupNotes")}</th>
+                  <th className="py-2 px-3 text-left">{t("detail.topupAmount")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {advance.topups.map((topup, index) => (
+                  <tr key={topup.id} className="border-t border-emerald-100">
+                    <td className="py-2 px-3 text-center text-gray-500">{index + 1}</td>
+                    <td className="py-2 px-3 font-mono" dir="ltr">{toEnglishDigits(topup.shamsi_date || "—")}</td>
+                    <td className="py-2 px-3 text-gray-700">{topup.notes || "—"}</td>
+                    <td className="py-2 px-3 text-left font-mono font-bold text-emerald-700" dir="ltr">+{fmt(topup.amount)} {advance.currency}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
       <div className="bg-white rounded-table border border-gray-200 shadow-2xs overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-200 bg-white flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2">
@@ -594,6 +638,12 @@ export default function ManagerAdvanceDetailPage() {
           setShowExpenseForm(false);
           fetchAdvance();
         }}
+      />
+      <ManagerAdvanceTopupModal
+        isOpen={showTopupForm}
+        advance={advance}
+        onClose={() => setShowTopupForm(false)}
+        onDone={fetchAdvance}
       />
       <ExpenseDetailsModal
         isOpen={Boolean(expenseToView)}

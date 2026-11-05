@@ -41,7 +41,7 @@ export default function DepositWithdrawModal({
   const [docNumber, setDocNumber] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [memberId, setMemberId] = useState("");
-  const [exchangeRate, setExchangeRate] = useState("70");
+  const [exchangeRate, setExchangeRate] = useState("");
   const [categories, setCategories] = useState([]);
   const [members, setMembers] = useState([]);
   const categoryOptions = [{ value: "", label: t("depositWithdraw.categoryPlaceholder") }, ...categories.map((c) => ({ value: String(c.id), label: c.name }))];
@@ -100,7 +100,7 @@ export default function DepositWithdrawModal({
       setTimePeriod(currentTime?.period || "AM");
       setCategoryId("");
       setMemberId("");
-      setExchangeRate("70");
+      setExchangeRate("");
       fetchNextDocNumber();
       fetchCategories(initialType);
       fetchMembers();
@@ -115,7 +115,7 @@ export default function DepositWithdrawModal({
     setTransactionType(newType);
     setCategoryId("");
     setMemberId("");
-    setExchangeRate("70");
+    setExchangeRate("");
     fetchCategories(newType);
   };
   const handleMemberSelect = (selectedId) => {
