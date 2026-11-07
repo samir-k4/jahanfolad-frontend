@@ -141,7 +141,10 @@ export default function ProductFormModal({
       onSaved?.();
       onClose();
     } catch (err) {
-      showToast.error(step || t("messages.genericError"));
+      const validationMessage = Object.values(err?.data?.errors || {})
+        .flat()
+        .find((message) => typeof message === "string");
+      showToast.error(validationMessage || err?.message || step || t("messages.genericError"));
     } finally {
       setSaving(false);
     }

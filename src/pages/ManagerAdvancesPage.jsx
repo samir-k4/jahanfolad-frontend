@@ -344,11 +344,12 @@ export default function ManagerAdvancesPage() {
                   const spent = adv.total_spent || 0;
                   const remaining = adv.remaining ?? Math.max(0, adv.amount - spent);
                   const isOpen = adv.status === "open";
+                  const isCancelled = adv.status === "cancelled";
                   const displayName = adv.receiver_name || adv.employee?.full_name || "—";
                   const rowIndex = (currentPage - 1) * perPage + index + 1;
                   const docCode = String(adv.id).padStart(4, "0");
                   return (
-                    <tr key={adv.id} className="hover:bg-amber-50/40 transition-colors even:bg-slate-50/40">
+                    <tr key={adv.id} className={isCancelled ? "bg-rose-50 text-rose-900" : "hover:bg-amber-50/40 transition-colors even:bg-slate-50/40"}>
                       <td className="py-2 px-2 text-center text-gray-400 border border-gray-200 font-mono text-table-cell-text font-normal whitespace-nowrap">
                         {rowIndex}
                       </td>
@@ -388,7 +389,9 @@ export default function ManagerAdvancesPage() {
                         {adv.created_by || "—"}
                       </td>
                       <td className="py-2 px-3 text-center border border-gray-200 whitespace-nowrap">
-                        {isOpen ? (
+                        {isCancelled ? (
+                          <span className="inline-flex items-center bg-rose-100 text-rose-800 border border-rose-300 text-table-cell-text font-bold px-2 py-0.5 rounded-badge">{t("status.cancelled")}</span>
+                        ) : isOpen ? (
                           <span className="inline-flex items-center bg-amber-50 text-amber-700 border border-amber-200 text-table-cell-text font-medium px-2 py-0.5 rounded-badge">{t("status.open")}</span>
                         ) : (
                           <span className="inline-flex items-center bg-emerald-50 text-emerald-700 border border-emerald-200 text-table-cell-text font-medium px-2 py-0.5 rounded-badge">{t("status.settled")}</span>
@@ -399,7 +402,8 @@ export default function ManagerAdvancesPage() {
                           <TooltipButton
                             tooltip={t("table.detailTip")}
                             onClick={() => navigate(`/manager-advances/${adv.id}`)}
-                            className="w-7 h-7 flex items-center justify-center bg-white text-gray-400 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-300 rounded-btn border border-gray-200 transition-colors cursor-pointer"
+                            disabled={isCancelled}
+                            className="w-7 h-7 flex items-center justify-center bg-white text-gray-400 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-300 rounded-btn border border-gray-200 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                           >
                             <Info size={14} />
                           </TooltipButton>
@@ -407,7 +411,8 @@ export default function ManagerAdvancesPage() {
                             <TooltipButton
                               tooltip={t("table.deleteTip")}
                               onClick={() => setAdvanceToDelete(adv)}
-                              className="w-7 h-7 flex items-center justify-center bg-white text-gray-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 rounded-btn border border-gray-200 transition-colors cursor-pointer"
+                              disabled={!isOpen}
+                              className="w-7 h-7 flex items-center justify-center bg-white text-gray-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 rounded-btn border border-gray-200 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                             >
                               <Trash2 size={14} />
                             </TooltipButton>

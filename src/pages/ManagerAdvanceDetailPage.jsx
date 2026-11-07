@@ -153,6 +153,7 @@ export default function ManagerAdvanceDetailPage() {
     );
   }
   const isOpen = advance.status === "open";
+  const isCancelled = advance.status === "cancelled";
   const receiverName = advance.receiver_name || advance.employee?.full_name || t("detail.receiverFallback");
   const totalReceived = Number(advance.total_received ?? advance.amount ?? 0);
   const spentPercent = totalReceived > 0 ? Math.min(100, Math.round((advance.total_spent / totalReceived) * 100)) : 0;
@@ -212,7 +213,8 @@ export default function ManagerAdvanceDetailPage() {
           <button
             type="button"
             onClick={() => setShowVoucherModal(true)}
-            className="px-3.5 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-btn hover:bg-gray-50 transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+            disabled={isCancelled}
+            className="px-3.5 py-2 text-xs font-bold text-gray-700 bg-white border border-gray-300 rounded-btn hover:bg-gray-50 transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Printer size={15} />
             <span>{t("detail.printVoucher")}</span>
@@ -429,17 +431,20 @@ export default function ManagerAdvanceDetailPage() {
                 <th className="py-1.5 px-2 text-center border border-gray-200 min-w-[75px]">{t("detail.expenseTime")}</th>
                 <th className="py-1.5 px-2.5 text-center border border-gray-200 min-w-[100px]">{t("detail.expenseAmount")}</th>
                 <th className="py-1.5 px-2.5 text-right border border-gray-200">{t("table.createdBy", { ns: "common" })}</th>
+                <th className="py-1.5 px-2 text-center border border-gray-200 min-w-[75px]">{t("table.status")}</th>
                 {(canEdit || canDelete) && <th className="py-1.5 px-2 text-center w-28 border border-gray-200">{t("table.actions")}</th>}
               </tr>
             </thead>
             <tbody className="bg-white">
               {(advance.expenses?.length || 0) === 0 ? (
                 <tr>
-                  <td colSpan={(canEdit || canDelete) ? 10 : 9} className="p-10 text-center text-gray-400 text-sm">{t("detail.noExpenses")}</td>
+                  <td colSpan={(canEdit || canDelete) ? 11 : 10} className="p-10 text-center text-gray-400 text-sm">{t("detail.noExpenses")}</td>
                 </tr>
               ) : (
-                advance.expenses.map((exp, idx) => (
-                  <tr key={exp.id} className="hover:bg-amber-50/40 transition-colors even:bg-slate-50/40">
+                advance.expenses.map((exp, idx) => {
+                  const isReversed = Boolean(exp.is_reversed || exp.reversed_at);
+                  return (
+                  <tr key={exp.id} className={isReversed ? "bg-rose-50 text-rose-900" : "hover:bg-amber-50/40 transition-colors even:bg-slate-50/40"}>
                     <td className="py-2 px-1.5 text-center text-gray-400 border border-gray-200 font-mono text-sm font-normal">
                       {idx + 1}
                     </td>
@@ -472,6 +477,11 @@ export default function ManagerAdvanceDetailPage() {
                         </span>
                       )}
                     </td>
+                    <td className="py-2 px-2 text-center border border-gray-200 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-badge text-table-cell-text font-bold ${isReversed ? "bg-rose-100 text-rose-800 border border-rose-300" : "bg-emerald-50 text-emerald-700 border border-emerald-200"}`}>
+                        {isReversed ? t("status.cancelled") : t("status.paid")}
+                      </span>
+                    </td>
                     {(canEdit || canDelete) && (
                       <td className="py-1.5 px-2 text-center border border-gray-200">
                         <div className="flex items-center justify-center gap-1">
@@ -485,13 +495,14 @@ export default function ManagerAdvanceDetailPage() {
                               created_by: exp.created_by,
                               source_title: `امانت مدیریت — ${advance.receiver_name || "—"}`,
                             })}
-                            className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-300 rounded border border-gray-200 transition-colors cursor-pointer"
+                            disabled={isReversed}
+                            className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-300 rounded border border-gray-200 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                           >
                             <Info size={17} />
                           </TooltipButton>
                           {canEdit && (
                             <TooltipButton
-                              tooltip={isOpen && !exp.is_reversed ? t("detail.editExpense") : t("detail.editExpenseDisabled")}
+                              tooltip={isOpen && !isReversed ? t("detail.editExpense") : t("detail.editExpenseDisabled")}
                               onClick={() => setExpenseToEdit({
                                 ...exp,
                                 category_id: exp.category_id || exp.expense_category_id,
@@ -499,20 +510,21 @@ export default function ManagerAdvanceDetailPage() {
                                 transaction_date: exp.transaction_date || exp.shamsi_date,
                                 update_url: `/manager-advances/${id}/expenses/${exp.id}`,
                               })}
-                              disabled={!isOpen || exp.is_reversed}
-                              className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 rounded border border-gray-200 transition-colors cursor-pointer disabled:cursor-not-allowed"
+                              disabled={!isOpen || isReversed}
+                              className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-300 rounded border border-gray-200 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                             >
                               <Pencil size={15} />
                             </TooltipButton>
                           )}
-                          {canDelete && !exp.is_reversed && (
+                          {canDelete && (
                             <TooltipButton
-                              tooltip={t("detail.deleteExpenseTip")}
+                              tooltip={isReversed ? t("detail.editExpenseDisabled") : t("detail.deleteExpenseTip")}
                               onClick={() => {
                                 setExpenseReversalReason("");
                                 setExpenseToDelete(exp);
                               }}
-                              className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 rounded border border-gray-200 transition-colors cursor-pointer"
+                              disabled={isReversed || !isOpen}
+                              className="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-300 rounded border border-gray-200 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                             >
                               <Trash2 size={15} />
                             </TooltipButton>
@@ -521,17 +533,18 @@ export default function ManagerAdvanceDetailPage() {
                       </td>
                     )}
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
             {(advance.expenses?.length || 0) > 0 && (
               <tfoot>
                 <tr className="bg-slate-50 border-t border-gray-200 font-bold text-sm">
-                  <td colSpan={7} className="py-2 px-3 text-gray-800 border border-gray-200">{t("detail.expensesTotal")}</td>
+                  <td colSpan={8} className="py-2 px-3 text-gray-800 border border-gray-200">{t("detail.expensesTotal")}</td>
                   <td className="py-2 px-3 text-center font-mono font-bold text-rose-700 text-sm border border-gray-200" dir="ltr">
                     −{fmt(advance.total_spent)} {advance.currency}
                   </td>
-                  <td colSpan={(canEdit || canDelete) ? 2 : 1} className="border border-gray-200" />
+                  <td colSpan={(canEdit || canDelete) ? 3 : 2} className="border border-gray-200" />
                 </tr>
               </tfoot>
             )}

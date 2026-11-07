@@ -86,6 +86,7 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
     total > 0 &&
     (!!receiverId || receiverName.trim() !== "") &&
     Boolean(selectedVault) &&
+    selectedVault.status === "active" &&
     (!needsRate || enteredRate > 0) &&
     !insufficientBalance;
   const submit = async (event) => {
@@ -133,7 +134,7 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
   };
   const vaultOptions = vaults.map((vault) => ({
     value: `${vault.source_type}:${vault.id}`,
-    label: `${vault.source_type === "manager_advance" ? "امانت مدیریت" : "صندوق"}: ${vault.name} — ${money(vault.current_balance)} ${String(vault.currency || "AFN").toUpperCase()}`,
+    label: `${vault.source_type === "manager_advance" ? "امانت مدیریت" : "صندوق"}: ${vault.name} — ${money(vault.current_balance)} ${String(vault.currency || "AFN").toUpperCase()}${vault.status !== "active" ? " — غیرفعال" : ""}`,
   }));
   const defaultRateForVault = (currency) => {
     if (currency === "USD" && usdRate > 0) return (1 / usdRate).toFixed(6);
@@ -365,6 +366,11 @@ export default function OvertimePayoutModal({ isOpen, onClose, date, branchId, o
             )}
             {selectedVault && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {selectedVault.status !== "active" && (
+                  <p className="sm:col-span-2 text-caption-text text-danger-text">
+                    این صندوق غیرفعال است و برای کسر مبلغ قابل انتخاب نیست.
+                  </p>
+                )}
                 <div className="rounded-card border border-line bg-surface-muted px-3 py-2">
                   <span className="block text-caption-text text-content-subtle">{t("payout.vaultBalance")}</span>
                   <span className="font-mono font-bold text-content-strong" dir="ltr">
