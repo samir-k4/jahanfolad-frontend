@@ -7,7 +7,7 @@ import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import useVaults from "../../hooks/useVaults";
 import { formatToGregorian } from "../../utils/dateHelpers";
 import { getCleanErrorMessage } from "../../utils/errorHandler";
-import { ALL_BRANCHES, RUN_STATE, defaultVaultId, vaultOption } from "../../constants/salaryDomain";
+import { ALL_BRANCHES, PAYMENT_SOURCE, RUN_STATE, defaultVaultId, vaultOption } from "../../constants/salaryDomain";
 import CustomDropdown from "../common/CustomDropdown";
 const TILE = "bg-gray-50 border border-gray-200 rounded-card p-3";
 const money = (value) => Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
@@ -29,13 +29,34 @@ export default function SalaryBatchSettleModal({
   const [cancelAcknowledged, setCancelAcknowledged] = useState(false);
   const [collectorIds, setCollectorIds] = useState([]);
   const [vaultId, setVaultId] = useState("");
+  const [managerAdvances, setManagerAdvances] = useState([]);
   const { vaults, loading: vaultsLoading, error: vaultsError } = useVaults(isOpen && !run);
   const cashVaults = useMemo(
     () =>
       vaults.filter((vault) => String(vault.currency || "AFN").trim().toUpperCase() === "AFN"),
     [vaults]
   );
-  const vaultOptions = useMemo(() => cashVaults.map(vaultOption), [cashVaults]);
+  const vaultOptions = useMemo(
+    () => [
+      ...cashVaults.map((vault) => ({ ...vaultOption(vault), value: `vault:${vault.id}` })),
+      ...managerAdvances
+        .filter((advance) => advance.status === "open" && String(advance.currency || "AFN").toUpperCase() === "AFN")
+        .map((advance) => ({
+          value: `advance:${advance.id}`,
+          label: `${advance.receiver_name || `امانت #${advance.id}`} (امانت مدیریت - ${advance.currency})`,
+        })),
+    ],
+    [cashVaults, managerAdvances]
+  );
+  useEffect(() => {
+    if (!isOpen || run) return undefined;
+    const controller = new AbortController();
+    fetch(apiUrl("/manager-advances?status=open&per_page=100"), { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => setManagerAdvances(Array.isArray(body?.data) ? body.data : []))
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, [isOpen, run]);
   useEffect(() => {
     if (!isOpen) return;
     setErrorMessage("");
@@ -50,11 +71,11 @@ export default function SalaryBatchSettleModal({
   useEffect(() => {
     if (!isOpen) return;
     setVaultId((current) =>
-      current && cashVaults.some((vault) => String(vault.id) === current)
+      current && vaultOptions.some((option) => option.value === current)
         ? current
-        : defaultVaultId(cashVaults)
+        : (defaultVaultId(cashVaults) ? `vault:${defaultVaultId(cashVaults)}` : "")
     );
-  }, [isOpen, cashVaults]);
+  }, [isOpen, cashVaults, vaultOptions]);
   const monthName = afghanMonthInfo?.shamsi_month_name || t("page.currentMonth");
   const yearName = afghanMonthInfo?.shamsi_year || "";
   const pending = useMemo(
@@ -106,7 +127,9 @@ export default function SalaryBatchSettleModal({
         shamsi_month: afghanMonthInfo?.shamsi_month,
         payment_date: formatToGregorian(new Date()),
         employee_ids: chosen.map((row) => row.id),
-        vault_id: vaultId,
+        payment_source: vaultId.startsWith("advance:") ? PAYMENT_SOURCE.MANAGER_ADVANCE : PAYMENT_SOURCE.VAULT_DIRECT,
+        vault_id: vaultId.startsWith("vault:") ? Number(vaultId.replace("vault:", "")) : undefined,
+        manager_advance_id: vaultId.startsWith("advance:") ? Number(vaultId.replace("advance:", "")) : undefined,
       });
       onDone?.(data?.message);
       onClose();

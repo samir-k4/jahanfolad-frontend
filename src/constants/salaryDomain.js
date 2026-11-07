@@ -54,6 +54,8 @@ export const PAYMENT_SOURCE = {
   ALL: "all",
   HAND: "hand",
   PAYROLL: "payroll",
+  VAULT_DIRECT: "vault_direct",
+  MANAGER_ADVANCE: "manager_advance",
 };
 export const DATE_PRESET = {
   CURRENT_MONTH: "current_month",

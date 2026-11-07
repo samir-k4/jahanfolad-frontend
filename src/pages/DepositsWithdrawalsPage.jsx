@@ -277,20 +277,20 @@ export default function DepositsWithdrawalsPage() {
         <div className="flex items-center gap-2.5 flex-wrap">
           <Link
             to="/deposits-withdrawals/create?type=deposit"
-            className="px-4 py-2 text-btn-text font-bold text-content-inverse bg-positive hover:bg-positive-strong rounded-btn transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 text-caption-text font-bold text-content-inverse bg-positive hover:bg-positive-strong rounded-btn transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
           >
             <span>{t("actions.createDeposit")}</span>
           </Link>
           <Link
             to="/deposits-withdrawals/create?type=withdraw"
-            className="px-4 py-2 text-btn-text font-bold text-content-inverse bg-danger-text hover:bg-danger-text/90 rounded-btn transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 text-caption-text font-bold text-content-inverse bg-danger-text hover:bg-danger-text/90 rounded-btn transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
           >
             <span>{t("actions.createWithdraw")}</span>
           </Link>
           <button
             type="button"
             onClick={() => setShowReportModal(true)}
-            className="px-3.5 py-2 text-btn-text font-bold text-content-body bg-surface hover:bg-surface-muted border border-line-strong rounded-btn transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
+            className="px-3.5 py-2 text-caption-text font-bold text-content-body bg-surface hover:bg-surface-muted border border-line-strong rounded-btn transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
           >
             <Printer size={15} />
             <span>{t("actions.printReport")}</span>
@@ -299,36 +299,40 @@ export default function DepositsWithdrawalsPage() {
       </div>
       <div className="bg-surface rounded-table border border-line shadow-2xs overflow-hidden">
         <div className="border-b border-line bg-surface">
-          <div className="p-3.5 border-b border-line flex flex-wrap items-center gap-2">
-            <span className="text-label-text text-content-body whitespace-nowrap">{t("filters.rangeLabel")}</span>
-            <FilterPresetButtons
-              presets={datePresets}
-              activeKey={filterPreset}
-              onChange={applyDatePreset}
-              buttonClassName="px-3 py-1.5 rounded-btn text-xs"
-            />
-            <div className="flex items-center gap-2">
-              <span className="text-label-text text-content-body">{t("filters.dateFrom")}</span>
-              <DatePicker
-                value={filterStartDate}
-                onChange={(d) => { setFilterPreset("custom"); setFilterStartDate(d); }}
-                calendar={persian}
-                locale={persian_af}
-                format="YYYY/MM/DD"
-                portal
-                inputClass="w-28 h-8 font-mono text-center bg-surface border border-line-strong rounded-input px-2 text-xs outline-none focus:border-accent"
-              />
-              <span className="text-label-text text-content-body">{t("filters.dateTo")}</span>
-              <DatePicker
-                value={filterEndDate}
-                onChange={(d) => { setFilterPreset("custom"); setFilterEndDate(d); }}
-                calendar={persian}
-                locale={persian_af}
-                format="YYYY/MM/DD"
-                portal
-                inputClass="w-28 h-8 font-mono text-center bg-surface border border-line-strong rounded-input px-2 text-xs outline-none focus:border-accent"
+          <div className="p-3.5 border-b border-line flex flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-label-text text-content-body whitespace-nowrap">{t("filters.rangeLabel")}</span>
+              <FilterPresetButtons
+                presets={datePresets}
+                activeKey={filterPreset}
+                onChange={applyDatePreset}
+                buttonClassName="px-3 py-1.5 rounded-btn text-xs"
               />
             </div>
+            {filterPreset === "all" && (
+              <div className="flex flex-wrap items-center gap-2 pr-1">
+                <span className="text-label-text font-medium text-content-body">{t("filters.dateFrom")}</span>
+                <DatePicker
+                  value={filterStartDate}
+                  onChange={(d) => { setFilterPreset("all"); setFilterStartDate(d); }}
+                  calendar={persian}
+                  locale={persian_af}
+                  format="YYYY/MM/DD"
+                  portal
+                  inputClass="w-28 h-8 font-mono font-bold text-center bg-surface border border-line-strong rounded-input px-2 text-xs outline-none focus:border-accent"
+                />
+                <span className="text-label-text font-medium text-content-body">{t("filters.dateTo")}</span>
+                <DatePicker
+                  value={filterEndDate}
+                  onChange={(d) => { setFilterPreset("all"); setFilterEndDate(d); }}
+                  calendar={persian}
+                  locale={persian_af}
+                  format="YYYY/MM/DD"
+                  portal
+                  inputClass="w-28 h-8 font-mono font-bold text-center bg-surface border border-line-strong rounded-input px-2 text-xs outline-none focus:border-accent"
+                />
+              </div>
+            )}
           </div>
           <div className="p-3.5 bg-surface-muted flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
             <div className="relative flex-1 max-w-md">

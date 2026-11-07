@@ -26,6 +26,8 @@ export function BranchProvider({ children }) {
     enabled: isAuthenticated,
   });
   const branches = isAuthenticated ? cachedBranches : [];
+  const isMultiBranch = branches.length > 1;
+  const singleBranchId = branches.length === 1 ? String(branches[0].id) : "";
   const [pickedBranch, setPickedBranchState] = useState(() => {
     try {
       return localStorage.getItem("jfc_selected_branch") || "";
@@ -47,6 +49,17 @@ export function BranchProvider({ children }) {
     }
   }, [loginRevision, queryClient, user?.id]);
   useEffect(() => {
+    if (!isAuthenticated || !user?.id || isLoadingBranches || !isMultiBranch || pickedBranch) {
+      return;
+    }
+    try {
+      const remembered = localStorage.getItem(`jfc_remembered_branch_${user.id}`);
+      if (remembered) setPickedBranchState(remembered);
+    } catch (e) {
+      console.error(e);
+    }
+  }, [isAuthenticated, isLoadingBranches, isMultiBranch, pickedBranch, user?.id]);
+  useEffect(() => {
     if (error) {
       console.error(error);
     }
@@ -64,8 +77,6 @@ export function BranchProvider({ children }) {
       }),
     [queryClient, user?.id],
   );
-  const isMultiBranch = branches.length > 1;
-  const singleBranchId = branches.length === 1 ? String(branches[0].id) : "";
   const setPickedBranch = useCallback((branchId) => {
     const val = branchId || "";
     setPickedBranchState(val);
@@ -91,11 +102,18 @@ export function BranchProvider({ children }) {
   }, [branches, pickedBranch, setPickedBranch]);
   const selectedBranch = isMultiBranch ? pickedBranch : singleBranchId;
   const setSelectedBranch = useCallback(
-    (branchId) => {
+    (branchId, remember = false) => {
       if (!isMultiBranch) return;
       setPickedBranch(branchId);
+      if (remember && user?.id) {
+        try {
+          localStorage.setItem(`jfc_remembered_branch_${user.id}`, branchId);
+        } catch (e) {
+          console.error(e);
+        }
+      }
     },
-    [isMultiBranch, setPickedBranch],
+    [isMultiBranch, setPickedBranch, user?.id],
   );
   const onSwitchBranch = useCallback(() => {
     if (!isMultiBranch) return;

@@ -456,15 +456,9 @@ export default function DepositWithdrawCreatePage() {
     const d = String(gDate.getDate()).padStart(2, "0");
     const gregDate = `${y}-${m}-${d}`;
     const shamsiDate = toEnglishDigits(dateObj.format("YYYY/MM/DD"));
-    const categoryTitle = selectedCategoryObj?.name || (isDeposit ? t("defaults.depositCategory") : t("defaults.withdrawCategory"));
     const handlerPerson = selectedHandler.trim();
     const beneficiaryPerson = partyName.trim();
-    const noteDetails = [
-      description.trim(),
-      t("note.category", { value: categoryTitle }),
-      t("note.party", { value: beneficiaryPerson }),
-      handlerPerson ? t("note.member", { value: handlerPerson }) : null,
-    ].filter(Boolean).join(" - ");
+    const noteDetails = description.trim();
     const formatted12Hour = `${timeStr} ${timePeriod === "PM" ? t("timeSuffix.pm") : t("timeSuffix.am")}`;
     if (!parseTimeParts(formatted12Hour)) {
       showToast.error(t("messages.invalidTime"));

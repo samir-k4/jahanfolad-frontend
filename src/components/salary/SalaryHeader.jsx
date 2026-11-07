@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Calendar, Building2, CheckCheck, Printer, Wallet } from "lucide-react";
+import { Calendar, Building2, CheckCheck, Printer, Wallet, ReceiptText } from "lucide-react";
 import DatePicker from "react-multi-date-picker";
 import persian from "react-date-object/calendars/persian";
 import { BranchSelect } from "../common";
@@ -95,6 +95,13 @@ export default function SalaryHeader({
           >
             <Wallet size={15} />
             <span>{t("header.advancePayments")}</span>
+          </Link>
+          <Link
+            to="/salaries/paid"
+            className={`${ACTION_BASE} bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 shadow-2xs`}
+          >
+            <ReceiptText size={15} className="text-gray-500" />
+            <span>{t("header.paidSalaries")}</span>
           </Link>
           <button
             type="button"

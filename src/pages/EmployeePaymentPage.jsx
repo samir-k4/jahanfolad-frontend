@@ -106,6 +106,8 @@ export default function EmployeePaymentPage() {
     error: expenseCategoriesError,
   } = useExpenseCategories();
   const [selectedVaultId, setSelectedVaultId] = useState("");
+  const [managerAdvances, setManagerAdvances] = useState([]);
+  const [paymentSource, setPaymentSource] = useState(PAYMENT_SOURCE.VAULT_DIRECT);
   const {
     activePreset,
     setActivePreset,
@@ -155,8 +157,16 @@ export default function EmployeePaymentPage() {
     return () => controller.abort();
   }, []);
   useEffect(() => {
-    setSelectedVaultId((current) => current || defaultVaultId(vaults));
+    setSelectedVaultId((current) => current || (defaultVaultId(vaults) ? `vault:${defaultVaultId(vaults)}` : ""));
   }, [vaults]);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(apiUrl("/manager-advances?status=open&per_page=100"), { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => setManagerAdvances(Array.isArray(body?.data) ? body.data : []))
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, []);
   useEffect(() => {
     const controller = new AbortController();
     fetch(apiUrl("/categories/salary_payment_type?active_only=1"), { signal: controller.signal })
@@ -272,7 +282,21 @@ export default function EmployeePaymentPage() {
       })),
     [employees, t, emDash]
   );
-  const vaultOptions = useMemo(() => vaults.map(vaultOption), [vaults]);
+  const vaultOptions = useMemo(
+    () => [
+      ...vaults.filter((vault) => String(vault.currency || "AFN").toUpperCase() === "AFN").map((vault) => ({
+        ...vaultOption(vault),
+        value: `vault:${vault.id}`,
+      })),
+      ...managerAdvances
+        .filter((advance) => advance.status === "open" && String(advance.currency || "AFN").toUpperCase() === "AFN")
+        .map((advance) => ({
+          value: `advance:${advance.id}`,
+          label: `${advance.receiver_name || `امانت #${advance.id}`} (امانت مدیریت - ${advance.currency})`,
+        })),
+    ],
+    [vaults, managerAdvances]
+  );
   const expenseCategoryOptions = useMemo(
     () => expenseCategories.map((category) => ({
       value: String(category.id),
@@ -299,6 +323,7 @@ export default function EmployeePaymentPage() {
     !submitting &&
     !expenseCategoriesLoading &&
     !!selectedEmployeeId &&
+    !!selectedVaultId &&
     !!expenseCategoryId &&
     parsedAmount > 0 &&
     (!exceedsAvailable || minusAcknowledged);
@@ -349,7 +374,11 @@ export default function EmployeePaymentPage() {
           employee_id: selectedEmployeeId,
           amount: parsedAmount,
           payment_date: gregorianDateStr,
-          vault_id: selectedVaultId || undefined,
+          payment_source: paymentSource,
+          vault_id: paymentSource === PAYMENT_SOURCE.VAULT_DIRECT ? selectedVaultId?.replace(/^vault:/, "") || undefined : undefined,
+          manager_advance_id: paymentSource === PAYMENT_SOURCE.MANAGER_ADVANCE
+            ? selectedVaultId?.replace(/^advance:/, "") || undefined
+            : undefined,
           expense_category_id: expenseCategoryId,
           payment_method: paymentMethod,
           payment_type_id: paymentTypeId || undefined,
@@ -396,7 +425,9 @@ export default function EmployeePaymentPage() {
   const beginEdit = (payment) => {
     setEditingPayment(payment);
     setSelectedEmployeeId(String(payment.employee_id || payment.employee?.id || ""));
-    setSelectedVaultId(String(payment.vault_id || payment.vault?.id || ""));
+    const advanceId = payment.manager_advance_id || payment.manager_advance?.id;
+    setPaymentSource(advanceId ? PAYMENT_SOURCE.MANAGER_ADVANCE : PAYMENT_SOURCE.VAULT_DIRECT);
+    setSelectedVaultId(advanceId ? `advance:${advanceId}` : `vault:${payment.vault_id || payment.vault?.id || ""}`);
     setAmount(String(payment.amount ?? ""));
     setPaymentMethod(payment.payment_method || PAYMENT_METHOD.CASH);
     setPaymentTypeId(String(payment.payment_type_id || ""));
@@ -446,7 +477,8 @@ export default function EmployeePaymentPage() {
     [t]
   );
   const sourceFilters = useMemo(
-    () => Object.values(PAYMENT_SOURCE).map((key) => ({ key, label: t(`payment.history.source.${key}`) })),
+    () => [PAYMENT_SOURCE.ALL, PAYMENT_SOURCE.HAND, PAYMENT_SOURCE.PAYROLL]
+      .map((key) => ({ key, label: t(`payment.history.source.${key}`) })),
     [t]
   );
   return (
@@ -638,13 +670,16 @@ export default function EmployeePaymentPage() {
             </div>
             <div className="min-w-0 z-999">
               <label className={LABEL}>
-                {t("payment.form.vault")} <span className="text-rose-600">*</span>
+                {t("payment.form.source")} <span className="text-rose-600">*</span>
               </label>
               <SearchableSelect
                 value={selectedVaultId}
-                onChange={setSelectedVaultId}
+                onChange={(value) => {
+                  setSelectedVaultId(value);
+                  setPaymentSource(String(value).startsWith("advance:") ? PAYMENT_SOURCE.MANAGER_ADVANCE : PAYMENT_SOURCE.VAULT_DIRECT);
+                }}
                 options={vaultOptions}
-                placeholder={t("payment.form.vaultPlaceholder")}
+                placeholder={t("payment.form.sourcePlaceholder")}
                 searchPlaceholder={t("payment.form.vaultSearch")}
                 disabled={Boolean(editingPayment)}
                 buttonClassName={FIELD}
@@ -955,7 +990,9 @@ export default function EmployeePaymentPage() {
                           </span>
                         </td>
                         <td className={`${CELL} whitespace-normal break-words`}>
-                          {dash(payment.vault?.name, emDash)}
+                          {payment.manager_advance
+                            ? `${dash(payment.manager_advance.receiver_name, emDash)} (امانت مدیریت)`
+                            : dash(payment.vault?.name, emDash)}
                         </td>
                         <td className={`${CELL} text-center font-mono font-bold`} dir="ltr">
                           {money(payment.amount)}

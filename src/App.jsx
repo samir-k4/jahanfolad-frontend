@@ -18,6 +18,7 @@ const EmployeePage = lazy(() => import("./pages/EmployeePage"));
 const EmployeeFormPage = lazy(() => import("./pages/EmployeeFormPage"));
 const EmployeeProfilePage = lazy(() => import("./pages/EmployeeProfilePage"));
 const SalaryPage = lazy(() => import("./pages/SalaryPage"));
+const PaidSalariesPage = lazy(() => import("./pages/PaidSalariesPage"));
 const EmployeePaymentPage = lazy(() => import("./pages/EmployeePaymentPage"));
 const WarehousePage = lazy(() => import("./pages/WarehousePage"));
 const ExpensesPage = lazy(() => import("./pages/ExpensesPage"));
@@ -672,6 +673,14 @@ export default function App() {
             element={
               <RequirePage page={pageForPath("/salaries/payment")}>
                 <EmployeePaymentPage />
+              </RequirePage>
+            }
+          />
+          <Route
+            path="/salaries/paid"
+            element={
+              <RequirePage page={pageForPath("/salaries")}>
+                <PaidSalariesPage />
               </RequirePage>
             }
           />

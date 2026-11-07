@@ -13,7 +13,7 @@ import SearchableSelect from "../common/SearchableSelect";
 import { toEnglishDigits } from "../../utils";
 const fmt = (n) => Number(n || 0).toLocaleString("en-US", {
   minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
+  maximumFractionDigits: 0,
 });
 export default function ManagerExpenseAddModal({
   isOpen,

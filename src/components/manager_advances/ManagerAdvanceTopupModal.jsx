@@ -67,7 +67,7 @@ export default function ManagerAdvanceTopupModal({ isOpen, advance, onClose, onD
         </div>
         <div className="space-y-4 p-5">
           <div className="rounded-lg bg-slate-50 p-3 text-xs text-gray-600">
-            {t("topup.currentAvailable", { amount: Number(advance.remaining || 0).toLocaleString("en-US"), currency: advance.currency })}
+            {t("topup.currentAvailable", { amount: Number(advance.remaining || 0).toLocaleString("en-US", { maximumFractionDigits: 0 }), currency: advance.currency })}
           </div>
           <label className="block text-xs font-bold text-gray-700">
             {t("topup.vault")} *

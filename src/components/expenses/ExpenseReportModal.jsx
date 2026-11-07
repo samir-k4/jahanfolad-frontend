@@ -74,6 +74,7 @@ export default function ExpenseReportModal({ isOpen, onClose, expenseType = null
   const [paymentSource, setPaymentSource] = useState("all");
   const [filterCurrency, setFilterCurrency] = useState("all");
   const [filterVault, setFilterVault] = useState("all");
+  const [managerAdvances, setManagerAdvances] = useState([]);
   const [sortBy, setSortBy] = useState("date_desc");
   const [reportTitle, setReportTitle] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
@@ -112,6 +113,18 @@ export default function ExpenseReportModal({ isOpen, onClose, expenseType = null
       }
     };
     loadCategories();
+    const loadManagerAdvances = async () => {
+      try {
+        const res = await fetch(apiUrl("/manager-advances?status=open&per_page=100"));
+        if (!res.ok) throw new Error("failed");
+        const json = await res.json();
+        setManagerAdvances(Array.isArray(json?.data) ? json.data : []);
+      } catch (err) {
+        console.error(err);
+        setManagerAdvances([]);
+      }
+    };
+    loadManagerAdvances();
   }, [isOpen, applyPreset, typeSlug, defaultTitle]);
   const visibleCategories = useMemo(() => {
     const q = categorySearch.trim().toLowerCase();
@@ -143,7 +156,9 @@ export default function ExpenseReportModal({ isOpen, onClose, expenseType = null
     }
     if (paymentSource !== "all") params.append("payment_source", paymentSource);
     if (filterCurrency !== "all") params.append("currency", filterCurrency);
-    if (filterVault !== "all") params.append("vault_id", filterVault);
+    if (filterVault !== "all") {
+      params.append(paymentSource === "manager_advance" ? "manager_advance_id" : "vault_id", filterVault);
+    }
     if (sortBy !== "date_desc") params.append("sort", sortBy);
     if (reportTitle.trim()) params.append("report_title", reportTitle.trim());
     return params;
@@ -205,10 +220,18 @@ export default function ExpenseReportModal({ isOpen, onClose, expenseType = null
       setIsDownloading(false);
     }
   };
-  const vaultOptions = [
-    { value: "all", label: tx("reportModal.allAccounts") },
-    ...vaults.map((v) => ({ value: String(v.id), label: `${v.name} (${v.currency})` })),
-  ];
+  const accountOptions = paymentSource === "manager_advance"
+    ? [
+        { value: "all", label: tx("reportModal.allAccounts") },
+        ...managerAdvances.map((advance) => ({
+            value: String(advance.id),
+            label: `${advance.receiver_name || advance.employee?.full_name || `#${advance.id}`} — ${advance.currency}`,
+          })),
+      ]
+    : [
+        { value: "all", label: tx("reportModal.allAccounts") },
+        ...vaults.map((v) => ({ value: String(v.id), label: `${v.name} (${v.currency})` })),
+      ];
   return createPortal(
     <div
       className="fixed inset-0 z-[110] flex items-center justify-center p-3 sm:p-4 bg-overlay/50 backdrop-blur-xs font-sans animate-in fade-in duration-150"
@@ -315,7 +338,10 @@ export default function ExpenseReportModal({ isOpen, onClose, expenseType = null
                     <div className="grid grid-cols-2 gap-2.5">
                       <CustomDropdown
                         value={paymentSource}
-                        onChange={(val) => setPaymentSource(val)}
+                        onChange={(val) => {
+                          setPaymentSource(val);
+                          setFilterVault("all");
+                        }}
                         options={sourceOptions}
                         icon={<span className="text-caption-text text-content-faint shrink-0">{tx("reportModal.sourceLabel")}</span>}
                         buttonClassName="w-full h-[38px] px-2.5 text-body-text rounded-badge"
@@ -339,7 +365,7 @@ export default function ExpenseReportModal({ isOpen, onClose, expenseType = null
                       <CustomDropdown
                         value={filterVault}
                         onChange={(val) => setFilterVault(val)}
-                        options={vaultOptions}
+                        options={accountOptions}
                         icon={<span className="text-caption-text text-content-faint shrink-0">{tx("reportModal.accountLabel")}</span>}
                         buttonClassName="w-full h-[38px] px-2.5 text-body-text rounded-badge"
                         width="w-full"

@@ -8,7 +8,9 @@
     "createWithdraw": "ثبت برداشت جدید",
     "printReport": "چاپ راپور",
     "refresh": "تازه‌سازی",
-    "details": "جزئیات"
+    "details": "جزئیات",
+    "edit": "ویرایش",
+    "delete": "حذف"
   },
   "filters": {
     "rangeLabel": "بازه زمانی:",
@@ -58,6 +60,11 @@
   "status": {
     "loading": "در حال دریافت اطلاعات معاملات...",
     "empty": "هیچ معامله‌ای در این بازه زمانی یافت نشد."
+  },
+  "ledger": {
+    "editTip": "ویرایش معامله",
+    "deleteTip": "حذف معامله",
+    "lockedTip": "این سند باید از بخش اصلی ثبت آن مدیریت شود."
   },
   "emptyValue": "—",
   "messages": {

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Building2, ArrowLeft, LogOut } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useBranch } from "../../context/BranchContext";
@@ -6,6 +7,8 @@ export default function BranchGate() {
   const { t } = useTranslation("common");
   const { branches, setSelectedBranch } = useBranch();
   const { logout } = useAuth();
+  const [rememberChoice, setRememberChoice] = useState(false);
+  const selectBranch = (branchId) => setSelectedBranch(branchId, rememberChoice);
   return (
     <div
       dir="rtl"
@@ -21,11 +24,27 @@ export default function BranchGate() {
         <p className="text-base text-gray-600 mb-6 leading-relaxed">
           {t("branch.gateSubtitle")}
         </p>
+        <label className="mb-6 flex items-start gap-3 rounded-btn border border-slate-200 bg-slate-50 p-3 text-right cursor-pointer">
+          <input
+            type="checkbox"
+            checked={rememberChoice}
+            onChange={(event) => setRememberChoice(event.target.checked)}
+            className="mt-1 h-4 w-4 accent-slate-800"
+          />
+          <span>
+            <span className="block text-sm font-bold text-slate-800">
+              {t("branch.rememberChoice")}
+            </span>
+            <span className="mt-1 block text-xs leading-5 text-slate-500">
+              {t("branch.rememberChoiceHint")}
+            </span>
+          </span>
+        </label>
         <div className="space-y-3">
           {branches.length > 1 && (
             <button
               type="button"
-              onClick={() => setSelectedBranch("all")}
+              onClick={() => selectBranch("all")}
               className="w-full group flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 border border-slate-300 hover:border-slate-500 rounded-btn transition-colors cursor-pointer"
             >
               <div className="flex items-center space-x-3.5 space-x-reverse">
@@ -47,7 +66,7 @@ export default function BranchGate() {
             <button
               key={branch.id}
               type="button"
-              onClick={() => setSelectedBranch(String(branch.id))}
+              onClick={() => selectBranch(String(branch.id))}
               className="w-full group flex items-center justify-between p-4 bg-white hover:bg-gray-50 border border-gray-300 hover:border-slate-800 rounded-btn transition-colors cursor-pointer"
             >
               <div className="flex items-center space-x-3.5 space-x-reverse">

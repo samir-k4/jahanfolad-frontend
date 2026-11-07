@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { showToast } from "../utils/toast";
-import { Receipt } from "lucide-react";
+import { FileBarChart2, Receipt } from "lucide-react";
 import useDatePresets from "../hooks/useDatePresets";
 import { toEnglishDigits } from "../utils/dariNumberFormatter";
 import VaultsTable from "../components/treasury/VaultsTable";
@@ -156,15 +156,16 @@ export default function TreasuryVaultsPage() {
           <button
             type="button"
             onClick={() => setShowReportModal(true)}
-            className="px-4 py-2 text-btn-text font-bold text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 text-caption-text font-bold text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
           >
+            <FileBarChart2 className="w-4 h-4 text-gray-500" />
             <span>{t("page.report")}</span>
           </button>
           {canCreate && (
           <button
             type="button"
             onClick={() => setActiveModal("new_vault")}
-            className="px-4 py-2 text-btn-text font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2 text-caption-text font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
           >
             <span>{t("page.newVault")}</span>
           </button>

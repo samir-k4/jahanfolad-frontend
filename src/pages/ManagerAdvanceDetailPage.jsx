@@ -30,7 +30,7 @@ import { showToast } from "../utils/toast";
 import { getCleanErrorMessage } from "../utils/errorHandler";
 const fmt = (n) => Number(n || 0).toLocaleString("en-US", {
   minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
+  maximumFractionDigits: 0,
 });
 export default function ManagerAdvanceDetailPage() {
   const { id } = useParams();
