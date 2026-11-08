@@ -382,7 +382,9 @@ export default function ManagerAdvanceDetailPage() {
                   <th className="py-2 px-3 text-center">#</th>
                   <th className="py-2 px-3">{t("detail.topupDate")}</th>
                   <th className="py-2 px-3">{t("detail.topupNotes")}</th>
-                  <th className="py-2 px-3 text-left">{t("detail.topupAmount")}</th>
+                  <th className="py-2 px-3 text-left">مبلغ اصلی امانت</th>
+                  <th className="py-2 px-3 text-left">مبلغ افزایش</th>
+                  <th className="py-2 px-3 text-left">مبلغ پس از افزایش</th>
                 </tr>
               </thead>
               <tbody>
@@ -391,7 +393,9 @@ export default function ManagerAdvanceDetailPage() {
                     <td className="py-2 px-3 text-center text-gray-500">{index + 1}</td>
                     <td className="py-2 px-3 font-mono" dir="ltr">{toEnglishDigits(topup.shamsi_date || "—")}</td>
                     <td className="py-2 px-3 text-gray-700">{topup.notes || "—"}</td>
-                    <td className="py-2 px-3 text-left font-mono font-bold text-emerald-700" dir="ltr">+{fmt(topup.amount)} {advance.currency}</td>
+                    <td className="py-2 px-3 text-left font-mono text-gray-700" dir="ltr">{fmt(topup.original_advance_amount ?? advance.amount)} {advance.currency}</td>
+                    <td className="py-2 px-3 text-left font-mono font-bold text-emerald-700" dir="ltr">+{fmt(topup.increase_amount ?? topup.amount)} {advance.currency}</td>
+                    <td className="py-2 px-3 text-left font-mono font-bold text-slate-800" dir="ltr">{fmt(topup.amount_after_increase)} {advance.currency}</td>
                   </tr>
                 ))}
               </tbody>
@@ -430,6 +434,7 @@ export default function ManagerAdvanceDetailPage() {
                 <th className="py-1.5 px-2 text-center border border-gray-200 min-w-[90px]">{t("detail.expenseDate")}</th>
                 <th className="py-1.5 px-2 text-center border border-gray-200 min-w-[75px]">{t("detail.expenseTime")}</th>
                 <th className="py-1.5 px-2.5 text-center border border-gray-200 min-w-[100px]">{t("detail.expenseAmount")}</th>
+                <th className="py-1.5 px-2.5 text-center border border-gray-200 min-w-[120px]">باقی‌مانده پس از مصرف</th>
                 <th className="py-1.5 px-2.5 text-right border border-gray-200">{t("table.createdBy", { ns: "common" })}</th>
                 <th className="py-1.5 px-2 text-center border border-gray-200 min-w-[75px]">{t("table.status")}</th>
                 {(canEdit || canDelete) && <th className="py-1.5 px-2 text-center w-28 border border-gray-200">{t("table.actions")}</th>}
@@ -438,7 +443,7 @@ export default function ManagerAdvanceDetailPage() {
             <tbody className="bg-white">
               {(advance.expenses?.length || 0) === 0 ? (
                 <tr>
-                  <td colSpan={(canEdit || canDelete) ? 11 : 10} className="p-10 text-center text-gray-400 text-sm">{t("detail.noExpenses")}</td>
+                  <td colSpan={(canEdit || canDelete) ? 12 : 11} className="p-10 text-center text-gray-400 text-sm">{t("detail.noExpenses")}</td>
                 </tr>
               ) : (
                 advance.expenses.map((exp, idx) => {
@@ -468,6 +473,9 @@ export default function ManagerAdvanceDetailPage() {
                     </td>
                     <td className={`py-2 px-2.5 text-center font-mono font-medium text-sm border border-gray-200 text-nowrap ${exp.is_reversed ? "text-gray-500" : "text-rose-700"}`} dir="ltr">
                       {exp.is_reversed ? t("detail.expenseReversed") : `−${fmt(exp.amount)} ${advance.currency}`}
+                    </td>
+                    <td className="py-2 px-2.5 text-center font-mono font-bold text-slate-800 border border-gray-200 text-nowrap" dir="ltr">
+                      {fmt(exp.remaining_after ?? advance.remaining)} {advance.currency}
                     </td>
                     <td className="py-2 px-2.5 text-gray-700 border border-gray-200 whitespace-nowrap text-sm">
                       {exp.created_by || "—"}

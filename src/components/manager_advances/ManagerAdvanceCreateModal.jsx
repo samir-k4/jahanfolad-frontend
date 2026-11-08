@@ -104,7 +104,7 @@ export default function ManagerAdvanceCreateModal({
       errs.vault_id = t("create.vaultRequired");
     }
     const numAmount = parseFloat(toEnglishDigits(formData.amount));
-    if (!formData.amount || isNaN(numAmount) || numAmount <= 0) {
+    if (!formData.amount || isNaN(numAmount) || numAmount < 0) {
       errs.amount = t("create.amountRequired");
     } else {
       const selectedVault = vaults.find((v) => String(v.id) === String(formData.vault_id));

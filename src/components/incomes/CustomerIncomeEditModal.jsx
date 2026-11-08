@@ -37,6 +37,7 @@ export default function CustomerIncomeEditModal({
   const [fieldErrors, setFieldErrors] = useState({});
   const [formData, setFormData] = useState({
     payer_name: "",
+    customer_id: "",
     vault_id: "",
     income_category_id: "",
     amount: "",
@@ -58,6 +59,12 @@ export default function CustomerIncomeEditModal({
       const savedRate = Number(income.exchange_rate || 0);
       setFormData({
         payer_name: income.payer_name || "",
+        customer_id: String(
+          income.customer_id
+            || income.customer?.id
+            || income.customer_transaction?.customer_id
+            || "",
+        ),
         vault_id: String(income.vault_id || ""),
         income_category_id: String(income.income_category_id || ""),
         amount: String(income.amount || ""),
@@ -136,6 +143,7 @@ export default function CustomerIncomeEditModal({
     try {
       const payload = {
         payer_name: formData.payer_name.trim(),
+        customer_id: formData.customer_id ? parseInt(formData.customer_id, 10) : null,
         vault_id: parseInt(formData.vault_id),
         income_category_id: formData.income_category_id ? parseInt(formData.income_category_id) : null,
         amount: parseFloat(formData.amount),

@@ -351,7 +351,7 @@ export default function CustomerReceiptCreatePage() {
     if (isEditMode ? !canEdit : !canCreate) return;
     e.preventDefault();
     if (submitting) return;
-    if (!selectedCustomer && !customerSearchQuery.trim()) {
+    if (!selectedCustomer?.id) {
       showToast.error(t("create.customerRequired"));
       return;
     }
