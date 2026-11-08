@@ -154,6 +154,7 @@ export default function ManagerAdvanceDetailPage() {
   }
   const isOpen = advance.status === "open";
   const isCancelled = advance.status === "cancelled";
+  const canTopUp = !isCancelled && canCreate;
   const receiverName = advance.receiver_name || advance.employee?.full_name || t("detail.receiverFallback");
   const totalReceived = Number(advance.total_received ?? advance.amount ?? 0);
   const spentPercent = totalReceived > 0 ? Math.min(100, Math.round((advance.total_spent / totalReceived) * 100)) : 0;
@@ -196,7 +197,7 @@ export default function ManagerAdvanceDetailPage() {
           <button
             type="button"
             onClick={() => setShowTopupForm(true)}
-            disabled={!isOpen || !canCreate}
+            disabled={!canTopUp}
             className="inline-flex items-center gap-1.5 rounded-btn bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <PlusCircle size={15} />
