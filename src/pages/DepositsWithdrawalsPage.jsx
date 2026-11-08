@@ -83,9 +83,11 @@ export default function DepositsWithdrawalsPage() {
   }));
   const currencyOptions = CURRENCY_CODES.map((value) => ({ value, label: t(`currencies.${value}`) }));
   const [vaults, setVaults] = useState([]);
+  const [members, setMembers] = useState([]);
   const [vaultsLoading, setVaultsLoading] = useState(false);
   const [typeTab, setTypeTab] = useState("all");
   const [selectedVaultFilter, setSelectedVaultFilter] = useState("all");
+  const [selectedMemberFilter, setSelectedMemberFilter] = useState("all");
   const [selectedCurrencyFilter, setSelectedCurrencyFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 1000);
@@ -120,6 +122,16 @@ export default function DepositsWithdrawalsPage() {
       setVaultsLoading(false);
     }
   }, []);
+  const fetchMembers = useCallback(async () => {
+    try {
+      const res = await fetch(apiUrl("/vault-transaction-members"));
+      if (!res.ok) return;
+      const json = await res.json();
+      setMembers(Array.isArray(json.data) ? json.data : []);
+    } catch (err) {
+      console.error("Error fetching transaction members:", err);
+    }
+  }, []);
   const fetchTransactions = useCallback(async (page = 1) => {
     setTxLoading(true);
     try {
@@ -128,6 +140,7 @@ export default function DepositsWithdrawalsPage() {
       params.append("per_page", perPage);
       params.append("type", typeTab);
       if (selectedVaultFilter !== "all") params.append("vault_id", selectedVaultFilter);
+      if (selectedMemberFilter !== "all") params.append("member_id", selectedMemberFilter);
       if (selectedCurrencyFilter !== "all") params.append("currency", selectedCurrencyFilter);
       if (debouncedSearchTerm.trim()) params.append("search", debouncedSearchTerm.trim());
       if (filterStartDate) {
@@ -155,8 +168,11 @@ export default function DepositsWithdrawalsPage() {
     } finally {
       setTxLoading(false);
     }
-  }, [typeTab, selectedVaultFilter, selectedCurrencyFilter, debouncedSearchTerm, filterStartDate, filterEndDate, perPage]);
-  useEffect(() => { fetchVaults(); }, [fetchVaults]);
+  }, [typeTab, selectedVaultFilter, selectedMemberFilter, selectedCurrencyFilter, debouncedSearchTerm, filterStartDate, filterEndDate, perPage]);
+  useEffect(() => {
+    fetchVaults();
+    fetchMembers();
+  }, [fetchVaults, fetchMembers]);
   useEffect(() => { fetchTransactions(1); }, [fetchTransactions]);
   const handleTabChange = (tab) => {
     setTypeTab(tab);
@@ -378,6 +394,24 @@ export default function DepositsWithdrawalsPage() {
                     })),
                   ]}
                   placeholder={t("filters.allVaults")}
+                  usePortal
+                />
+              </div>
+              <div className="w-52">
+                <SearchableSelect
+                  value={selectedMemberFilter}
+                  onChange={(val) => {
+                    setSelectedMemberFilter(val);
+                    setCurrentPage(1);
+                  }}
+                  options={[
+                    { value: "all", label: "همه اعضا و مسئولین" },
+                    ...members.map((member) => ({
+                      value: String(member.id),
+                      label: member.name,
+                    })),
+                  ]}
+                  placeholder="همه اعضا و مسئولین"
                   usePortal
                 />
               </div>

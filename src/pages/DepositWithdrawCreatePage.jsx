@@ -50,6 +50,7 @@ export default function DepositWithdrawCreatePage() {
   const [vaults, setVaults] = useState([]);
   const [categories, setCategories] = useState([]);
   const [members, setMembers] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [loadingVaults, setLoadingVaults] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [docNumber, setDocNumber] = useState("");
@@ -70,6 +71,7 @@ export default function DepositWithdrawCreatePage() {
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
   const [newMemberName, setNewMemberName] = useState("");
   const [newMemberRole, setNewMemberRole] = useState("partner");
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
   const [newMemberPhone, setNewMemberPhone] = useState("");
   const [savingMember, setSavingMember] = useState(false);
   const [currency, setCurrency] = useState("AFN");
@@ -203,21 +205,8 @@ export default function DepositWithdrawCreatePage() {
           const eJson = await eRes.json();
           empList = Array.isArray(eJson.data) ? eJson.data : (Array.isArray(eJson) ? eJson : []);
         }
-        const combinedMembers = [...memList];
-        empList.forEach((emp) => {
-          const fullName = `${emp.first_name || ""} ${emp.last_name || ""}`.trim() || emp.name;
-          const exists = combinedMembers.some((m) => m.name === fullName);
-          if (!exists) {
-            combinedMembers.push({
-              id: `emp-${emp.id}`,
-              name: fullName,
-              member_type: "employee",
-              phone: emp.phone || "",
-              is_employee: true,
-            });
-          }
-        });
-        setMembers(combinedMembers);
+        setMembers(memList);
+        setEmployees(empList);
       } catch (err) {
         showToast.error(t("messages.loadFormFailed"));
       } finally {
@@ -272,6 +261,20 @@ export default function DepositWithdrawCreatePage() {
       ...list,
     ];
   }, [members]);
+  const availableEmployeeOptions = useMemo(() => {
+    const linkedEmployeeIds = new Set(
+      members
+        .map((member) => member.employee_id)
+        .filter((employeeId) => employeeId !== null && employeeId !== undefined)
+        .map((employeeId) => String(employeeId)),
+    );
+    return employees
+      .filter((employee) => !linkedEmployeeIds.has(String(employee.id)))
+      .map((employee) => ({
+        value: String(employee.id),
+        label: employee.full_name || employee.name || `#${employee.id}`,
+      }));
+  }, [employees, members]);
   const handleVaultChange = (val) => {
     setSelectedVaultId(val);
     const chosen = vaults.find((v) => String(v.id) === String(val));
@@ -398,6 +401,7 @@ export default function DepositWithdrawCreatePage() {
         body: JSON.stringify({
           name: name,
           member_type: newMemberRole,
+          employee_id: selectedEmployeeId ? Number(selectedEmployeeId) : null,
           phone: newMemberPhone.trim() || null,
         }),
       });
@@ -411,6 +415,7 @@ export default function DepositWithdrawCreatePage() {
       setSelectedMemberId(String(createdMem.id));
       setSelectedHandler(createdMem.name);
       setNewMemberName("");
+      setSelectedEmployeeId("");
       setNewMemberPhone("");
       setIsMemberModalOpen(false);
     } catch (err) {
@@ -464,7 +469,7 @@ export default function DepositWithdrawCreatePage() {
       showToast.error(t("messages.invalidTime"));
       return;
     }
-    const numMemberId = !selectedMemberId || String(selectedMemberId).startsWith("emp-") ? null : (parseInt(selectedMemberId, 10) || null);
+    const numMemberId = selectedMemberId ? (parseInt(selectedMemberId, 10) || null) : null;
     const numCategoryId = parseInt(selectedCategoryId, 10) || null;
     const payload = {
       type: transactionType,
@@ -1118,6 +1123,31 @@ export default function DepositWithdrawCreatePage() {
                     width="w-full"
                     usePortal
                   />
+              </div>
+              <div>
+                <label className="block text-label-text font-bold text-gray-700 mb-1">
+                  کارمند مرتبط <span className="text-gray-400 font-normal text-xs">(اختیاری)</span>
+                </label>
+                <SearchableSelect
+                  value={selectedEmployeeId}
+                  onChange={(value) => {
+                    setSelectedEmployeeId(value);
+                    const employee = employees.find((item) => String(item.id) === String(value));
+                    if (employee) {
+                      setNewMemberName(employee.full_name || employee.name || "");
+                      setNewMemberPhone(employee.phone || "");
+                      setNewMemberRole("employee");
+                    }
+                  }}
+                  options={[
+                    { value: "", label: "بدون ارتباط با کارمند" },
+                    ...availableEmployeeOptions,
+                  ]}
+                  placeholder="انتخاب کارمند"
+                  searchPlaceholder="جستجوی کارمند"
+                  buttonClassName="w-full bg-white border border-gray-300 rounded-input px-3 py-2 text-body-text font-medium text-gray-900 outline-none hover:border-gray-400"
+                  usePortal
+                />
               </div>
               <div>
                 <label className="block text-label-text font-bold text-gray-700 mb-1">
