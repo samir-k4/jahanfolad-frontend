@@ -98,6 +98,7 @@ export default function OvertimeForm() {
   const buildPayload = useCallback(
     (dateStr, ids, hoursFor, rateFor) => ({
       date: dateStr,
+      branch_id: selectedBranch ? Number(selectedBranch) : undefined,
       overtimes: ids.map((empId) => {
         const emp = employees.find((e) => e.id === empId);
         return {
@@ -107,7 +108,7 @@ export default function OvertimeForm() {
         };
       }),
     }),
-    [employees, leaveEmployeeIds]
+    [employees, leaveEmployeeIds, selectedBranch]
   );
   const handleHoursChange = (empId, hours) =>
     setOvertimeMap((prev) => ({ ...prev, [empId]: hours }));
