@@ -2,18 +2,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { printReportFrame, useReportFrameHeight } from "../../utils/reportFrame";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import { BarChart3, CalendarDays, Download, Loader2, Printer, X } from "lucide-react";
-import DatePicker from "react-multi-date-picker";
-import { DateObject, persian, persian_af } from "../../utils/dateHelpers";
+import { BarChart3, Download, Loader2, Printer, X } from "lucide-react";
 import useBodyScrollLock from "../../hooks/useBodyScrollLock";
 import useReportPreview from "../../hooks/useReportPreview";
-import useExpenseTypes from "../../hooks/useExpenseTypes";
 import { showToast } from "../../utils";
 import { getCleanErrorMessage } from "../../utils/errorHandler";
-import CustomDropdown from "../common/CustomDropdown";
 const HTML_PATH = "/expenses/monthly-summary-html";
 const PDF_PATH = "/expenses/monthly-summary-pdf";
-const ALL_TYPES = "all";
 const PAGE_WIDTH_PX = 793.7;
 const PAGE_PAD_X_PX = 38;
 const PAGE_PAD_TOP_PX = 38;
@@ -23,21 +18,14 @@ const MIN_SHEET_HEIGHT_PX = 500;
 const VIEWPORT_PADDING_PX = 32;
 const MIN_PREVIEW_SCALE = 0.4;
 const REMEASURE_DELAY_MS = 150;
-export default function ExpenseSummaryModal({ isOpen, onClose }) {
+export default function ExpenseSummaryModal({ isOpen, onClose, filters = {} }) {
   useBodyScrollLock(isOpen);
   const { t } = useTranslation("expenses");
-  const { types: expenseTypes } = useExpenseTypes(isOpen);
-  const [month, setMonth] = useState(() => new DateObject({ calendar: persian, locale: persian_af }));
-  const [typeId, setTypeId] = useState(ALL_TYPES);
   const [scale, setScale] = useState(1);
   const viewportRef = useRef(null);
   const buildPayload = useCallback(
-    () => ({
-      shamsi_year: month.year,
-      shamsi_month: month.month.number,
-      expense_type_id: typeId !== ALL_TYPES ? typeId : undefined,
-    }),
-    [month, typeId]
+    () => filters,
+    [filters]
   );
   const onError = useCallback(
     (err) => showToast.error(getCleanErrorMessage(err, t("summary.loadError"))),
@@ -73,10 +61,6 @@ export default function ExpenseSummaryModal({ isOpen, onClose }) {
   if (!isOpen) return null;
   const busy = isLoadingPreview || isDownloading;
   const pageHeight = PAGE_PAD_TOP_PX + sheetHeight + PAGE_PAD_BOTTOM_PX;
-  const typeOptions = [
-    { value: ALL_TYPES, label: t("filters.allTypes") },
-    ...expenseTypes.map((type) => ({ value: String(type.id), label: type.name })),
-  ];
   return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-overlay/50 backdrop-blur-xs font-sans"
@@ -94,29 +78,6 @@ export default function ExpenseSummaryModal({ isOpen, onClose }) {
             </div>
           </div>
           <div className="flex items-center gap-2.5 flex-wrap">
-            <div className="flex items-center gap-1.5 bg-surface border border-line-strong rounded-input px-2.5 py-1.5">
-              <CalendarDays size={15} className="text-content-faint" />
-              <DatePicker
-                value={month}
-                onChange={(date) => date && setMonth(date)}
-                calendar={persian}
-                locale={persian_af}
-                onlyMonthPicker
-                format="YYYY/MM"
-                calendarPosition="bottom-right"
-                portal
-                zIndex={9999}
-                inputClass="bg-transparent text-xs font-bold text-content outline-none cursor-pointer w-20 text-center font-sans border-0 shadow-none focus:ring-0 p-0"
-                containerClassName="w-auto"
-              />
-            </div>
-            <CustomDropdown
-              value={typeId}
-              onChange={setTypeId}
-              options={typeOptions}
-              buttonClassName="h-9 px-3 text-xs font-medium text-content-body bg-surface border border-line-strong rounded-input min-w-[150px]"
-              width="w-52"
-            />
             <button
               type="button"
               onClick={onClose}

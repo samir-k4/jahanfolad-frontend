@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import ExpenseCreateModal from "../components/expenses/ExpenseCreateModal";
 import ExpenseReportModal from "../components/expenses/ExpenseReportModal";
 import ExpenseSummaryModal from "../components/expenses/ExpenseSummaryModal";
+import ExpenseSummaryFilterModal from "../components/expenses/ExpenseSummaryFilterModal";
 import ExpenseDetailsModal from "../components/expenses/ExpenseDetailsModal";
 import ExpenseEditModal from "../components/expenses/ExpenseEditModal";
 import { formatShamsiDate } from "../utils";
@@ -100,6 +101,8 @@ export default function ExpensesPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
+  const [isSummaryFilterOpen, setIsSummaryFilterOpen] = useState(false);
+  const [summaryFilters, setSummaryFilters] = useState({});
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [detailsTarget, setDetailsTarget] = useState(null);
@@ -238,7 +241,7 @@ export default function ExpensesPage() {
         <div className="flex flex-wrap items-center gap-2.5 lg:justify-end shrink-0">
           <button
             type="button"
-            onClick={() => setIsSummaryModalOpen(true)}
+            onClick={() => setIsSummaryFilterOpen(true)}
             className={HEADER_ACTION}
           >
             <BarChart3 size={14} />
@@ -541,6 +544,16 @@ export default function ExpensesPage() {
       <ExpenseSummaryModal
         isOpen={isSummaryModalOpen}
         onClose={() => setIsSummaryModalOpen(false)}
+        filters={summaryFilters}
+      />
+      <ExpenseSummaryFilterModal
+        isOpen={isSummaryFilterOpen}
+        onClose={() => setIsSummaryFilterOpen(false)}
+        onShow={(filters) => {
+          setSummaryFilters(filters);
+          setIsSummaryFilterOpen(false);
+          setIsSummaryModalOpen(true);
+        }}
       />
       <ExpenseDetailsModal
         isOpen={Boolean(detailsTarget)}

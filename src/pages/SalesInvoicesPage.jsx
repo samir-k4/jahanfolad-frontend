@@ -635,6 +635,7 @@ export default function SalesInvoicesPage() {
           mode="warehouse-exit"
         />
       )}
+
     </div>
   );
 }
